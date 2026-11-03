@@ -100,6 +100,30 @@ const GARMENTS={
     make(m){return tunicDraft(m,1,9,['Sew the shoulders.','Attach the neck binding, stretching it gently.','Sew the sleeves into the armholes, then sew each side and underarm in one seam.','Hem the sleeves and bottom.'])}},
   tunic:{label:'Elven tunic',f:[['bust','Bust or chest',96],['sh','Shoulder width',42],['len','Tunic length',92],['sl','Sleeve length',58],['flare','Sleeve flare',1.5]],sa:1.5,
     make(m){return tunicDraft(m,m.flare,11,['Sew the shoulders, then attach the neck binding.','Sew the sleeves into the armholes.','Sew each underarm and side seam, stopping 25 cm above the hem for side slits.','Press the slit edges under and stitch them, then hem the sleeves and bottom.'])}},
+  gown:{label:'Fantasy gown',f:[['bust','Bust or chest',96],['sh','Shoulder width',42],['len','Gown length',145],['sl','Sleeve length',60],['flare','Sleeve flare',1.8],['skirt','Hem flare (cm per side)',30]],sa:1.5,
+    make(m){return tunicDraft(m,m.flare,11,['Sew the shoulders, then attach the neck binding.','Sew the sleeves into the armholes.','Sew each underarm and side seam in one line.','Let the gown hang for a day, as the angled seams stretch, then level and hem the bottom and sleeves.','Wear it with the sash for shape.'],m.skirt)}},
+  capelet:{label:'Hooded capelet',f:[['neck','Neck',44],['len','Capelet length',40],['hood','Hood height',38]],sa:1.5,
+    make(m){const r=(m.neck+3)/Math.PI,o=r+m.len,d=(m.neck+3)/2,h=m.hood;
+      const quarter=[...arc(0,0,r,0,Math.PI/2),...arc(0,0,o,Math.PI/2,0)];
+      const hood=[[0,0],[d*.62,0],...bez([d*.62,0],[d*.95,0],[d,h*.25],[d,h*.55],16).slice(1),[d,h],[0,h]];
+      return {pieces:[{name:'Capelet',cut:'Cut 1 on the fold',fold:true,poly:quarter,grain:1},{name:'Hood',cut:'Cut 2',poly:hood,grain:1}],
+      steps:['Sew the hood pieces along the curved back and top.','Sew the hood to the neck edge, matching its seam to the centre back fold.','Hem the hood front and capelet edges.','Add a clasp or ties at the front neck.']}}},
+  cowl:{label:'Elven cowl hood',f:[['face','Face opening',62],['drop','Shoulder drop',24],['hood','Hood height',38]],sa:1.5,
+    make(m){const w=m.face/2+4,h=m.hood,c=m.drop,poly=[[0,0],[w*.62,0],...bez([w*.62,0],[w*.95,0],[w,h*.25],[w,h*.55],16).slice(1),[w,h],[w+c*.55,h+c],[0,h+c]];
+      return {pieces:[{name:'Cowl',cut:'Cut 4: 2 outer, 2 lining',n:4,poly,grain:1}],
+      steps:['Sew two pieces along the curved back and down the front neck. Repeat for the lining.','Put the outer and lining right sides together, and sew around the face and the lower edge, leaving a 10 cm gap.','Turn through the gap and stitch it closed.','It pulls on over the head, so check that the face opening fits over your head on the test version.']}}},
+  tabard:{label:'Tabard',f:[['tw','Width',44],['len','Length, shoulder to hem',90],['nk','Neck opening',24]],sa:1.5,
+    make(m){const w=m.tw/2,n=m.nk/2;const neck=arc(0,0,n,Math.PI/2,0,18);
+      const point=[w,m.len*.9],poly=[...neck,[w,0],point,[0,m.len]];
+      return {pieces:[{name:'Front',cut:'Cut 1 on the fold',fold:true,poly,grain:1},{name:'Back',cut:'Cut 1 on the fold',fold:true,poly,grain:1}],
+      steps:['Sew the front and back at the shoulders.','Hem the neck with a bias strip or a narrow turned edge.','Hem the sides and pointed bottom.','Wear it belted, over a tunic.']}}},
+  bracer:{label:'Laced bracers',f:[['wrist','Wrist',17],['arm','Forearm',27],['blen','Bracer length',20]],sa:1,
+    make(m){const b=(m.wrist+1)/2,t=(m.arm+1)/2,L=m.blen,poly=[[0,0],[t,0],[b,L],[0,L]];
+      return {pieces:[{name:'Bracer',cut:'Cut 4: 2 outer, 2 lining',n:4,fold:true,poly,grain:1}],
+      steps:['Sew each outer to its lining, right sides together, leaving a gap at one short end.','Turn, press, and stitch the gap closed.','Add a row of 4 to 6 eyelets or sewn loops down each long edge.','Lace them closed around your arm with cord.']}}},
+  sash:{label:'Long sash',f:[['slen','Sash length',220],['swide','Sash width',16]],sa:1,
+    make(m){const half=m.slen/2;return {pieces:[{name:'Sash half',cut:'Cut 2',poly:[[0,0],[m.swide*2,0],[m.swide*2,half],[m.swide,half+m.swide*.8],[0,half]],grain:1}],
+      steps:['Sew the two halves together at the straight ends.','Fold lengthwise, right sides together, and sew the long edge and the pointed ends, leaving a 10 cm gap.','Turn through the gap, press, and stitch the gap closed.']}}},
   cloak:{label:'Hooded cloak',f:[['neck','Neck',44],['len','Cloak length',120],['hood','Hood height',38]],sa:1.5,
     make(m){const r=(m.neck+3)/Math.PI,o=r+m.len,d=(m.neck+3)/2,h=m.hood;
       const quarter=[...arc(0,0,r,0,Math.PI/2),...arc(0,0,o,Math.PI/2,0)];
@@ -120,12 +144,12 @@ const GARMENTS={
     make(m){return {pieces:[{name:'Pouch',cut:'Cut 2',poly:[[0,0],[m.pw,0],[m.pw,m.ph+5],[0,m.ph+5]],grain:1}],
       steps:['Sew the sides and bottom, stopping 5 cm below the top on each side.','Press those open side edges under and stitch them flat.','Fold the top over by 2.5 cm to make a channel, and stitch it.','Thread a cord through both channels, and knot the ends.']}}}
 };
-function tunicDraft(m,flare,frontDepth,steps){
+function tunicDraft(m,flare,frontDepth,steps,skirt=0){
   const B=(m.bust+14)/4,neck=8.5,drop=3,ad=m.bust*.22+1,S=m.sh/2;
   const piece=(depth)=>{
     const nc=bez([0,depth],[neck*.6,depth],[neck,depth*.5],[neck,0],16);
     const ah=bez([S,drop],[S-1.5,ad*.5],[S-.5,ad*.9],[B,ad],24);
-    return {poly:[...nc,...ah,[B,m.len],[0,m.len]],nc,ah};
+    return {poly:[...nc,...ah,[B+skirt,m.len],[0,m.len]],nc,ah};
   };
   const f=piece(frontDepth),b=piece(2.5),a=lenOf(f.ah),cap=8,hw=Math.sqrt(Math.max(1,a*a-cap*cap));
   const head=bez([hw,cap],[hw*.6,cap],[hw*.45,0],[0,0],24).reverse();
@@ -161,7 +185,7 @@ function buildDraft(){
 }
 function fabricNeed(pieces,width){
   const items=[];
-  for(const p of pieces){const n=parseInt(p.cut.match(/\d/))||1,wide=p.fold?p.w*2:p.w;for(let i=0;i<n;i++)items.push([wide,p.h])}
+  for(const p of pieces){const n=p.n||parseInt(p.cut.match(/\d/))||1,wide=p.fold?p.w*2:p.w;for(let i=0;i<n;i++)items.push([wide,p.h])}
   if(items.some(i=>i[0]>width&&i[1]>width))return null;
   items.sort((a,b)=>b[1]-a[1]);
   let used=0,x=0,row=0;
@@ -173,7 +197,7 @@ function patternView(){
   for(const k in GARMENTS)seg.append(el('button',{type:'button',textContent:GARMENTS[k].label,'aria-pressed':String(k===gar),on:{click(){gar=k;render()}}}));
   const fields=el('div',{className:'fields'});
   for(const [k,l,d] of GARMENTS[gar].f){
-    fields.append(el('label',{className:'f'},l+(k==='full'?' (times hip)':k==='flare'?' (1 is straight)':' (cm)'),el('input',{id:'m_'+k,type:'number',step:'any',min:'0',value:M[mk(k)]??d,on:{input(e){M[mk(k)]=e.target.value;saveBody();drawPattern()}}})));
+    fields.append(el('label',{className:'f'},l+(k==='full'?' (times hip)':k==='flare'?' (1 is straight)':k==='skirt'?'':' (cm)'),el('input',{id:'m_'+k,type:'number',step:'any',min:'0',value:M[mk(k)]??d,on:{input(e){M[mk(k)]=e.target.value;saveBody();drawPattern()}}})));
   }
   const fw=el('select',{'aria-label':'Fabric width',on:{change(e){fab=+e.target.value;drawPattern()}}},...[110,140,150].map(w=>el('option',{value:w,textContent:w+' cm',selected:w===fab})));
   return el('div',{className:'grid'},
@@ -203,7 +227,7 @@ function drawPattern(){
   for(const [a,b] of rows)tot.append(el('div',{},el('span',{textContent:a}),el('span',{textContent:b})));
   const m=el('div',{className:'msg',role:'status',id:'pm'});
   r.append(tot,el('button',{className:'btn solid',type:'button',textContent:'Download A4 pattern PDF',on:{click:savePdf}}),m);
-  if(['top','circle','tunic','cloak','apron'].includes(gar))r.append(el('div',{className:'warn',textContent:'This is a first draft. Sew a test in cheap fabric before cutting anything special.'}));
+  if(['top','circle','tunic','cloak','apron','gown','capelet','cowl','bracer'].includes(gar))r.append(el('div',{className:'warn',textContent:'This is a first draft. Sew a test in cheap fabric before cutting anything special.'}));
   if(d.fabric==null)r.append(el('div',{className:'warn',textContent:'A piece is wider than this fabric. Choose wider fabric or a shorter length.'}));
   const st=$('steps');st.innerHTML='';st.append(el('h2',{textContent:'How to sew it'}),el('ol',{style:'margin:0;padding-left:20px'},...(GARMENTS[gar].make(curM()).steps.map(t=>el('li',{textContent:t})))),el('p',{className:'note',textContent:'Solid line: cut. Dashed line: sew. Red edge: place on the fold of the fabric.'}));
 }
