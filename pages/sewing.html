@@ -100,6 +100,26 @@ const GARMENTS={
     make(m){return tunicDraft(m,1,9,['Sew the shoulders.','Attach the neck binding, stretching it gently.','Sew the sleeves into the armholes, then sew each side and underarm in one seam.','Hem the sleeves and bottom.'])}},
   tunic:{label:'Elven tunic',f:[['bust','Bust or chest',96],['sh','Shoulder width',42],['len','Tunic length',92],['sl','Sleeve length',58],['flare','Sleeve flare',1.5]],sa:1.5,
     make(m){return tunicDraft(m,m.flare,11,['Sew the shoulders, then attach the neck binding.','Sew the sleeves into the armholes.','Sew each underarm and side seam, stopping 25 cm above the hem for side slits.','Press the slit edges under and stitch them, then hem the sleeves and bottom.'])}},
+  pirate:{label:'Pirate shirt',f:[['bust','Chest or bust',96],['sh','Shoulder width',42],['len','Shirt length',80],['sl','Sleeve length',60],['flare','Sleeve fullness',1.7],['wrist','Wrist',17]],sa:1.5,
+    make(m){const d=tunicDraft({...m,bust:m.bust+10},m.flare,6,['Cut a 16 cm slit down the centre front, and hem its edges, or bind them for lacing.','Sew the shoulders, and attach the collar around the neck.','Sew the sleeves into the armholes.','Sew each underarm and side seam in one line.','Gather each sleeve end to fit its cuff, and stitch the cuff on.','Hem the bottom, and lace the neck with cord.']);
+      d.pieces=d.pieces.filter(p=>p.name!=='Neck binding');
+      d.pieces.push({name:'Collar',cut:'Cut 2',poly:[[0,0],[46,0],[46,9],[0,9]],grain:1},{name:'Cuff',cut:'Cut 2',poly:[[0,0],[m.wrist+5,0],[m.wrist+5,14],[0,14]],grain:1});return d}},
+  waistcoat:{label:'Waistcoat',f:[['bust','Chest or bust',96],['sh','Shoulder width',42],['len','Back length',58]],sa:1.5,
+    make(m){const d=openFront(m,6,4);return {pieces:[{name:'Front',cut:'Cut 4: 2 outer, 2 lining',n:4,poly:d.front,grain:1},{name:'Back',cut:'Cut 2 on the fold: 1 outer, 1 lining',n:2,fold:true,poly:d.back,grain:1}],
+      steps:['Sew the outer fronts to the outer back at the shoulders. Repeat with the lining.','Put the outer and lining right sides together, and sew around the armholes, front edges, neck, and hem, leaving the sides open.','Turn it right side out through the shoulders and side openings, and press.','Sew the side seams, outer to outer and lining to lining, and stitch the last gap closed.','Add buttons, or hooks for the pirate look.']}}},
+  frock:{label:'Frock coat',f:[['bust','Chest or bust',96],['sh','Shoulder width',42],['len','Coat length',105],['sl','Sleeve length',64],['skirt','Skirt flare (cm per side)',14]],sa:1.5,
+    make(m){const d=openFront({...m,bust:m.bust+8},4,m.skirt);const t=tunicDraft({...m,bust:m.bust+8},1.12,9,[]);
+      return {pieces:[{name:'Front',cut:'Cut 2',poly:d.front,grain:1},{name:'Back',cut:'Cut 1 on the fold',fold:true,poly:d.back,grain:1},t.pieces.find(p=>p.name==='Sleeve'),{name:'Turn-back cuff',cut:'Cut 2',poly:[[0,0],[42,0],[42,16],[0,16]],grain:1},{name:'Collar',cut:'Cut 2',poly:[[0,0],[48,0],[48,10],[0,10]],grain:1}],
+      steps:['Sew the fronts to the back at the shoulders.','Sew the collar pieces together, turn, and attach them to the neck.','Sew the sleeves into the armholes.','Sew each underarm and side seam, stopping 30 cm above the hem for a vent.','Sew each cuff into a loop, attach it to the sleeve end, and fold it back.','Hem the front edges, vents, and bottom. Use a heavier fabric, or line it, for a proper coat.']}}},
+  trousers:{label:'Wide trousers',f:[['hip','Hip',98],['rise','Rise (waist to seat)',29],['inseam','Inseam',78],['leg','Leg width at hem',30]],sa:1.5,
+    make(m){const H=m.hip+10,f=H/4,b=H/4,L=m.rise+m.inseam+3,e1=H/16,e2=H/9,hw=m.leg/2;
+      const c=f/2,front=[[-c+1.5,3],[f-c+1.5,3],[hw+1,L],[-hw+1,L],[-c-e1,3+m.rise],...bez([-c-e1,3+m.rise],[-c,3+m.rise],[-c+1,3+m.rise*.6],[-c+1.5,3],14).slice(1,-1)];
+      const c2=b/2,back=[[-c2,0],[b-c2+1.5,3],[hw+1.5,L],[-hw+1.5,L],[-c2-e2,3+m.rise],...bez([-c2-e2,3+m.rise],[-c2,3+m.rise+1],[-c2+.5,3+m.rise*.5],[-c2,0],14).slice(1,-1)];
+      return {pieces:[{name:'Front leg',cut:'Cut 2',poly:front,grain:1},{name:'Back leg',cut:'Cut 2',poly:back,grain:1}],
+      steps:['Sew each front to its back along the outside leg.','Sew each inside leg.','Turn one leg right side out, put it inside the other, and sew the curved crotch seam in one line.','Fold the top over by 3 cm for a channel, thread elastic or a drawstring, and close it.','Hem the legs, or gather them into a band below the knee for a breeches look.']}}},
+  wrap:{label:'Head wrap',f:[['wsize','Square size',75]],sa:1,
+    make(m){return {pieces:[{name:'Head wrap',cut:'Cut 1',poly:[[0,0],[m.wsize,0],[m.wsize,m.wsize],[0,m.wsize]],grain:1}],
+      steps:['Hem all four edges with a narrow double fold.','Fold it corner to corner, and tie it around your head with the knot at the back or side.']}}},
   gown:{label:'Fantasy gown',f:[['bust','Bust or chest',96],['sh','Shoulder width',42],['len','Gown length',145],['sl','Sleeve length',60],['flare','Sleeve flare',1.8],['skirt','Hem flare (cm per side)',30]],sa:1.5,
     make(m){return tunicDraft(m,m.flare,11,['Sew the shoulders, then attach the neck binding.','Sew the sleeves into the armholes.','Sew each underarm and side seam in one line.','Let the gown hang for a day, as the angled seams stretch, then level and hem the bottom and sleeves.','Wear it with the sash for shape.'],m.skirt)}},
   capelet:{label:'Hooded capelet',f:[['neck','Neck',44],['len','Capelet length',40],['hood','Hood height',38]],sa:1.5,
@@ -144,6 +164,13 @@ const GARMENTS={
     make(m){return {pieces:[{name:'Pouch',cut:'Cut 2',poly:[[0,0],[m.pw,0],[m.pw,m.ph+5],[0,m.ph+5]],grain:1}],
       steps:['Sew the sides and bottom, stopping 5 cm below the top on each side.','Press those open side edges under and stitch them flat.','Fold the top over by 2.5 cm to make a channel, and stitch it.','Thread a cord through both channels, and knot the ends.']}}}
 };
+function openFront(m,lap,skirt){
+  const B=(m.bust+10)/4,neck=8.5,drop=3,ad=m.bust*.22+1,S=m.sh/2;
+  const ah=bez([S,drop],[S-1.5,ad*.5],[S-.5,ad*.9],[B,ad],24);
+  const vee=-lap,front=[[vee,ad*.9],[neck,0],...ah,[B+skirt,m.len],[vee,m.len+4]];
+  const nb=bez([0,2.5],[neck*.6,2.5],[neck,1.25],[neck,0],12);
+  return {front,back:[...nb,...ah,[B+skirt,m.len],[0,m.len]]};
+}
 function tunicDraft(m,flare,frontDepth,steps,skirt=0){
   const B=(m.bust+14)/4,neck=8.5,drop=3,ad=m.bust*.22+1,S=m.sh/2;
   const piece=(depth)=>{
@@ -227,7 +254,7 @@ function drawPattern(){
   for(const [a,b] of rows)tot.append(el('div',{},el('span',{textContent:a}),el('span',{textContent:b})));
   const m=el('div',{className:'msg',role:'status',id:'pm'});
   r.append(tot,el('button',{className:'btn solid',type:'button',textContent:'Download A4 pattern PDF',on:{click:savePdf}}),m);
-  if(['top','circle','tunic','cloak','apron','gown','capelet','cowl','bracer'].includes(gar))r.append(el('div',{className:'warn',textContent:'This is a first draft. Sew a test in cheap fabric before cutting anything special.'}));
+  if(['top','circle','tunic','cloak','apron','gown','capelet','cowl','bracer','pirate','waistcoat','frock','trousers'].includes(gar))r.append(el('div',{className:'warn',textContent:'This is a first draft. Sew a test in cheap fabric before cutting anything special.'}));
   if(d.fabric==null)r.append(el('div',{className:'warn',textContent:'A piece is wider than this fabric. Choose wider fabric or a shorter length.'}));
   const st=$('steps');st.innerHTML='';st.append(el('h2',{textContent:'How to sew it'}),el('ol',{style:'margin:0;padding-left:20px'},...(GARMENTS[gar].make(curM()).steps.map(t=>el('li',{textContent:t})))),el('p',{className:'note',textContent:'Solid line: cut. Dashed line: sew. Red edge: place on the fold of the fabric.'}));
 }
