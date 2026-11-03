@@ -1,0 +1,349 @@
+<!doctype html><html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover"><style>[hidden]{display:none!important}body{margin:0}img{max-width:100%}input,select,textarea{font-size:16px!important}@media (pointer:coarse){button:not(.bed):not(.qg button){min-height:40px}}</style><script src="../shim.js"></script></head><body>
+<title>Sewing Studio</title>
+<meta name="claude:viewport-fit-sides" content="cover">
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Cormorant+Garamond:wght@600;700&family=Nunito+Sans:wght@400;600;700&family=Spline+Sans+Mono:wght@500&display=swap">
+<style>
+/* Layout: a cutting table. Measurements on the left, the paper pattern laid out at scale on the right. */
+:root{
+  --bg:#e6efee; --panel:#fafcfb; --fg:#16302f; --muted:#4e6665; --line:#bfd2d0; --accent:#0e6b6b; --on-accent:#fff; --pin:#c0392b; --paper:#fffef8; --warn:#7a4a00; --warn-bg:#fbeed0; --cut:#16302f;
+  --head:"Cormorant Garamond",Georgia,serif; --body:"Nunito Sans",ui-sans-serif,system-ui,sans-serif; --mono:"Spline Sans Mono",ui-monospace,monospace;
+}
+@media (prefers-color-scheme:dark){:root:not([data-theme="light"]){--bg:#101b1b;--panel:#172423;--fg:#e4efed;--muted:#a0b5b3;--line:#2f4342;--accent:#6fd0c8;--on-accent:#0c1c1b;--pin:#f08a7c;--paper:#1f2e2d;--warn:#f4cd8a;--warn-bg:#3a2c12;--cut:#e4efed;color-scheme:dark}}
+:root[data-theme="dark"]{--bg:#101b1b;--panel:#172423;--fg:#e4efed;--muted:#a0b5b3;--line:#2f4342;--accent:#6fd0c8;--on-accent:#0c1c1b;--pin:#f08a7c;--paper:#1f2e2d;--warn:#f4cd8a;--warn-bg:#3a2c12;--cut:#e4efed;color-scheme:dark}
+*{box-sizing:border-box}
+body{background:var(--bg);color:var(--fg);font:400 16px/1.5 var(--body)}
+.wrap{max-width:1120px;margin:0 auto;padding-block:30px 56px;padding-left:max(16px,env(safe-area-inset-left,0px));padding-right:max(16px,env(safe-area-inset-right,0px));display:grid;gap:20px}
+h1{font:700 clamp(36px,7vw,54px)/1 var(--head);margin:0}
+h2{font:700 25px/1.1 var(--head);margin:0 0 10px}
+header p{margin:4px 0 0;color:var(--muted)}
+.tabs{display:flex;flex-wrap:wrap;gap:18px;margin-top:10px}
+.tabs button{font:700 15px var(--body);background:none;border:0;border-bottom:3px solid transparent;color:var(--fg);padding:6px 2px;cursor:pointer}
+.tabs button[aria-selected="true"]{border-bottom-color:var(--pin);color:var(--accent)}
+.grid{display:grid;grid-template-columns:minmax(0,340px) minmax(0,1fr);gap:24px;align-items:start}
+.col{display:grid;gap:16px;min-width:0}
+.box{background:var(--panel);border:1px solid var(--line);border-radius:8px;padding:16px;display:grid;gap:10px;min-width:0}
+.fields{display:grid;grid-template-columns:repeat(auto-fit,minmax(125px,1fr));gap:10px}
+label.f{display:grid;gap:3px;font-size:14px;font-weight:600;min-width:0}
+input,select{font:400 16px var(--body);color:var(--fg);background:var(--panel);border:1px solid var(--line);border-radius:5px;padding:7px 8px;width:100%;min-width:0}
+input[type=number]{font-family:var(--mono)}
+input[type=color]{height:38px;padding:3px}
+input[type=file]{border:0;padding:4px 0;background:none;font-size:14px}
+:focus-visible{outline:2px solid var(--accent);outline-offset:1px}
+.seg{display:flex;flex-wrap:wrap;gap:6px}
+.seg button,.btn{font:600 14px var(--body);border:1px solid var(--line);background:transparent;color:var(--fg);border-radius:5px;padding:7px 11px;cursor:pointer}
+.seg button[aria-pressed="true"],.btn.solid{background:var(--accent);border-color:var(--accent);color:var(--on-accent)}
+.row{display:flex;flex-wrap:wrap;gap:8px;align-items:center}
+.scroll{overflow:auto;max-height:70vh;background:var(--paper);border:1px solid var(--line);border-radius:6px}
+svg.sheet{display:block;width:100%;height:auto;min-width:320px}
+svg.sheet text{font:600 13px var(--body);fill:var(--fg)}
+.total div{display:flex;justify-content:space-between;gap:12px;font-size:15px}
+.total span:last-child{font:500 14px var(--mono);text-align:right}
+.msg{font-size:14px;color:var(--muted);min-height:1.3em}
+.note{font-size:14px;color:var(--muted);max-width:68ch;margin:0}
+.warn{font-size:14px;background:var(--warn-bg);color:var(--warn);border-radius:6px;padding:9px 11px}
+table{border-collapse:collapse;width:100%;font-size:15px}
+th,td{text-align:left;padding:6px 8px;border-bottom:1px solid var(--line)}
+td.n{font:500 14px var(--mono)}
+.qg{display:grid;gap:0;width:100%;max-width:560px;aspect-ratio:var(--ar,1);border:1px solid var(--line)}
+.qg button{padding:0;border:0;border-radius:0;background:none;cursor:pointer;min-width:0;aspect-ratio:1}
+.qg svg{display:block;width:100%;height:100%}
+.swatches{display:flex;flex-wrap:wrap;gap:6px;align-items:center}
+.swatches label{display:grid;gap:2px;font-size:13px;width:64px}
+.swatches button[aria-pressed="true"]{outline:2px solid var(--accent);outline-offset:1px}
+canvas{max-width:100%;height:auto;display:block;background:var(--paper)}
+.key{display:grid;grid-template-columns:repeat(auto-fill,minmax(150px,1fr));gap:6px 12px;font-size:14px}
+.key span.c{display:inline-block;width:16px;height:16px;border:1px solid var(--line);vertical-align:-3px;margin-right:6px}
+@media (max-width:840px){.grid{grid-template-columns:minmax(0,1fr)}}
+</style>
+<div class="wrap">
+  <header>
+    <h1>Sewing Studio</h1>
+    <p>Draft patterns from your measurements, adjust the ones you own, and plan quilts and embroidery.</p>
+    <div class="tabs" role="tablist" aria-label="Tools" id="tabs"></div>
+  </header>
+  <div id="view"></div>
+</div>
+<script src="../lib/clipper.js"></script>
+<script src="../lib/jspdf.umd.min.js"></script>
+<script>
+const $=id=>document.getElementById(id);
+function el(t,p={},...k){const e=document.createElement(t);for(const a in p){if(a==='on'){for(const v in p.on)e.addEventListener(v,p.on[v])}else if(a in e)e[a]=p[a];else e.setAttribute(a,p[a])}e.append(...k.filter(x=>x!=null));return e}
+const nf=(v,d)=>{const n=parseFloat(v);return isFinite(n)?n:d};
+const fmt=(n,d=1)=>n.toLocaleString('en',{minimumFractionDigits:d,maximumFractionDigits:d});
+const CS=100,L=()=>window.ClipperLib;
+const toP=p=>p.map(q=>({X:Math.round(q[0]*CS),Y:Math.round(q[1]*CS)})),fromP=p=>p.map(q=>[q.X/CS,q.Y/CS]);
+function grow(poly,sa,fold){
+  const C=L(),o=new C.ClipperOffset(2,.05*CS),out=[];
+  o.AddPath(toP(poly),C.JoinType.jtMiter,C.EndType.etClosedPolygon);o.Execute(out,sa*CS);
+  let r=out;
+  if(fold){const c=new C.Clipper(),b=[];const big=1e5;c.AddPaths(out,C.PolyType.ptSubject,true);c.AddPath([{X:0,Y:-big},{X:big,Y:-big},{X:big,Y:big},{X:0,Y:big}],C.PolyType.ptClip,true);c.Execute(C.ClipType.ctIntersection,b,C.PolyFillType.pftNonZero,C.PolyFillType.pftNonZero);r=b}
+  return fromP(r[0]);
+}
+const arc=(cx,cy,r,a0,a1,n=40)=>Array.from({length:n+1},(_,i)=>{const a=a0+(a1-a0)*i/n;return [cx+r*Math.cos(a),cy+r*Math.sin(a)]});
+const bez=(a,b,c,d,n=24)=>Array.from({length:n+1},(_,i)=>{const t=i/n,u=1-t;return [0,1].map(k=>u*u*u*a[k]+3*u*u*t*b[k]+3*u*t*t*c[k]+t*t*t*d[k])});
+const lenOf=p=>p.slice(1).reduce((s,q,i)=>s+Math.hypot(q[0]-p[i][0],q[1]-p[i][1]),0);
+const GARMENTS={
+  tote:{label:'Tote bag',f:[['bw','Bag width',38],['bh','Bag height',40],['bg','Base depth',10],['sl','Strap length',60],['sw','Strap width',4]],sa:1,
+    make(m){return {pieces:[
+      {name:'Bag body',cut:'Cut 2',poly:[[0,0],[m.bw+m.bg,0],[m.bw+m.bg,m.bh+m.bg/2],[0,m.bh+m.bg/2]],grain:1},
+      {name:'Strap',cut:'Cut 2',poly:[[0,0],[m.sw*2,0],[m.sw*2,m.sl],[0,m.sl]],grain:1}],
+      steps:['Sew the sides and bottom of the bag body, right sides together.','Box each base corner: flatten it into a triangle and sew across where it is '+fmt(m.bg,1)+' cm wide.','Fold each strap in half lengthwise, sew, and turn. Stitch it to the top edge, then hem the top.']}}},
+  gathered:{label:'Gathered skirt',f:[['hip','Hip',98],['len','Skirt length',60],['full','Fullness',1.6]],sa:1.5,
+    make(m){const w=m.hip*m.full/4;return {pieces:[{name:'Skirt panel',cut:'Cut 2 on the fold',fold:true,poly:[[0,0],[w,0],[w,m.len+3],[0,m.len+3]],grain:1}],
+      steps:['Sew the two side seams.','Fold the top over to make a 3 cm channel for elastic, and leave a gap.','Thread the elastic through, sew its ends, close the gap, and hem.']}}},
+  circle:{label:'Circle skirt',f:[['waist','Waist',76],['len','Skirt length',55]],sa:1.5,
+    make(m){const r=(m.waist+2)/(2*Math.PI),o=r+m.len;
+      const poly=[...arc(0,0,r,0,Math.PI/2),...arc(0,0,o,Math.PI/2,0)];
+      return {pieces:[{name:'Skirt quarter',cut:'Cut 2 on the fold',fold:true,poly,grain:1}],
+      steps:['Sew the side seams, leaving 18 cm open at the top of one for a zip.','Add a waistband or facing, and put in the zip.','Hang the skirt for a day before hemming, as the bias edges stretch.']}}},
+  top:{label:'Boxy top',f:[['bust','Bust or chest',96],['sh','Shoulder width',42],['len','Top length',62],['sl','Sleeve length',22]],sa:1.5,
+    make(m){
+      const B=(m.bust+14)/4,neck=8.5,drop=3,ad=m.bust*.22+1,S=m.sh/2;
+      const piece=(depth)=>{
+        const nc=bez([0,depth],[neck*.6,depth],[neck,depth*.5],[neck,0],16);
+        const ah=bez([S,drop],[S-1.5,ad*.5],[S-.5,ad*.9],[B,ad],24);
+        return {poly:[...nc,...ah,[B,m.len],[0,m.len]],nc,ah};
+      };
+      const f=piece(9),b=piece(2.5),a=lenOf(f.ah),cap=8,hw=Math.sqrt(Math.max(1,a*a-cap*cap));
+      const head=bez([hw,cap],[hw*.6,cap],[hw*.45,0],[0,0],24).reverse();
+      const slv=[...head,[hw,cap],[hw*.86,cap+m.sl],[0,cap+m.sl]];
+      const nl=2*(lenOf(f.nc)+lenOf(b.nc));
+      return {pieces:[
+        {name:'Front',cut:'Cut 1 on the fold',fold:true,poly:f.poly,grain:1},{name:'Back',cut:'Cut 1 on the fold',fold:true,poly:b.poly,grain:1},
+        {name:'Sleeve',cut:'Cut 2 on the fold',fold:true,poly:slv,grain:1},{name:'Neck binding',cut:'Cut 1, across the stretch',poly:[[0,0],[nl*.92,0],[nl*.92,5],[0,5]],grain:1}],
+      steps:['Sew the shoulders.','Attach the neck binding, stretching it gently.','Sew the sleeves into the armholes, then sew each side and underarm in one seam.','Hem the sleeves and bottom.']};
+    }}
+};
+let tab='pattern',gar='tote',M={},fab=140,saOn=true,db=null,userId=null,dl=null,draft=null;
+/* True body measurements are shared across garments; everything else belongs to one garment. */
+const BODY=['bust','waist','hip','sh'];
+const mk=k=>BODY.includes(k)?k:gar+'.'+k;
+function loadBody(){try{M=JSON.parse(localStorage.getItem('sewing-m'))||{}}catch{}}
+let saveT;function saveBody(){try{localStorage.setItem('sewing-m',JSON.stringify(M))}catch{}
+  clearTimeout(saveT);saveT=setTimeout(()=>{if(db&&userId)db.collection('data/users/'+userId).doc('measurements').set(M).catch(()=>{})},600)}
+function buildDraft(){
+  const g=GARMENTS[gar],m={};for(const [k,,d] of g.f)m[k]=nf(M[mk(k)],d);
+  if(g.f.some(([k])=>!(m[k]>0)))return null;
+  const r=g.make(m);
+  r.pieces.forEach(p=>{p.outer=grow(p.poly,g.sa,p.fold)});
+  /* lay the pieces out for the sheet */
+  let x=2,y=2,rowH=0;const maxW=56;
+  for(const p of r.pieces){
+    const xs=p.outer.map(q=>q[0]),ys=p.outer.map(q=>q[1]),w=Math.max(...xs)-Math.min(...xs),h=Math.max(...ys)-Math.min(...ys);
+    if(x+w>maxW&&x>2){x=2;y+=rowH+4;rowH=0}
+    p.ox=x-Math.min(...xs);p.oy=y-Math.min(...ys);p.w=w;p.h=h;x+=w+4;rowH=Math.max(rowH,h);
+  }
+  r.W=Math.max(...r.pieces.map(p=>p.ox+Math.max(...p.outer.map(q=>q[0]))))+2;
+  r.H=Math.max(...r.pieces.map(p=>p.oy+Math.max(...p.outer.map(q=>q[1]))))+2;
+  r.fabric=fabricNeed(r.pieces,fab);r.sa=g.sa;
+  return r;
+}
+function fabricNeed(pieces,width){
+  const items=[];
+  for(const p of pieces){const n=parseInt(p.cut.match(/\d/))||1,wide=p.fold?p.w*2:p.w;for(let i=0;i<n;i++)items.push([wide,p.h])}
+  if(items.some(i=>i[0]>width&&i[1]>width))return null;
+  items.sort((a,b)=>b[1]-a[1]);
+  let used=0,x=0,row=0;
+  for(const it of items){const [w,h]=it[0]<=width?it:[it[1],it[0]];if(x+w>width){used+=row;x=0;row=0}x+=w;row=Math.max(row,h)}
+  return (used+row)*1.1/100;
+}
+function patternView(){
+  const seg=el('div',{className:'seg',role:'group','aria-label':'Garment'});
+  for(const k in GARMENTS)seg.append(el('button',{type:'button',textContent:GARMENTS[k].label,'aria-pressed':String(k===gar),on:{click(){gar=k;render()}}}));
+  const fields=el('div',{className:'fields'});
+  for(const [k,l,d] of GARMENTS[gar].f){
+    fields.append(el('label',{className:'f'},l+(k==='full'?' (times hip)':' (cm)'),el('input',{id:'m_'+k,type:'number',step:'any',min:'0',value:M[mk(k)]??d,on:{input(e){M[mk(k)]=e.target.value;saveBody();drawPattern()}}})));
+  }
+  const fw=el('select',{'aria-label':'Fabric width',on:{change(e){fab=+e.target.value;drawPattern()}}},...[110,140,150].map(w=>el('option',{value:w,textContent:w+' cm',selected:w===fab})));
+  return el('div',{className:'grid'},
+    el('div',{className:'col'},
+      el('section',{className:'box'},el('h2',{textContent:'Your measurements'}),seg,fields,el('label',{className:'f'},'Fabric width',fw),
+        el('p',{className:'note',textContent:'Sample numbers are placeholders. Replace them with your own, measured over light clothing. Yours are kept private to you.'})),
+      el('section',{className:'box',id:'res'})),
+    el('div',{className:'col'},el('div',{className:'scroll'},el('div',{id:'sheet'})),el('section',{className:'box',id:'steps'})));
+}
+function drawPattern(){
+  if(!window.ClipperLib){$('res').textContent='The pattern tools could not load. Reload the page and try again.';return}
+  draft=buildDraft();
+  if(!draft){$('sheet').innerHTML='';$('steps').innerHTML='';const r=$('res');r.innerHTML='';r.append(el('div',{className:'warn',textContent:'Enter every measurement above zero to draw the pattern.'}));return}
+  const d=draft,sc=14;
+  const path=(p,o)=>'M'+p.map(q=>((q[0]+o.ox)*sc).toFixed(1)+' '+((q[1]+o.oy)*sc).toFixed(1)).join('L')+'Z';
+  let s=`<svg class="sheet" viewBox="0 0 ${d.W*sc} ${d.H*sc}" role="img" aria-label="Pattern pieces drawn to scale">`;
+  for(const p of d.pieces){
+    s+=`<path d="${path(p.outer,p)}" fill="none" stroke="var(--cut)" stroke-width="2"/><path d="${path(p.poly,p)}" fill="none" stroke="var(--muted)" stroke-width="1.2" stroke-dasharray="6 5"/>`;
+    const tx=(p.ox+p.w*.22+(p.fold?1:0))*sc,ty=(p.oy+Math.min(p.h*.45,18))*sc;
+    s+=`<text x="${tx}" y="${ty}" font-size="15">${p.name}</text><text x="${tx}" y="${ty+18}">${p.cut}</text>`;
+    if(p.fold)s+=`<line x1="${(p.ox+.05)*sc}" x2="${(p.ox+.05)*sc}" y1="${(p.oy+Math.min(...p.outer.map(q=>q[1])))*sc}" y2="${(p.oy+Math.max(...p.outer.map(q=>q[1])))*sc}" stroke="var(--pin)" stroke-width="4"/>`;
+  }
+  $('sheet').innerHTML=s+'</svg>';
+  const r=$('res');r.innerHTML='';
+  const tot=el('div',{className:'total'});
+  const rows=[['Seam allowance',fmt(d.sa,1)+' cm, included'],['Fabric at '+fab+' cm wide',d.fabric==null?'Too wide':'about '+fmt(d.fabric,1)+' m'],['Pattern size',fmt(d.W,0)+' × '+fmt(d.H,0)+' cm']];
+  for(const [a,b] of rows)tot.append(el('div',{},el('span',{textContent:a}),el('span',{textContent:b})));
+  const m=el('div',{className:'msg',role:'status',id:'pm'});
+  r.append(tot,el('button',{className:'btn solid',type:'button',textContent:'Download A4 pattern PDF',on:{click:savePdf}}),m);
+  if(gar==='top'||gar==='circle')r.append(el('div',{className:'warn',textContent:'This is a first draft. Sew a test in cheap fabric before cutting anything special.'}));
+  if(d.fabric==null)r.append(el('div',{className:'warn',textContent:'A piece is wider than this fabric. Choose wider fabric or a shorter length.'}));
+  const st=$('steps');st.innerHTML='';st.append(el('h2',{textContent:'How to sew it'}),el('ol',{style:'margin:0;padding-left:20px'},...(GARMENTS[gar].make(curM()).steps.map(t=>el('li',{textContent:t})))),el('p',{className:'note',textContent:'Solid line: cut. Dashed line: sew. Red edge: place on the fold of the fabric.'}));
+}
+function curM(){const m={};for(const [k,,d] of GARMENTS[gar].f)m[k]=nf(M[mk(k)],d);return m}
+function pdfOf(d){
+  const doc=new jspdf.jsPDF({unit:'mm',format:'a4',orientation:'portrait'});
+  const PW=210,PH=297,mg=10,uw=PW-2*mg,uh=PH-2*mg,tw=d.W*10,th=d.H*10;
+  const cols=Math.max(1,Math.ceil(tw/uw)),rows=Math.max(1,Math.ceil(th/uh));
+  let first=true;
+  const used=(r,c)=>(r===0&&c===0)||d.pieces.some(p=>{const xs=p.outer.map(q=>(q[0]+p.ox)*10),ys=p.outer.map(q=>(q[1]+p.oy)*10);return Math.max(...xs)>c*uw&&Math.min(...xs)<(c+1)*uw&&Math.max(...ys)>r*uh&&Math.min(...ys)<(r+1)*uh});
+  for(let r=0;r<rows;r++)for(let c=0;c<cols;c++){
+    if(!used(r,c))continue;
+    if(!first)doc.addPage();first=false;
+    const ox=mg-c*uw,oy=mg-r*uh;
+    const poly=(p,o,dash)=>{doc.setLineDashPattern(dash?[2,2]:[],0);doc.setLineWidth(dash?.2:.35);const q=p.map(a=>[(a[0]+o.ox)*10+ox,(a[1]+o.oy)*10+oy]);const lines=q.slice(1).concat([q[0]]).map((a,i)=>[a[0]-q[i][0],a[1]-q[i][1]]);doc.lines(lines,q[0][0],q[0][1],[1,1],'S',false)};
+    /* keep drawing inside the sheet margins, so that pages tape edge to edge */
+    doc.saveGraphicsState();doc.rect(mg,mg,uw,uh,null);doc.clip();doc.discardPath();
+    for(const p of d.pieces){
+      poly(p.outer,p,false);poly(p.poly,p,true);
+      const tx=(p.ox+p.w*.22+(p.fold?1:0))*10+ox,ty=(p.oy+Math.min(p.h*.45,18))*10+oy;
+      doc.setFontSize(13);doc.text(p.name,tx,ty);doc.setFontSize(10);doc.text(p.cut,tx,ty+5);
+      if(p.fold){doc.setLineDashPattern([],0);doc.setLineWidth(.8);doc.setDrawColor(190,50,40);const ys=p.outer.map(q=>q[1]);doc.line(p.ox*10+ox+.4,(Math.min(...ys)+p.oy)*10+oy,p.ox*10+ox+.4,(Math.max(...ys)+p.oy)*10+oy);doc.setDrawColor(0,0,0)}
+    }
+    doc.restoreGraphicsState();
+    doc.setLineDashPattern([],0);doc.setLineWidth(.1);doc.setDrawColor(150);doc.rect(mg,mg,uw,uh);doc.setDrawColor(0);
+    doc.setFontSize(9);doc.text('Row '+(r+1)+', column '+(c+1)+' of '+rows+' rows and '+cols+' columns. Tape along the grey lines. Blank sheets are left out.',mg,6.5);
+    if(r===0&&c===0){doc.setLineWidth(.3);doc.rect(PW-mg-52,PH-mg-52,50,50);doc.setFontSize(9);doc.text('Test square: 5 cm. Print at 100%.',PW-mg-52,PH-mg-54)}
+  }
+  return doc;
+}
+async function savePdf(){
+  const m=$('pm');m.textContent='';if(!draft)return;
+  try{
+    if(!dl){m.textContent='Downloads aren’t available in this view. Open the page in Claude.';return}
+    const doc=pdfOf(draft);await dl.save({filename:gar+'-pattern.pdf',data:doc.output('blob')});m.textContent='Saved. Print at 100%, and check the 5 cm test square first.';
+  }catch(e){m.textContent=e&&e.code==='declined'?'Download cancelled.':'That did not save. Try again.'}
+}
+/* ---- pattern adjuster ---- */
+let adj={pb:92,pw:74,ph:98,yb:96,yw:80,yh:102,ease:0};
+function adjustView(){
+  const f=(k,l)=>el('label',{className:'f'},l,el('input',{id:'a_'+k,type:'number',step:'any',value:adj[k],on:{input(e){adj[k]=nf(e.target.value,0);drawAdj()}}}));
+  return el('div',{className:'grid'},
+    el('section',{className:'box'},el('h2',{textContent:'Pattern and you'}),
+      el('div',{className:'fields'},f('pb','Pattern bust (cm)'),f('yb','Your bust (cm)'),f('pw','Pattern waist (cm)'),f('yw','Your waist (cm)'),f('ph','Pattern hip (cm)'),f('yh','Your hip (cm)')),
+      el('p',{className:'note',textContent:'Use the body measurements printed on the pattern envelope for your size. Sample numbers are placeholders.'})),
+    el('div',{className:'col'},el('section',{className:'box',id:'adjOut'})));
+}
+function drawAdj(){
+  const b=$('adjOut');b.innerHTML='';const row=(n,p,y)=>{const d=y-p,per=d/4;return el('tr',{},el('td',{textContent:n}),el('td',{className:'n',textContent:(d>=0?'+':'')+fmt(d,1)+' cm'}),el('td',{className:'n',textContent:(per>=0?'add ':'take in ')+fmt(Math.abs(per),2)+' cm'}))};
+  b.append(el('h2',{textContent:'Change at each side edge'}),el('table',{},el('thead',{},el('tr',{},el('th',{textContent:'Where'}),el('th',{textContent:'Total'}),el('th',{textContent:'Each of 4 edges'}))),el('tbody',{},row('Bust',adj.pb,adj.yb),row('Waist',adj.pw,adj.yw),row('Hip',adj.ph,adj.yh))),
+    el('p',{className:'note',textContent:'A garment usually has four side edges: the left and right of the front, and of the back. Mark the change at each height, then join the marks in a smooth line. Changes over about 2.5 cm per edge can distort the fit, so try the next size up.'}));
+}
+/* ---- quilt ---- */
+const QC=['#2f5d62','#d7a86e','#a64b2a','#efe7da'];
+let Q={r:6,c:6,b:15,cols:[...QC],cells:[],brush:0,type:'square'};
+function qInit(){const n=Q.r*Q.c;Q.cells=Array.from({length:n},(_,i)=>Q.cells[i]||{a:(i+Math.floor(i/Q.c))%2?0:3,b:1,t:(i%2)?'hst':'square',rot:i%4})}
+function quiltView(){
+  qInit();
+  const num=(k,l)=>el('label',{className:'f'},l,el('input',{id:'q_'+k,type:'number',min:'1',step:'1',value:Q[k],on:{change(e){Q[k]=Math.max(1,Math.min(k==='b'?60:30,nf(e.target.value,Q[k])));render()}}}));
+  const sw=el('div',{className:'swatches'});
+  Q.cols.forEach((c,i)=>sw.append(el('label',{},'Colour '+(i+1),el('input',{type:'color',value:c,on:{input(e){Q.cols[i]=e.target.value;drawQ()}}}),el('button',{className:'btn',type:'button',textContent:'Use','aria-pressed':String(i===Q.brush),on:{click(){Q.brush=i;render()}}}))));
+  const tseg=el('div',{className:'seg',role:'group','aria-label':'Block type'});
+  for(const [k,l] of [['square','Square'],['hst','Two triangles']])tseg.append(el('button',{type:'button',textContent:l,'aria-pressed':String(k===Q.type),on:{click(){Q.type=k;render()}}}));
+  return el('div',{className:'grid'},
+    el('div',{className:'col'},el('section',{className:'box'},el('h2',{textContent:'Quilt size'}),el('div',{className:'fields'},num('r','Rows'),num('c','Columns'),num('b','Block size (cm)')),tseg,sw,
+      el('div',{className:'row'},el('button',{className:'btn',type:'button',textContent:'Shuffle',on:{click(){Q.cells=Q.cells.map(()=>{const hst=Math.random()<.5;return {a:Math.floor(Math.random()*4),b:Math.floor(Math.random()*4),t:hst?'hst':'square',rot:Math.floor(Math.random()*4)}});render()}}})),
+      el('p',{className:'note',textContent:'Click a block to paint it. Click a two-triangle block again to turn it.'})),el('section',{className:'box',id:'qOut'})),
+    el('div',{className:'col'},el('div',{id:'qg',className:'qg',style:`grid-template-columns:repeat(${Q.c},1fr);--ar:${Q.c}/${Q.r}`})));
+}
+function qSvg(c){
+  const a=Q.cols[c.a],b=Q.cols[c.b];
+  if(c.t==='square')return `<svg viewBox="0 0 10 10"><rect width="10" height="10" fill="${a}" stroke="#0003" stroke-width=".15"/></svg>`;
+  return `<svg viewBox="0 0 10 10"><g transform="rotate(${c.rot*90} 5 5)"><rect width="10" height="10" fill="${a}"/><path d="M0 0H10V10Z" fill="${b}"/></g><rect width="10" height="10" fill="none" stroke="#0003" stroke-width=".15"/></svg>`;
+}
+function drawQ(){
+  const g=$('qg');if(!g)return;g.innerHTML='';
+  Q.cells.forEach((c,i)=>{const b=el('button',{type:'button','aria-label':'Block '+(i+1),on:{click(){
+    if(Q.type==='hst'){if(c.t==='hst'&&c.a===Q.brush)c.rot=(c.rot+1)%4;else{c.b=c.a===Q.brush?c.b:c.a;c.a=Q.brush;c.t='hst'}}else{c.t='square';c.a=Q.brush}drawQ()}}});b.innerHTML=qSvg(c);g.append(b)});
+  const sq=Q.cols.map(()=>0),pairs={};
+  for(const c of Q.cells){
+    if(c.t==='square'||c.a===c.b)sq[c.a]++;
+    else{const k=Math.min(c.a,c.b)+'-'+Math.max(c.a,c.b);pairs[k]=(pairs[k]||0)+1}
+  }
+  const hs=Q.cols.map(()=>0);
+  for(const k in pairs){const n=Math.ceil(pairs[k]/2);k.split('-').forEach(i=>{hs[+i]+=n})}
+  const cutS=Q.b+1.5,cutH=Q.b+3,o=$('qOut');o.innerHTML='';
+  const strips=(n,cut)=>{if(!n)return 0;const per=Math.floor(106/cut);return per<1?NaN:Math.ceil(n/per)*cut};
+  const body=el('tbody');
+  Q.cols.forEach((col,i)=>{const len=strips(sq[i],cutS)+strips(hs[i],cutH),m=len?Math.ceil(len*1.1/10)/10:0;
+    body.append(el('tr',{},el('td',{},el('span',{style:`display:inline-block;width:14px;height:14px;background:${col};margin-right:6px;vertical-align:-2px`}),'Colour '+(i+1)),el('td',{className:'n',textContent:sq[i]}),el('td',{className:'n',textContent:hs[i]}),el('td',{className:'n',textContent:isNaN(m)?'Too wide':fmt(m,1)+' m'})))});
+  o.append(el('h2',{textContent:'What to cut'}),el('table',{},el('thead',{},el('tr',{},...['Fabric','Squares','Triangle squares','At 110 cm wide'].map(t=>el('th',{textContent:t})))),body),
+    el('p',{className:'note',textContent:`Cut squares at ${fmt(cutS,1)} cm. For two-triangle blocks, cut squares at ${fmt(cutH,1)} cm, pair two colours, sew, then trim each block to ${fmt(cutS,1)} cm. Each pair gives two blocks. Finished quilt top: ${fmt(Q.c*Q.b,0)} × ${fmt(Q.r*Q.b,0)} cm, with 0.75 cm seams.`}));
+}
+/* ---- embroidery ---- */
+let E={w:70,n:7,ct:5.5,img:null,res:null};
+const SYM='●■▲◆★✚○□△◇☆✖';
+function emView(){
+  const f=(k,l,min,max)=>el('label',{className:'f'},l,el('input',{id:'e_'+k,type:'number',min,max,step:k==='ct'?'0.1':'1',value:E[k],on:{change(e){E[k]=Math.min(max,Math.max(min,nf(e.target.value,E[k])));drawE()}}}));
+  return el('div',{className:'grid'},
+    el('div',{className:'col'},el('section',{className:'box'},el('h2',{textContent:'Your picture'}),
+      el('label',{className:'f'},'Photo or drawing',el('input',{type:'file',accept:'image/*',on:{change(e){const f=e.target.files[0];if(!f)return;const i=new Image();i.onload=()=>{E.img=i;drawE()};i.src=URL.createObjectURL(f)}}})),
+      el('div',{className:'fields'},f('w','Stitches across',20,200),f('n','Thread colours',2,12),f('ct','Stitches per cm',2,10)),
+      el('p',{className:'note',textContent:'Bold pictures with few colours work best. The sample moon shows the layout until you add your own.'})),el('section',{className:'box',id:'eOut'})),
+    el('div',{className:'col'},el('div',{className:'scroll'},el('canvas',{id:'eC'}))));
+}
+function emSample(){const c=document.createElement('canvas');c.width=c.height=200;const x=c.getContext('2d');x.fillStyle='#1d2a55';x.fillRect(0,0,200,200);x.fillStyle='#e8c766';x.beginPath();x.arc(100,100,70,0,7);x.fill();x.fillStyle='#1d2a55';x.beginPath();x.arc(130,90,62,0,7);x.fill();x.fillStyle='#fff';x.beginPath();x.arc(150,60,6,0,7);x.fill();return c}
+function kmeans(px,n){
+  /* Spread the starting colours apart, so that a small detail keeps its own thread. */
+  const dist=(a,b)=>(a[0]-b[0])**2+(a[1]-b[1])**2+(a[2]-b[2])**2;
+  let cs=[px[0].slice()];
+  while(cs.length<n){let far=px[0],fd=-1;for(let i=0;i<px.length;i+=3){const d=Math.min(...cs.map(c=>dist(px[i],c)));if(d>fd){fd=d;far=px[i]}}cs.push(far.slice())}
+  const lab=new Array(px.length).fill(0);
+  for(let it=0;it<10;it++){
+    const sum=cs.map(()=>[0,0,0,0]);
+    px.forEach((p,i)=>{let b=0,bd=1e12;cs.forEach((c,k)=>{const d=(p[0]-c[0])**2+(p[1]-c[1])**2+(p[2]-c[2])**2;if(d<bd){bd=d;b=k}});lab[i]=b;const s=sum[b];s[0]+=p[0];s[1]+=p[1];s[2]+=p[2];s[3]++});
+    sum.forEach((s,k)=>{if(s[3])cs[k]=[s[0]/s[3],s[1]/s[3],s[2]/s[3]]});
+  }
+  return {cs,lab};
+}
+function drawE(){
+  const c=$('eC');if(!c)return;
+  const src=E.img||emSample(),sw=src.naturalWidth||src.width,sh=src.naturalHeight||src.height,w=E.w,h=Math.max(1,Math.round(w*sh/sw));
+  const t=document.createElement('canvas');t.width=w;t.height=h;const x=t.getContext('2d',{willReadFrequently:true});x.fillStyle='#fff';x.fillRect(0,0,w,h);x.drawImage(src,0,0,w,h);
+  const d=x.getImageData(0,0,w,h).data,px=[];for(let i=0;i<d.length;i+=4)px.push([d[i],d[i+1],d[i+2]]);
+  const {cs,lab}=kmeans(px,E.n);
+  const chart=(cv,q)=>{const g=cv.getContext('2d');cv.width=w*q+1;cv.height=h*q+1;
+    g.font=`${Math.max(6,q-3)}px sans-serif`;g.textAlign='center';g.textBaseline='middle';
+    lab.forEach((k,i)=>{const X=(i%w)*q,Y=Math.floor(i/w)*q,col=cs[k];g.fillStyle=`rgb(${col.map(Math.round)})`;g.fillRect(X,Y,q,q);
+      if(q>=8){g.fillStyle=(col[0]*.3+col[1]*.6+col[2]*.1)>140?'#000':'#fff';g.fillText(SYM[k],X+q/2,Y+q/2)}});
+    for(let i=0;i<=w;i++){g.fillStyle=i%10?'rgba(0,0,0,.18)':'rgba(0,0,0,.7)';g.fillRect(i*q,0,1,h*q)}
+    for(let j=0;j<=h;j++){g.fillStyle=j%10?'rgba(0,0,0,.18)':'rgba(0,0,0,.7)';g.fillRect(0,j*q,w*q,1)}};
+  chart(c,Math.max(4,Math.min(14,Math.floor(900/w))));
+  const counts=cs.map((_,k)=>lab.filter(v=>v===k).length),o=$('eOut');o.innerHTML='';
+  const key=el('div',{className:'key'});
+  cs.forEach((col,k)=>{if(!counts[k])return;const m=counts[k]*(4.8/E.ct)*2/100;key.append(el('div',{},el('span',{className:'c',style:`background:rgb(${col.map(Math.round)})`}),SYM[k]+' '+counts[k]+' stitches, '+fmt(m,1)+' m'))});
+  const dm=el('div',{className:'msg',role:'status',id:'em'});
+  o.append(el('h2',{textContent:'Thread key'}),el('p',{className:'note',textContent:`Finished size: ${fmt(w/E.ct,1)} × ${fmt(h/E.ct,1)} cm, in cross stitch. Thread lengths are rough estimates for 2 strands, so buy extra, and match colours to real threads in daylight.`}),key,
+    el('button',{className:'btn solid',type:'button',textContent:'Download chart PDF',on:{async click(){
+      try{if(!dl){dm.textContent='Downloads aren’t available in this view.';return}
+        const big=document.createElement('canvas');chart(big,14);
+        const doc=new jspdf.jsPDF({unit:'mm',format:'a4'}),s=Math.min(190/big.width,215/big.height);doc.setFontSize(12);doc.text('Embroidery chart, '+w+' x '+h+' stitches',10,12);doc.addImage(big.toDataURL('image/png'),'PNG',10,18,big.width*s,big.height*s);
+        const kc=document.createElement('canvas'),rows=Math.ceil(cs.length/3);kc.width=1500;kc.height=rows*70;const kg=kc.getContext('2d');kg.fillStyle='#fff';kg.fillRect(0,0,1500,kc.height);kg.font='30px sans-serif';kg.textBaseline='middle';
+        cs.forEach((col,k)=>{if(!counts[k])return;const X=(k%3)*500,Y=Math.floor(k/3)*70;kg.fillStyle=`rgb(${col.map(Math.round)})`;kg.fillRect(X,Y+8,50,50);kg.strokeRect(X,Y+8,50,50);kg.fillStyle='#000';kg.fillText(SYM[k]+'  '+counts[k]+' stitches',X+64,Y+34)});
+        doc.addImage(kc.toDataURL('image/png'),'PNG',10,18+big.height*s+4,190,190*kc.height/1500);
+        await dl.save({filename:'embroidery-chart.pdf',data:doc.output('blob')});dm.textContent='Saved.'}catch(e){dm.textContent=e&&e.code==='declined'?'Download cancelled.':'That did not save. Try again.'}
+    }}}),dm);
+}
+function render(){
+  const b=$('tabs');b.innerHTML='';
+  for(const [k,l] of [['pattern','Patterns'],['adjust','Adjust a pattern'],['quilt','Quilt'],['embroidery','Embroidery']])b.append(el('button',{type:'button',role:'tab',textContent:l,'aria-selected':String(k===tab),on:{click(){tab=k;render()}}}));
+  const v=$('view');v.innerHTML='';v.append({pattern:patternView,adjust:adjustView,quilt:quiltView,embroidery:emView}[tab]());
+  if(tab==='pattern')drawPattern();if(tab==='adjust')drawAdj();if(tab==='quilt')drawQ();if(tab==='embroidery')drawE();
+}
+async function connect(){
+  loadBody();render();
+  const use=async n=>{try{return window.claude?await window.claude.use(n):null}catch{return null}};
+  [db,dl]=await Promise.all([use('db'),use('downloads')]);
+  const u=await use('user');
+  if(db&&u){try{userId=await u.id();const d=await db.collection('data/users/'+userId).doc('measurements').get();if(d&&d.exists){M={...M,...d.data()};render()}}catch{}}
+}
+connect();
+</script>
+
+</body></html>

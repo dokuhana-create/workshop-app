@@ -1,0 +1,92 @@
+<!doctype html><html lang="en"><head><meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
+<title>Workshop</title>
+<link rel="manifest" href="manifest.webmanifest">
+<link rel="apple-touch-icon" href="icon-180.png">
+<meta name="apple-mobile-web-app-capable" content="yes"><meta name="mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-title" content="Workshop"><meta name="theme-color" content="#2b2546">
+<style>
+:root{--bg:#2b2546;--fg:#f4f1fb;--muted:#c4bede;--gold:#e0b95c;--panel:#f8f7fb;--ink:#201d2b;--line:#cbc8d8}
+*{box-sizing:border-box}
+html,body{height:100%;margin:0}
+body{display:flex;flex-direction:column;background:var(--bg);font:400 16px/1.5 system-ui,-apple-system,sans-serif}
+nav{display:flex;gap:4px;padding:calc(6px + env(safe-area-inset-top)) max(8px,env(safe-area-inset-right)) 0 max(8px,env(safe-area-inset-left));overflow-x:auto;flex:none}
+nav button{font:inherit;font-size:15px;font-weight:600;color:var(--muted);background:none;border:0;border-bottom:3px solid transparent;padding:9px 12px;cursor:pointer;white-space:nowrap}
+nav button[aria-selected=true]{color:var(--fg);border-bottom-color:var(--gold)}
+main{flex:1;min-height:0;position:relative;background:var(--panel)}
+iframe{position:absolute;inset:0;width:100%;height:100%;border:0}
+#settings{position:absolute;inset:0;overflow:auto;color:var(--ink);padding:24px max(16px,env(safe-area-inset-left)) 40px}
+#settings .in{max-width:640px;margin:0 auto;display:grid;gap:22px}
+h2{margin:0 0 6px;font-size:21px}
+p{margin:0 0 8px;color:#55516a}
+input{font:inherit;font-size:16px;width:100%;padding:9px;border:1px solid var(--line);border-radius:5px;margin-bottom:8px;background:#fff}
+.b{font:inherit;font-size:15px;font-weight:600;min-height:42px;padding:9px 13px;border-radius:5px;border:1px solid #4b3f8f;background:#4b3f8f;color:#fff;cursor:pointer;margin-right:6px}
+.b.o{background:none;color:#4b3f8f}
+.m{min-height:1.4em;font-size:14px;color:#55516a}
+:focus-visible{outline:2px solid var(--gold);outline-offset:1px}
+</style></head><body>
+<nav role="tablist" aria-label="Workshop" id="nav"></nav>
+<main id="main">
+<div id="settings" hidden><div class="in">
+<section><h2>Back up your data</h2><p>Your supplies, projects, resins, measurements, and photos stay on this device. A backup file is how you move them to another device, or keep them safe.</p>
+<button class="b" id="exp" type="button">Prepare backup</button><button class="b" id="expS" type="button" hidden>Save backup file</button><button class="b o" id="impB" type="button">Restore backup</button><input id="imp" type="file" accept=".json,application/json" hidden aria-label="Backup file"><div class="m" id="bm" role="status"></div><p>Restoring replaces this device's saved data with the data in the file.</p></section>
+<section><h2>AI suggestions</h2><p>Project ideas and reading supplies from photos use your own Anthropic API key, and you pay Anthropic for what you use. The key is stored only on this device, so don't enter it on a shared device. If you also host other projects on the same GitHub Pages address, those pages could read it, so use a key with a low spending limit.</p>
+<input id="key" type="password" autocomplete="off" aria-label="Anthropic API key" placeholder="API key"><button class="b" id="saveK" type="button">Save key</button><button class="b o" id="clrK" type="button">Remove key</button><div class="m" id="km" role="status"></div></section>
+<section><h2>Install on iPhone</h2><p>Open this page in Safari, tap Share, then Add to Home Screen. After that, it opens like an app and works offline. The installed app has separate storage from Safari, so make a backup first if you've already entered data in Safari.</p></section>
+</div></div>
+</main>
+<script src="shim.js"></script>
+<script>
+const P='workshop:',$=i=>document.getElementById(i),TABS=[['hub',"Maker's Hub",'pages/hub.html'],['resin','Resin Workshop','pages/resin.html'],['sewing','Sewing Studio','pages/sewing.html'],['settings','Settings','']];
+const frames={};
+function show(k){
+  for(const [id,,src] of TABS){
+    const on=id===k;
+    if(src){if(on&&!frames[id]){const f=document.createElement('iframe');f.src=src;f.title=id;$('main').append(f);frames[id]=f}if(frames[id])frames[id].hidden=!on,frames[id].style.display=on?'':'none'}
+  }
+  $('settings').hidden=k!=='settings';
+  document.querySelectorAll('nav button').forEach(b=>b.setAttribute('aria-selected',b.dataset.k===k));
+  try{localStorage.setItem(P+'tab',k)}catch{}
+}
+for(const [k,l] of TABS){const b=document.createElement('button');b.type='button';b.setAttribute('role','tab');b.dataset.k=k;b.textContent=l;b.onclick=()=>show(k);$('nav').append(b)}
+const SEED=[['s1','Epoxy resin 1:1','Resin','g'],['s2','Epoxy resin 1:2','Resin','g'],['s3','Dragon Skin','Silicone','g'],['s4','Sorta-Clear','Silicone','g'],['s5','PLA filament','Filament','g'],['s6','Fabric','Fabric','m'],['s7','Thread','Thread','spools'],['s8','Mica powder','Mica','g'],['s9','Alcohol ink','Alcohol ink','ml'],['s10','Isopropyl alcohol','Isopropyl alcohol','ml']];
+if(!localStorage.getItem(P+'seeded')){const o={};for(const [id,name,cat,unit] of SEED)o[id]={name,cat,unit,amount:null,low:null,paid:null,pack:null,place:''};localStorage.setItem(P+'db:supplies',JSON.stringify(o));localStorage.setItem(P+'seeded','1')}
+const toB64=b=>new Promise(ok=>{const r=new FileReader();r.onload=()=>ok(r.result);r.readAsDataURL(b)});
+let ready=null;
+$('exp').onclick=async()=>{
+  const m=$('bm');m.textContent='Preparing…';$('expS').hidden=true;
+  try{
+    const data={};for(let i=0;i<localStorage.length;i++){const k=localStorage.key(i);if(k.startsWith(P+'db:'))data[k]=localStorage.getItem(k)}
+    const blobs=await workshopBlobs.all(),ph={};for(const k in blobs)ph[k]=await toB64(blobs[k]);
+    const d=new Date().toISOString().slice(0,10);
+    ready={filename:'workshop-backup-'+d+'.json',data:new Blob([JSON.stringify({version:1,data,photos:ph})],{type:'application/json'})};
+    $('expS').hidden=false;m.textContent='Ready. Tap Save backup file.';
+  }catch{m.textContent='The backup could not be prepared. Try again.'}
+};
+let dlSvc=null;claude.use('downloads').then(d=>{dlSvc=d});
+$('expS').onclick=async()=>{
+  const m=$('bm');if(!ready)return;
+  try{await dlSvc.save(ready);m.textContent='Backup saved.';$('expS').hidden=true;ready=null}
+  catch(e){m.textContent=e&&e.code==='declined'?'Backup cancelled.':e&&e.code==='tap_again'?'Tap Save backup file again.':'The backup did not save. Try again.'}
+};
+$('impB').onclick=()=>$('imp').click();
+$('imp').onchange=async e=>{
+  const f=e.target.files[0],m=$('bm');if(!f)return;
+  try{
+    const o=JSON.parse(await f.text());if(o.version!==1||!o.data)throw 0;
+    const photos=[];for(const id in o.photos||{})photos.push([id,await (await fetch(o.photos[id])).blob()]);
+    for(const k in o.data)if(!k.startsWith(P+'db:'))throw 0;
+    for(const [id,b] of photos)await workshopBlobs.put(id,b);
+    for(let i=localStorage.length-1;i>=0;i--){const k=localStorage.key(i);if(k.startsWith(P+'db:'))localStorage.removeItem(k)}
+    for(const k in o.data)localStorage.setItem(k,o.data[k]);
+    m.textContent='Restored. Reloading…';setTimeout(()=>location.reload(),600);
+  }catch{m.textContent='That file could not be read. Choose a Workshop backup.'}
+  e.target.value='';
+};
+$('key').value=localStorage.getItem(P+'apikey')||'';
+$('saveK').onclick=()=>{const v=$('key').value.trim();if(!v){$('km').textContent='Enter a key first.';return}localStorage.setItem(P+'apikey',v);$('km').textContent='Saved. Reloading…';setTimeout(()=>location.reload(),500)};
+$('clrK').onclick=()=>{localStorage.removeItem(P+'apikey');$('key').value='';$('km').textContent='Removed. Reloading…';setTimeout(()=>location.reload(),500)};
+show(localStorage.getItem(P+'tab')||'hub');
+if(navigator.storage&&navigator.storage.persist)navigator.storage.persist().catch(()=>{});
+if('serviceWorker' in navigator)navigator.serviceWorker.register('sw.js').catch(()=>{});
+</script></body></html>

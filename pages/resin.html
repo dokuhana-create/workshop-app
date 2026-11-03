@@ -1,0 +1,1477 @@
+<!doctype html><html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover"><style>[hidden]{display:none!important}body{margin:0}img{max-width:100%}input,select,textarea{font-size:16px!important}@media (pointer:coarse){button:not(.bed):not(.qg button){min-height:40px}}</style><script src="../shim.js"></script></head><body>
+<title>Resin Workshop</title>
+<meta name="claude:viewport-fit-sides" content="cover">
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Bricolage+Grotesque:opsz,wght@12..96,600;12..96,750&family=IBM+Plex+Mono:wght@500&family=IBM+Plex+Sans:wght@400;500;600&display=swap">
+<style>
+/* Layout: inputs read top to bottom on the left; the measuring cup and pour amounts stay beside them. */
+:root{
+  --seal:#b3261e; --sil:#8fd0c7; --bg:#e9efee; --panel:#f8fbfa; --fg:#172523; --muted:#566664; --line:#c9d5d2;
+  --accent:#0d675f; --on-accent:#fff; --a:#c98208; --b:#5c58a8; --cup:#fff; --warn:#8a4b00; --warn-bg:#fbeed8;
+  --display:"Bricolage Grotesque",ui-sans-serif,system-ui,sans-serif;
+  --body:"IBM Plex Sans",ui-sans-serif,system-ui,sans-serif;
+  --mono:"IBM Plex Mono",ui-monospace,Menlo,monospace;
+}
+@media (prefers-color-scheme:dark){:root:not([data-theme="light"]){
+  --bg:#121b1a; --panel:#1a2624; --fg:#e7f0ee; --muted:#9fb0ad; --line:#30413e;
+  --seal:#ef6a5e; --accent:#57c4b8; --on-accent:#0b1d1b; --a:#e8a93a; --b:#9b97e6; --cup:#111a19; --warn:#f3c37e; --warn-bg:#3a2a12; color-scheme:dark}}
+:root[data-theme="dark"]{
+  --bg:#121b1a; --panel:#1a2624; --fg:#e7f0ee; --muted:#9fb0ad; --line:#30413e;
+  --seal:#ef6a5e; --accent:#57c4b8; --on-accent:#0b1d1b; --a:#e8a93a; --b:#9b97e6; --cup:#111a19; --warn:#f3c37e; --warn-bg:#3a2a12; color-scheme:dark}
+*{box-sizing:border-box}
+[hidden]{display:none!important}
+body{background:var(--bg);color:var(--fg);font:400 16px/1.5 var(--body)}
+.wrap{max-width:1080px;margin:0 auto;padding-block:32px 56px;padding-left:max(16px,env(safe-area-inset-left,0px));padding-right:max(16px,env(safe-area-inset-right,0px));display:grid;gap:24px}
+header h1{font:750 clamp(34px,6vw,52px)/1.05 var(--display);margin:0;letter-spacing:-.01em;text-wrap:balance}
+header p{margin:8px 0 0;color:var(--muted);max-width:60ch}
+.grid{display:grid;grid-template-columns:minmax(0,1fr) minmax(0,400px);gap:24px;align-items:start}
+.inputs{display:grid;gap:32px;min-width:0}
+section h2{font:600 22px/1.2 var(--display);margin:0 0 12px}
+.seg{display:flex;flex-wrap:wrap;gap:6px;margin-bottom:16px}
+.seg button{font:500 14px var(--body);color:var(--fg);background:transparent;border:1px solid var(--line);border-radius:6px;padding:8px 12px;cursor:pointer}
+.seg button[aria-pressed="true"]{background:var(--accent);border-color:var(--accent);color:var(--on-accent)}
+.fields{display:grid;grid-template-columns:repeat(auto-fit,minmax(130px,1fr));gap:12px}
+label.f{display:grid;gap:4px;font-size:14px;font-weight:500;min-width:0}
+label.f small{font-weight:400;color:var(--muted)}
+input,select{font:500 16px var(--mono);color:var(--fg);background:var(--panel);border:1px solid var(--line);border-radius:6px;padding:9px 10px;width:100%;min-width:0}
+input[type=text],select{font-family:var(--body)}
+input[type=file]{font:400 14px var(--body)}
+input[type=color]{height:44px;padding:4px;cursor:pointer}
+:focus-visible{outline:2px solid var(--accent);outline-offset:2px}
+.hint{font-size:14px;color:var(--muted);margin:12px 0 0;max-width:62ch}
+.row{display:flex;flex-wrap:wrap;gap:8px;align-items:center;margin-top:12px}
+.btn{font:600 14px var(--body);border-radius:6px;padding:9px 13px;border:1px solid var(--accent);background:transparent;color:var(--accent);cursor:pointer}
+.btn.quiet{border-color:var(--line);color:var(--muted)}
+.result{position:sticky;top:calc(16px + env(safe-area-inset-top,0px));background:var(--panel);border:1px solid var(--line);border-radius:8px;padding:20px;display:grid;gap:16px;min-width:0}
+.vol{display:flex;justify-content:space-between;align-items:baseline;gap:12px;font-size:14px;color:var(--muted)}
+.vol b{font:500 15px var(--mono);color:var(--fg)}
+.pour{display:grid;grid-template-columns:96px minmax(0,1fr);gap:18px;align-items:stretch}
+svg.cup{width:96px;height:200px;display:block}
+.parts{display:grid;gap:12px;align-content:center;min-width:0}
+.part .name{font-size:14px;font-weight:600;display:flex;gap:6px;align-items:center}
+.dot{width:10px;height:10px;border-radius:2px;flex:none}
+.part .big{font:750 36px/1.1 var(--display);font-variant-numeric:tabular-nums}
+.part .alt{font:500 13px var(--mono);color:var(--muted)}
+.part.dim .big{font-size:22px;color:var(--muted)}
+.total{border-top:1px solid var(--line);padding-top:12px;display:grid;gap:4px;font-size:14px}
+.total div{display:flex;justify-content:space-between;gap:12px}
+.total span:last-child{font:500 14px var(--mono);text-align:right}
+.note{font-size:14px;background:var(--warn-bg);color:var(--warn);border-radius:6px;padding:10px 12px}
+.stl{font-size:14px;margin-top:12px;display:grid;gap:4px}
+.saved{font-size:14px;color:var(--muted)}
+.tabs{display:flex;flex-wrap:wrap;gap:6px;margin-top:16px}
+.tabs button{font:600 15px var(--body);color:var(--fg);background:transparent;border:0;border-bottom:3px solid transparent;padding:6px 4px;margin-right:14px;cursor:pointer}
+.tabs button[aria-selected="true"]{border-bottom-color:var(--accent);color:var(--accent)}
+svg.section{width:100%;height:auto;display:block}
+svg.section text{font:500 11px var(--mono);fill:var(--muted)}
+.legend{display:flex;flex-wrap:wrap;gap:6px 14px;font-size:13px;color:var(--muted)}
+.legend span{display:flex;gap:6px;align-items:center}
+.btn.solid{background:var(--accent);color:var(--on-accent);width:100%;padding:11px 13px}
+.tips{margin:0;padding-left:18px;font-size:15px;display:grid;gap:6px;max-width:62ch}
+.src{font-size:13px;color:var(--muted);margin:10px 0 0}
+.src a{color:var(--accent)}
+@media (max-width:820px){.grid{grid-template-columns:minmax(0,1fr)}.result{position:static;order:-1}}
+</style>
+
+<div class="wrap">
+  <header>
+    <h1>Resin Workshop</h1>
+    <p>Design a piece or a seal, make its silicone mould, and work out your resin pour.</p>
+    <div class="tabs" role="tablist" aria-label="Workshop tools">
+      <button type="button" role="tab" id="tabPour" aria-controls="viewPour">Resin pour</button>
+      <button type="button" role="tab" id="tabMould" aria-controls="viewMould">Mould box</button>
+      <button type="button" role="tab" id="tabJewel" aria-controls="viewJewel">Jewellery</button>
+      <button type="button" role="tab" id="tabSeal" aria-controls="viewSeal">Seal</button>
+    </div>
+  </header>
+  <div class="grid" id="viewSeal" role="tabpanel" aria-labelledby="tabSeal" hidden>
+    <div class="inputs">
+      <section aria-labelledby="h-seal">
+        <h2 id="h-seal">李岩</h2>
+        <div class="seg" id="sStrokeSeg" role="group" aria-label="Stroke style"></div>
+        <div class="seg" id="sStyleSeg" role="group" aria-label="Carving style"></div>
+        <div class="seg" id="sShapeSeg" role="group" aria-label="Seal shape"></div>
+        <div class="seg" id="sLayoutSeg" role="group" aria-label="Character layout"></div>
+        <div class="seg" id="sAgedSeg" role="group" aria-label="Edge"></div>
+        <div class="row" id="sSeedRow" hidden><button class="btn" id="sSeed" type="button">Try other chips</button></div>
+      </section>
+      <section aria-labelledby="h-sealsize">
+        <h2 id="h-sealsize">Size</h2>
+        <div class="fields">
+          <label class="f">Seal width (mm)<input id="sS" type="number" min="12" step="1" value="40"></label>
+          <label class="f" id="sBoldWrap">Extra boldness (mm)<input id="sBold" type="number" min="0" step="0.05" value="0.1"></label>
+          <label class="f" id="sLineWrap">Line width (mm)<input id="sLine" type="number" min="0.5" step="0.1" value="0.8"></label>
+          <label class="f">Border (mm)<input id="sBorder" type="number" min="0" step="0.1" value="1.4"></label>
+          <label class="f">Space inside border (mm)<input id="sMargin" type="number" min="0.2" step="0.1" value="0.8"></label>
+          <label class="f">Carving depth (mm)<input id="sDepth" type="number" min="0.4" step="0.1" value="1.2"></label>
+          <label class="f">Stamp height (mm)<input id="sH" type="number" min="5" step="1" value="30"></label>
+        </div>
+      </section>
+      <section aria-labelledby="h-sealnote">
+        <h2 id="h-sealnote">About these forms</h2>
+        <ul class="tips">
+          <li>Brush strokes uses the Ma Shan Zheng font and Print uses Noto Serif SC Black, both under the SIL Open Font License.</li>
+          <li>In the two seal styles, 李 is built from 木 over 子, and 岩 from 山 over 石, drawn in two styles: flowing curves nearer to small seal script, or the even, squared line of Han seals. They are drawn for this tool, not copied from a historical seal.</li>
+          <li>Have someone who reads seal script check them before you carve them in stone.</li>
+          <li>The stamp itself is mirrored, so the impression reads correctly.</li>
+        </ul>
+      </section>
+    </div>
+    <aside class="result" aria-label="Seal result">
+      <div class="parts" style="display:grid;grid-template-columns:1fr 1fr">
+        <div class="part"><div class="name">Impression</div><svg class="section" id="sImp" role="img" aria-label="How the seal looks when stamped"></svg></div>
+        <div class="part"><div class="name">Stamp face</div><svg class="section" id="sFace" role="img" aria-label="The mirrored face of the stamp"></svg></div>
+      </div>
+      <div class="total" id="sTotal"></div>
+      <div class="note" id="sNote" hidden></div>
+      <button class="btn solid" id="sDl" type="button">Download stamp STL</button>
+      <button class="btn" id="sToMould" type="button">Make its mould box</button>
+      <span class="saved" id="sMsg" role="status"></span>
+    </aside>
+  </div>
+  <div class="grid" id="viewJewel" role="tabpanel" aria-labelledby="tabJewel" hidden>
+    <div class="inputs">
+      <section aria-labelledby="h-pend">
+        <h2 id="h-pend">Pendant</h2>
+        <div class="seg" id="jShapes" role="group" aria-label="Pendant shape"></div>
+        <div class="fields">
+          <label class="f" id="jWWrap"><span id="jWLabel">Width (mm)</span><input id="jW" type="number" min="5" step="0.5" value="26"></label>
+          <label class="f" id="jHWrap">Height (mm)<input id="jH" type="number" min="5" step="0.5" value="36"></label>
+          <label class="f">Thickness (mm)<input id="jT" type="number" min="1" step="0.5" value="4"></label>
+        </div>
+      </section>
+      <section aria-labelledby="h-style">
+        <h2 id="h-style">Style</h2>
+        <div class="seg" id="jStyleSeg" role="group" aria-label="Pendant style"></div>
+        <div id="jFili" hidden>
+          <div class="seg" id="jPatSeg" role="group" aria-label="Filigree pattern"></div>
+          <div class="seg" id="jStructSeg" role="group" aria-label="Filigree structure"></div>
+          <div class="fields">
+            <label class="f">Line width (mm)<input id="jLw" type="number" min="0.6" step="0.1" value="1"></label>
+            <label class="f">Outer rim (mm)<input id="jFrame" type="number" min="0.8" step="0.1" value="1.4"></label>
+            <label class="f" id="jBackWrap">Backing thickness (mm)<input id="jBack" type="number" min="0.6" step="0.1" value="1.2"></label>
+          </div>
+          <div class="row"><button class="btn" id="jSeed" type="button">Try another variation</button></div>
+          <p class="hint" id="jFiliHint"></p>
+        </div>
+      </section>
+      <section aria-labelledby="h-loop">
+        <h2 id="h-loop">Hanging loop</h2>
+        <div class="seg" id="jLoopSeg" role="group" aria-label="Hanging loop"></div>
+        <div class="fields" id="jLoopFields">
+          <label class="f">Loop diameter (mm)<input id="jLD" type="number" min="3" step="0.5" value="8"></label>
+          <label class="f">Hole diameter (mm)<input id="jHD" type="number" min="1" step="0.5" value="3"></label>
+        </div>
+      </section>
+      <section aria-labelledby="h-inlay" id="jInlaySec">
+        <h2 id="h-inlay">Inlay</h2>
+        <div class="seg" id="jInlaySeg" role="group" aria-label="Inlay"></div>
+        <div class="fields" id="jInlayFields">
+          <label class="f">Rim width (mm)<input id="jRim" type="number" min="0.5" step="0.5" value="2"></label>
+          <label class="f">Recess depth (mm)<input id="jDep" type="number" min="0.5" step="0.5" value="2"></label>
+        </div>
+        <p class="hint">The recess casts into the front of the pendant, ready for a second colour once the first pour has cured.</p>
+      </section>
+      <section aria-labelledby="h-col">
+        <h2 id="h-col">Preview colours</h2>
+        <div class="fields">
+          <label class="f">Body<input id="jC1" type="color" value="#1f6f68"></label>
+          <label class="f">Inlay<input id="jC2" type="color" value="#d9a441"></label>
+        </div>
+      </section>
+    </div>
+    <aside class="result" aria-label="Pendant result">
+      <svg class="section" id="jSvg" role="img" aria-label="Pendant seen from the front, with a 10 mm scale bar"></svg>
+      <div class="total" id="jTotal"></div>
+      <div class="note" id="jNote" hidden></div>
+      <button class="btn solid" id="jDl" type="button">Download master STL</button>
+      <div class="row" style="margin-top:0">
+        <button class="btn" id="jToMould" type="button">Make its mould box</button>
+        <button class="btn" id="jToBody" type="button">Pour the body</button>
+        <button class="btn" id="jToInlay" type="button">Pour the inlay</button>
+      </div>
+      <span class="saved" id="jMsg" role="status"></span>
+    </aside>
+  </div>
+  <div class="grid" id="viewMould" role="tabpanel" aria-labelledby="tabMould" hidden>
+    <div class="inputs">
+      <section aria-labelledby="h-master">
+        <h2 id="h-master">Master</h2>
+        <div class="seg" id="mShapes" role="group" aria-label="Master shape"></div>
+        <div class="fields" id="mFields"></div>
+        <div class="stl" id="mStl" hidden></div>
+        <p class="hint" id="mHint"></p>
+      </section>
+      <section aria-labelledby="h-box">
+        <h2 id="h-box">Box</h2>
+        <div class="seg" id="mStyles" role="group" aria-label="Box style"></div>
+        <div class="fields">
+          <label class="f">Silicone around sides (mm)<input id="mSide" type="number" min="1" step="0.5" value="8"></label>
+          <label class="f">Silicone above master (mm)<input id="mTop" type="number" min="1" step="0.5" value="8"></label>
+          <label class="f">Wall thickness (mm)<input id="mWall" type="number" min="0.8" step="0.2" value="2.4"></label>
+          <label class="f">Floor thickness (mm)<input id="mFloor" type="number" min="0.8" step="0.2" value="2.4"></label>
+          <label class="f" id="mLipWrap">Base lip height (mm)<input id="mLip" type="number" min="1" step="0.5" value="4"></label>
+          <label class="f" id="mGapWrap">Fit gap per side (mm)<input id="mGap" type="number" min="0" step="0.05" value="0.15"></label>
+        </div>
+        <p class="hint" id="mStyleHint"></p>
+      </section>
+      <section aria-labelledby="h-sil">
+        <h2 id="h-sil">Silicone</h2>
+        <div class="fields">
+          <label class="f" style="grid-column:1/-1">Product<select id="mSil"></select></label>
+          <label class="f">Extra for waste (%)<input id="mWaste" type="number" min="0" max="50" step="1" value="10"></label>
+        </div>
+      </section>
+      <section aria-labelledby="h-tips">
+        <h2 id="h-tips">Before you pour</h2>
+        <ul class="tips">
+          <li>Test on a small area first. Dragon Skin and Sorta-Clear are platinum silicones, and they can stay tacky against sulfur clay, latex, or freshly cast epoxy, polyester, or urethane.</li>
+          <li>Be especially careful with resin-printed masters, and wash and cure them fully. A clear acrylic lacquer usually prevents curing problems.</li>
+          <li>Sand or seal a PLA master, because silicone copies every layer line.</li>
+          <li>Seal the seam around a frame and base from the outside so the silicone can't leak out.</li>
+          <li>Use a release agent before casting epoxy into the finished mould.</li>
+        </ul>
+        <p class="src">Mix ratios, cure times, and curing advice come from Smooth-On's <a href="https://www.smooth-on.com/assets/pdf/Technical_Data_Charts.pdf">technical data charts</a> and <a href="https://www.smooth-on.com/tb/files/DRAGON_SKIN_SERIES_TB.pdf">Dragon Skin bulletin</a>. Confirm them on your own product's label.</p>
+      </section>
+    </div>
+    <aside class="result" aria-label="Mould box result">
+      <svg class="section" id="mSvg" role="img" aria-label="Cross-section of the mould box, drawn to scale"></svg>
+      <div class="legend">
+        <span><i class="dot" style="background:var(--muted)"></i>Printed box</span>
+        <span><i class="dot" style="background:var(--sil)"></i>Silicone</span>
+        <span><i class="dot" style="background:var(--a)"></i>Master</span>
+      </div>
+      <div class="parts" style="grid-template-columns:1fr 1fr;display:grid">
+        <div class="part" id="mA"></div>
+        <div class="part" id="mB"></div>
+      </div>
+      <div class="total" id="mTotal"></div>
+      <div class="note" id="mNote" hidden></div>
+      <button class="btn solid" id="mDl" type="button">Download STL files</button>
+      <span class="saved" id="mDlMsg" role="status"></span>
+    </aside>
+  </div>
+  <div class="grid" id="viewPour" role="tabpanel" aria-labelledby="tabPour">
+    <div class="inputs">
+      <section aria-labelledby="h-mould">
+        <h2 id="h-mould">Mould</h2>
+        <div class="seg" id="shapes" role="group" aria-label="How to measure the mould"></div>
+        <div class="fields" id="shapeFields"></div>
+        <p class="hint" id="shapeHint"></p>
+        <div class="stl" id="stlInfo" hidden></div>
+        <div class="fields" style="margin-top:12px">
+          <label class="f" id="fillWrap">Fill level (%)<input id="fill" type="number" min="1" max="100" step="1" value="100"></label>
+          <label class="f">Number of pieces<input id="pieces" type="number" min="1" step="1" value="1"></label>
+        </div>
+      </section>
+
+      <section aria-labelledby="h-resin">
+        <h2 id="h-resin">Resin</h2>
+        <div class="fields">
+          <label class="f" style="grid-column:1/-1">Saved resin<select id="profile"></select></label>
+          <label class="f">Part A<input id="ra" type="number" min="0.01" step="0.1" value="1"></label>
+          <label class="f">Part B<input id="rb" type="number" min="0.01" step="0.1" value="1"></label>
+          <label class="f">Ratio is by<select id="basis"><option value="volume">Volume</option><option value="weight">Weight</option></select></label>
+          <label class="f">Density A (g/ml)<input id="da" type="number" min="0.5" max="3" step="0.01" value="1.1"></label>
+          <label class="f">Density B (g/ml)<input id="db" type="number" min="0.5" max="3" step="0.01" value="1.1"></label>
+        </div>
+        <p class="hint">The label or data sheet says whether the ratio is by weight or volume. It usually gives the densities too. 1.1 is only an estimate, so replace it if you can.</p>
+        <div class="row">
+          <label class="f" style="flex:1 1 200px">Name<input id="pname" type="text" placeholder="Name this resin"></label>
+        </div>
+        <div class="row">
+          <button class="btn" id="save" type="button">Save resin</button>
+          <button class="btn quiet" id="del" type="button" hidden>Delete resin</button>
+          <span class="saved" id="saved" role="status"></span>
+        </div>
+      </section>
+
+      <section aria-labelledby="h-extras">
+        <h2 id="h-extras">Extras</h2>
+        <div class="fields">
+          <label class="f">Extra for waste (%)<input id="waste" type="number" min="0" max="50" step="1" value="5"></label>
+          <label class="f">Pigment (% of mix)<input id="pig" type="number" min="0" max="20" step="0.5" value="0"></label>
+        </div>
+        <p class="hint">Extra covers what stays behind in the cup and on the stirrer. Check the data sheet for how much pigment your resin takes.</p>
+      </section>
+    </div>
+
+    <aside class="result" aria-live="polite" aria-label="Amounts to pour">
+      <div class="vol"><span>Mould volume</span><b id="rVol"></b></div>
+      <div class="pour">
+        <svg class="cup" id="cup" viewBox="0 0 96 200" role="img" aria-label="Mixing cup showing part A and part B"></svg>
+        <div class="parts">
+          <div class="part" id="pA"></div>
+          <div class="part" id="pB"></div>
+        </div>
+      </div>
+      <div class="total" id="total"></div>
+      <div class="note" id="note" hidden></div>
+    </aside>
+  </div>
+</div>
+
+<script src="../lib/earcut.min.js"></script>
+<script src="../lib/clipper.js"></script>
+<script>
+/* ---- calculations ---- */
+function mouldMl(shape,v){
+  const pi=Math.PI;
+  switch(shape){
+    case 'box': return v.l*v.w*v.d/1000;
+    case 'cyl': return pi*(v.dia/2)**2*v.d/1000;
+    case 'dome':return (2/3)*pi*(v.dia/2)**3/1000;
+    case 'water':return v.g;       /* 1 g of water is about 1 ml */
+    case 'stl': return v.ml;
+  }
+  return 0;
+}
+function mixAmounts(ml,r){
+  const t=r.a+r.b, A=r.a/t, B=r.b/t;
+  let va,vb,ma,mb;
+  if(r.basis==='volume'){ va=ml*A; vb=ml*B; ma=va*r.da; mb=vb*r.db; }
+  else{
+    const rho=1/(A/r.da+B/r.db), m=ml*rho;
+    ma=m*A; mb=m*B; va=ma/r.da; vb=mb/r.db;
+  }
+  return {va,vb,ma,mb,g:ma+mb,ml:va+vb};
+}
+function parseSTL(buf){
+  const dv=new DataView(buf), LIMIT=200000;
+  let n=0,vol=0,tris=0,open=0;const min=[1/0,1/0,1/0],max=[-1/0,-1/0,-1/0],edges=new Map();
+  const key=(a,b,c)=>a.toFixed(4)+','+b.toFixed(4)+','+c.toFixed(4);
+  const add=(x1,y1,z1,x2,y2,z2,x3,y3,z3,check)=>{
+    tris++;vol+=(x1*(y2*z3-z2*y3)-y1*(x2*z3-z2*x3)+z1*(x2*y3-y2*x3))/6;
+    for(const [k,v] of [[0,x1],[1,y1],[2,z1],[0,x2],[1,y2],[2,z2],[0,x3],[1,y3],[2,z3]]){if(v<min[k])min[k]=v;if(v>max[k])max[k]=v}
+    if(check){const ks=[key(x1,y1,z1),key(x2,y2,z2),key(x3,y3,z3)];
+      for(let k=0;k<3;k++){const a=ks[k],b=ks[(k+1)%3],e=a<b?a+'|'+b:b+'|'+a;edges.set(e,(edges.get(e)||0)+1)}}
+  };
+  const count=buf.byteLength>=84?dv.getUint32(80,true):-1;
+  if(84+50*count===buf.byteLength){
+    n=count;const check=n<=LIMIT;
+    for(let i=0;i<n;i++){const o=96+i*50,f=k=>dv.getFloat32(o+k*4,true);add(f(0),f(1),f(2),f(3),f(4),f(5),f(6),f(7),f(8),check)}
+    if(!check)return {ml:Math.abs(vol)/1000,size:max.map((m,i)=>m-min[i]),tris,closed:null};
+  }else{
+    const text=new TextDecoder().decode(new Uint8Array(buf));
+    const re=/vertex\s+(\S+)\s+(\S+)\s+(\S+)/g;let m,p=[];
+    while((m=re.exec(text))){p.push(+m[1],+m[2],+m[3]);if(p.length===9){add(...p,tris<LIMIT);p=[]}}
+    if(!tris) throw new Error('no triangles');
+  }
+  for(const c of edges.values()) if(c!==2) open++;
+  return {ml:Math.abs(vol)/1000,size:max.map((m,i)=>m-min[i]),tris,closed:tris>LIMIT?null:open===0};
+}
+
+/* ---- page ---- */
+const $=id=>document.getElementById(id);
+const num=(el,d=0)=>{const n=parseFloat(el&&el.value);return isFinite(n)?n:d};
+const SHAPES={
+  box:{label:'Box',fields:[['l','Length (mm)',60],['w','Width (mm)',40],['d','Depth (mm)',10]],hint:'Measure the inside of the mould.'},
+  cyl:{label:'Cylinder',fields:[['dia','Diameter (mm)',50],['d','Depth (mm)',15]],hint:'Measure the inside of the mould.'},
+  dome:{label:'Half sphere',fields:[['dia','Diameter (mm)',40]],hint:'Measure across the flat side of the mould.'},
+  water:{label:'Water test',fields:[['g','Water weight (g)',30]],hint:'The best option for odd shapes. Fill the mould with water, pour it into a cup on your scale, then dry the mould completely before casting. Water can ruin epoxy.'},
+  stl:{label:'3D file',fields:[],hint:'Upload the STL of the object you are casting, in millimetres. The file stays on this device.'}
+};
+const STARTERS=[
+  {id:'s1',name:'Epoxy 1:1 by volume',a:1,b:1,basis:'volume',da:1.1,db:1.1,starter:true},
+  {id:'s2',name:'Epoxy 1:2 by volume',a:1,b:2,basis:'volume',da:1.1,db:1.1,starter:true},
+  {id:'s3',name:'Epoxy 1:2 by weight',a:1,b:2,basis:'weight',da:1.1,db:1.1,starter:true}
+];
+let shape='box', values={}, stl=null, saved=[], db=null;
+
+function drawShapes(){
+  $('shapes').innerHTML='';
+  for(const k in SHAPES){
+    const b=document.createElement('button');
+    b.type='button'; b.textContent=SHAPES[k].label; b.setAttribute('aria-pressed',k===shape);
+    b.onclick=()=>{shape=k;drawShapes();drawFields();calc()};
+    $('shapes').append(b);
+  }
+}
+function drawFields(){
+  const s=SHAPES[shape], box=$('shapeFields'); box.innerHTML='';
+  for(const [k,label,def] of s.fields){
+    const l=document.createElement('label'); l.className='f'; l.textContent=label;
+    const i=document.createElement('input');
+    i.type='number';i.min='0';i.step='any';i.id='v_'+shape+'_'+k;
+    i.value=values[i.id]??def;
+    i.oninput=()=>{values[i.id]=i.value;calc()};
+    l.append(i); box.append(l);
+  }
+  if(shape==='stl'){
+    const l=document.createElement('label'); l.className='f'; l.textContent='STL file';
+    const i=document.createElement('input'); i.type='file'; i.id='stlFile'; i.accept='.stl';
+    i.onchange=loadSTL; l.append(i); box.append(l);
+  }
+  $('shapeHint').textContent=s.hint;
+  $('stlInfo').hidden=shape!=='stl'||!stl;
+  /* A partial fill level would be wrong for a dome, a water test or a 3D object. */
+  $('fillWrap').hidden=!(shape==='box'||shape==='cyl');
+}
+async function loadSTL(e){
+  const f=e.target.files[0]; if(!f) return;
+  const box=$('stlInfo'); box.hidden=false;
+  try{
+    stl=parseSTL(await f.arrayBuffer());
+    box.textContent='';
+    const add=t=>{const d=document.createElement('div');d.textContent=t;box.append(d)};
+    add(f.name+': '+stl.size.map(n=>n.toFixed(1)).join(' × ')+' mm, '+stl.tris.toLocaleString('en')+' triangles');
+    if(stl.closed===false) add('This model has gaps, so the volume may be wrong. Repair it in your slicer first.');
+  }catch{ stl=null; box.textContent='This file could not be read. Check that it is an STL file.' }
+  calc();
+}
+function curShapeValues(){
+  const v={}; for(const [k,,def] of SHAPES[shape].fields) v[k]=num($('v_'+shape+'_'+k),def);
+  if(shape==='stl') v.ml=stl?stl.ml:0;
+  return v;
+}
+const fmt=(n,d=1)=>n.toLocaleString('en',{minimumFractionDigits:d,maximumFractionDigits:d});
+
+function calc(){
+  const r={a:Math.max(num($('ra'),1),.0001),b:Math.max(num($('rb'),1),.0001),basis:$('basis').value,da:num($('da'),1.1)||1.1,db:num($('db'),1.1)||1.1};
+  const fill=(shape==='box'||shape==='cyl')?num($('fill'),100)/100:1;
+  const pieces=Math.max(1,Math.round(num($('pieces'),1)));
+  const one=mouldMl(shape,curShapeValues())*fill;
+  const mould=one*pieces, waste=num($('waste'),0)/100, ml=mould*(1+waste);
+  const m=mixAmounts(ml,r), byW=r.basis==='weight';
+  $('rVol').textContent=fmt(mould)+' ml';
+  const part=(el,name,col,g,v)=>{
+    el.innerHTML='';
+    const n=document.createElement('div');n.className='name';
+    const d=document.createElement('span');d.className='dot';d.style.background=col;
+    n.append(d,name);
+    const big=document.createElement('div');big.className='big';big.textContent=byW?fmt(g)+' g':fmt(v)+' ml';
+    const alt=document.createElement('div');alt.className='alt';alt.textContent=byW?'about '+fmt(v)+' ml':'about '+fmt(g)+' g';
+    el.append(n,big,alt);
+  };
+  part($('pA'),'Part A','var(--a)',m.ma,m.va);
+  part($('pB'),'Part B','var(--b)',m.mb,m.vb);
+  const rows=[['Total mix',fmt(m.g)+' g / '+fmt(m.ml)+' ml'],['Measure by',byW?'Weight, on a scale':'Volume, in a marked cup']];
+  const pig=num($('pig'),0);
+  if(pig>0) rows.push(['Pigment',fmt(m.g*pig/100,2)+' g']);
+  if(pieces>1) rows.push(['Each piece',fmt(one)+' ml']);
+  $('total').innerHTML='';
+  for(const [a,b] of rows){const d=document.createElement('div'),x=document.createElement('span'),y=document.createElement('span');x.textContent=a;y.textContent=b;d.append(x,y);$('total').append(d)}
+  drawCup(m);
+  const note=[];
+  if(shape==='stl'&&!stl) note.push('Upload an STL file to see the amounts.');
+  const depth=(shape==='box'||shape==='cyl')?curShapeValues().d*fill:0;
+  if(depth>20) note.push('This pour is '+fmt(depth,0)+' mm deep. Check the maximum pour depth on the data sheet, because a thick pour can overheat.');
+  $('note').hidden=!note.length; $('note').textContent=note.join(' ');
+}
+function drawCup(m){
+  const top=14,bot=190,h=bot-top,ax=(m.va+m.vb)||1;
+  const fillH=h*.82, ah=fillH*m.va/ax, bh=fillH-ah, y=bot-fillH;
+  const ticks=[0,1,2,3,4].map(i=>`<line x1="74" x2="82" y1="${bot-i*(fillH/4)}" y2="${bot-i*(fillH/4)}" stroke="var(--muted)"/>`).join('');
+  $('cup').innerHTML=`<path d="M10 ${top}H86L80 ${bot+4}a4 4 0 0 1-4 4H20a4 4 0 0 1-4-4Z" fill="var(--cup)" stroke="var(--line)" stroke-width="2"/>
+  <clipPath id="c"><path d="M12 ${top}H84L78 ${bot}H18Z"/></clipPath>
+  <g clip-path="url(#c)"><rect x="0" y="${y+bh}" width="96" height="${ah}" fill="var(--a)"/><rect x="0" y="${y}" width="96" height="${bh}" fill="var(--b)"/></g>${ticks}`;
+}
+
+/* ---- saved resins ---- */
+function allProfiles(){return [...STARTERS,...saved]}
+function drawProfiles(sel){
+  const s=$('profile'), cur=sel??s.value; s.innerHTML='';
+  const c=document.createElement('option');c.value='';c.textContent='Custom';s.append(c);
+  for(const p of allProfiles()){const o=document.createElement('option');o.value=p.id;o.textContent=p.name;s.append(o)}
+  s.value=allProfiles().some(p=>p.id===cur)?cur:'';
+  const p=allProfiles().find(x=>x.id===s.value);
+  $('del').hidden=!(p&&!p.starter);
+}
+function applyProfile(){
+  const p=allProfiles().find(x=>x.id===$('profile').value);
+  $('del').hidden=!(p&&!p.starter);
+  if(!p) return;
+  $('ra').value=p.a;$('rb').value=p.b;$('basis').value=p.basis;$('da').value=p.da;$('db').value=p.db;
+  $('pname').value=p.starter?'':p.name; calc();
+}
+const LS='resin-workshop-resins';
+function lsLoad(){try{return JSON.parse(localStorage.getItem(LS))||[]}catch{return[]}}
+function lsSave(){try{localStorage.setItem(LS,JSON.stringify(saved))}catch{}}
+async function saveProfile(){
+  const name=$('pname').value.trim();
+  if(!name){$('saved').textContent='Enter a name first.';$('pname').focus();return}
+  const ex=saved.find(p=>p.name===name), id=ex?ex.id:'r'+Date.now();
+  const p={name,a:num($('ra'),1),b:num($('rb'),1),basis:$('basis').value,da:num($('da'),1.1),db:num($('db'),1.1)};
+  try{
+    if(db){ await db.collection('resins').doc(id).set(p); }
+    saved=[...saved.filter(x=>x.id!==id),{id,...p}]; if(!db) lsSave();
+    drawProfiles(id); $('saved').textContent='Saved '+name+(db?'.':' on this device.');
+  }catch{ $('saved').textContent='That did not save. Try again.' }
+}
+async function deleteProfile(){
+  const id=$('profile').value, p=saved.find(x=>x.id===id); if(!p) return;
+  if($('del').dataset.sure!==id){$('del').dataset.sure=id;$('del').textContent='Delete '+p.name+'?';return}
+  delete $('del').dataset.sure;$('del').textContent='Delete resin';
+  try{
+    if(db) await db.collection('resins').doc(id).delete();
+    saved=saved.filter(x=>x.id!==id); if(!db) lsSave();
+    $('pname').value='';drawProfiles('');$('saved').textContent='Deleted '+p.name+'.';
+  }catch{ $('saved').textContent='That did not delete. Try again.' }
+}
+async function connect(){
+  saved=lsLoad(); drawProfiles();
+  try{ db=window.claude?await window.claude.use('db'):null }catch{ db=null }
+  if(!db) return;
+  saved=[]; drawProfiles();
+  db.collection('resins').onSnapshot(s=>{
+    saved=s.docs.map(d=>({id:d.id,...d.data()})); drawProfiles();
+  },()=>{ $('saved').textContent='Saved resins could not load. Reopen the page to try again.' });
+}
+
+for(const id of ['fill','pieces','ra','rb','basis','da','db','waste','pig']){
+  $(id).addEventListener('input',()=>{ if(['ra','rb','basis','da','db'].includes(id)){$('profile').value='';$('del').hidden=true} calc() });
+}
+$('profile').onchange=applyProfile;
+$('save').onclick=saveProfile;
+$('del').onclick=deleteProfile;
+drawShapes();drawFields();drawProfiles('s1');applyProfile();connect();
+
+/* ---- mould box: geometry ---- */
+const rect=(x0,y0,x1,y1,z)=>({p:[[x0,y0],[x1,y0],[x1,y1],[x0,y1]],z});
+function stitch(loops,opts={}){
+  const tris=[], P=(l,k)=>[...l.p[k],l.z];
+  const n=loops.length, stop=opts.ring?n:n-1;
+  for(let i=0;i<stop;i++){
+    const lo=loops[i], hi=loops[(i+1)%n];
+    for(let k=0;k<4;k++){
+      const j=(k+1)%4, a=P(lo,k),b=P(lo,j),c=P(hi,j),d=P(hi,k);
+      tris.push([a,b,c],[a,c,d]);
+    }
+  }
+  if(!opts.ring){
+    const f=loops[0],l=loops[n-1];
+    tris.push([P(f,0),P(f,2),P(f,1)],[P(f,0),P(f,3),P(f,2)]);
+    tris.push([P(l,0),P(l,1),P(l,2)],[P(l,0),P(l,2),P(l,3)]);
+  }
+  return tris;
+}
+const FREEBOARD=3;
+function boxDesign(d){
+  const iL=d.mL+2*d.side, iW=d.mW+2*d.side, iH=d.mH+d.top;
+  const oL=iL+2*d.wall, oW=iW+2*d.wall;
+  const R=(l,w,z)=>rect(-l/2,-w/2,l/2,w/2,z), out={iL,iW,iH,oL,oW,parts:[]};
+  if(d.style==='frame'){
+    const H=d.lip+iH+FREEBOARD;
+    out.parts.push({name:'frame',size:[oL,oW,H],tris:stitch([R(oL,oW,0),R(oL,oW,H),R(iL,iW,H),R(iL,iW,0)],{ring:true})});
+    const lL=iL-2*d.gap, lW=iW-2*d.gap, t=d.floor, top=t+d.lip;
+    out.parts.push({name:'base',size:[oL,oW,top],tris:stitch([R(oL,oW,0),R(oL,oW,t),R(lL,lW,t),R(lL,lW,top)])});
+    out.height=t+H;
+  }else{
+    const H=d.floor+iH+FREEBOARD;
+    out.parts.push({name:'tray',size:[oL,oW,H],tris:stitch([R(oL,oW,0),R(oL,oW,H),R(iL,iW,H),R(iL,iW,d.floor)])});
+    out.height=H;
+  }
+  return out;
+}
+function stlBinary(tris){
+  const buf=new ArrayBuffer(84+50*tris.length), dv=new DataView(buf);
+  dv.setUint32(80,tris.length,true);
+  tris.forEach((t,i)=>{let o=84+i*50+12;for(const v of t)for(const c of v){dv.setFloat32(o,c,true);o+=4}});
+  return new Uint8Array(buf);
+}
+function crc32(u8){
+  let c=~0;
+  for(let i=0;i<u8.length;i++){c^=u8[i];for(let k=0;k<8;k++)c=(c>>>1)^(0xEDB88320&-(c&1))}
+  return (~c)>>>0;
+}
+function zipStore(files){
+  const enc=new TextEncoder(), chunks=[], central=[]; let off=0;
+  for(const f of files){
+    const name=enc.encode(f.name), crc=crc32(f.data), h=new DataView(new ArrayBuffer(30));
+    h.setUint32(0,0x04034b50,true);h.setUint16(4,20,true);h.setUint16(6,0x0800,true);
+    h.setUint32(14,crc,true);h.setUint32(18,f.data.length,true);h.setUint32(22,f.data.length,true);h.setUint16(26,name.length,true);
+    chunks.push(new Uint8Array(h.buffer),name,f.data);
+    const c=new DataView(new ArrayBuffer(46));
+    c.setUint32(0,0x02014b50,true);c.setUint16(4,20,true);c.setUint16(6,20,true);c.setUint16(8,0x0800,true);
+    c.setUint32(16,crc,true);c.setUint32(20,f.data.length,true);c.setUint32(24,f.data.length,true);c.setUint16(28,name.length,true);c.setUint32(42,off,true);
+    central.push(new Uint8Array(c.buffer),name);
+    off+=30+name.length+f.data.length;
+  }
+  const size=central.reduce((a,b)=>a+b.length,0), e=new DataView(new ArrayBuffer(22));
+  e.setUint32(0,0x06054b50,true);e.setUint16(8,files.length,true);e.setUint16(10,files.length,true);e.setUint32(12,size,true);e.setUint32(16,off,true);
+  return new Blob([...chunks,...central,new Uint8Array(e.buffer)],{type:'application/zip'});
+}
+
+/* ---- mould box: silicone ---- */
+const SILICONES=[
+  ['Dragon Skin 10 Very Fast',1,1,true,1.07,'4 min','30 min'],
+  ['Dragon Skin 10 Fast',1,1,true,1.07,'8 min','75 min'],
+  ['Dragon Skin 10 Medium',1,1,true,1.07,'20 min','5 hours'],
+  ['Dragon Skin 10 Slow',1,1,true,1.07,'45 min','7 hours'],
+  ['Dragon Skin 15',1,1,true,1.07,'40 min','7 hours'],
+  ['Dragon Skin 20',1,1,true,1.08,'25 min','4 hours'],
+  ['Dragon Skin 30',1,1,true,1.08,'45 min','16 hours'],
+  ['Sorta-Clear 12',1,1,true,1.07,'40 min','12 hours'],
+  ['Sorta-Clear 18',10,1,false,1.08,'60 min','24 hours'],
+  ['Sorta-Clear 37',1,1,true,1.08,'25 min','4 hours'],
+  ['Sorta-Clear 40',10,1,false,1.08,'60 min','16 hours']
+].map(([name,a,b,vol,sg,pot,cure])=>({name,a,b,vol,sg,pot,cure}));
+function siliconeAmounts(ml,s){
+  const g=ml*s.sg, A=g*s.a/(s.a+s.b);
+  return {g,A,B:g-A,ml};
+}
+
+/* ---- mould box: page ---- */
+const MS={box:{label:'Box',f:[['L','Length (mm)',60],['W','Width (mm)',40],['H','Height (mm)',20]]},
+          cyl:{label:'Cylinder',f:[['D','Diameter (mm)',40],['H','Height (mm)',20]]},
+          stl:{label:'3D file',f:[]}};
+let mShape='box', mStyle='frame', mStlData=null, mDesign=null, mVals={};
+function segs(box,obj,cur,pick){
+  box.innerHTML='';
+  for(const [k,label] of obj){
+    const b=document.createElement('button');b.type='button';b.textContent=label;b.setAttribute('aria-pressed',k===cur);
+    b.onclick=()=>pick(k);box.append(b);
+  }
+}
+function drawM(){
+  segs($('mShapes'),Object.entries(MS).map(([k,v])=>[k,v.label]),mShape,k=>{mShape=k;drawM();mCalc()});
+  segs($('mStyles'),[['frame','Frame and base'],['tray','One-piece tray']],mStyle,k=>{mStyle=k;drawM();mCalc()});
+  const box=$('mFields');box.innerHTML='';
+  for(const [k,label,def] of MS[mShape].f){
+    const l=document.createElement('label');l.className='f';l.textContent=label;
+    const i=document.createElement('input');i.type='number';i.min='0';i.step='any';i.id='m_'+mShape+'_'+k;
+    i.value=mVals[i.id]??def;i.oninput=()=>{mVals[i.id]=i.value;mCalc()};l.append(i);box.append(l);
+  }
+  if(mShape==='stl'){
+    const l=document.createElement('label');l.className='f';l.textContent='STL file of your master';
+    const i=document.createElement('input');i.type='file';i.id='mFile';i.accept='.stl';
+    i.onchange=async e=>{
+      const f=e.target.files[0];if(!f)return;const s=$('mStl');s.hidden=false;
+      try{
+        mStlData=parseSTL(await f.arrayBuffer());
+        s.textContent=f.name+': '+mStlData.size.map(n=>n.toFixed(1)).join(' × ')+' mm, '+fmt(mStlData.ml)+' ml'+(mStlData.closed===false?'. This model has gaps, so its volume may be wrong.':'');
+      }catch{mStlData=null;s.textContent='This file could not be read. Check that it is an STL file.'}
+      mCalc();
+    };
+    l.append(i);box.append(l);
+  }
+  $('mStl').hidden=mShape!=='stl'||!$('mStl').textContent;
+  $('mHint').textContent=mShape==='stl'?'The box uses the size of your model in the file, so have it lying the way it will sit in the mould. Size is read in millimetres.':'Use the widest measurements of your master. The silicone amount assumes the master fills this shape, so it may come out a little low for irregular objects.';
+  const fr=mStyle==='frame';
+  $('mLipWrap').hidden=!fr;$('mGapWrap').hidden=!fr;
+  $('mStyleHint').textContent=fr?'Recommended. Glue the master to the base, and push the base out to demould. The frame slides over the lip.':'Prints as one piece, with no seam to seal, but it is harder to get the mould out.';
+}
+function mMaster(){
+  const v=k=>num($('m_'+mShape+'_'+k),0);
+  if(mShape==='box') return {L:v('L'),W:v('W'),H:v('H'),ml:v('L')*v('W')*v('H')/1000};
+  if(mShape==='cyl') return {L:v('D'),W:v('D'),H:v('H'),ml:Math.PI*(v('D')/2)**2*v('H')/1000};
+  if(mStlData) return {L:mStlData.size[0],W:mStlData.size[1],H:mStlData.size[2],ml:mStlData.ml};
+  return null;
+}
+function mCalc(){
+  const m=mMaster(), s=SILICONES[+$('mSil').value||0], note=[];
+  const ok=m&&m.L>0&&m.W>0&&m.H>0;
+  $('mDl').disabled=!ok;
+  const side=num($('mSide'),8), top=num($('mTop'),8);
+  if(!ok){
+    mDesign=null;$('mSvg').innerHTML='';$('mA').innerHTML='';$('mB').innerHTML='';$('mTotal').innerHTML='';
+    $('mNote').hidden=false;$('mNote').textContent=mShape==='stl'?'Upload an STL file to design the box.':'Enter the size of your master.';return;
+  }
+  const d=boxDesign({mL:m.L,mW:m.W,mH:m.H,side,top,wall:num($('mWall'),2.4),floor:num($('mFloor'),2.4),lip:num($('mLip'),4),gap:num($('mGap'),.15),style:mStyle});
+  mDesign=d;
+  const sil=Math.max(0,d.iL*d.iW*d.iH/1000-m.ml), a=siliconeAmounts(sil*(1+num($('mWaste'),10)/100),s);
+  const P=(el,name,g,alt)=>{el.innerHTML='';const n=document.createElement('div');n.className='name';n.textContent=name;
+    const b=document.createElement('div');b.className='big';b.style.fontSize='28px';b.textContent=fmt(g)+' g';
+    const t=document.createElement('div');t.className='alt';t.textContent=alt;el.append(n,b,t)};
+  const alt=s.vol?'or '+fmt(a.ml/2)+' ml':'by weight only';
+  P($('mA'),'Part A',a.A,alt);P($('mB'),'Part B',a.B,alt);
+  const rows=[['Mix ratio',s.a+'A:'+s.b+'B '+(s.vol?'by weight or volume':'by weight')],['Silicone',fmt(a.g)+' g / '+fmt(a.ml)+' ml'],['Working time',s.pot],['Cure time',s.cure]];
+  for(const p of d.parts) rows.push(['Print '+p.name,p.size.map(n=>fmt(n,1)).join(' × ')+' mm']);
+  $('mTotal').innerHTML='';
+  for(const [x,y] of rows){const e=document.createElement('div'),u=document.createElement('span'),w=document.createElement('span');u.textContent=x;w.textContent=y;e.append(u,w);$('mTotal').append(e)}
+  if(!s.vol) note.push(s.name+' must be weighed. It mixes 10 parts A to 1 part B, so don’t use the 1:1 ratio.');
+  if(side<5||top<5) note.push('Silicone under 5 mm thick tears more easily.');
+  if(mShape==='stl'&&mStlData.closed===false) note.push('Your model has gaps, so the silicone amount may be wrong.');
+  $('mNote').hidden=!note.length;$('mNote').textContent=note.join(' ');
+  drawSection(m,d,{side,top,wall:num($('mWall'),2.4),floor:num($('mFloor'),2.4),lip:num($('mLip'),4)});
+}
+function drawSection(m,d,o){
+  const W=360, pad=26, sc=Math.min((W-2*pad)/d.oL,190/d.height), H=d.height*sc+pad*2;
+  const cx=W/2, y0=H-pad, X=v=>cx+v*sc, Y=z=>y0-z*sc;
+  const R=(x0,z0,x1,z1,fill)=>`<rect x="${X(x0)}" y="${Y(z1)}" width="${(x1-x0)*sc}" height="${(z1-z0)*sc}" fill="var(--${fill})"/>`;
+  const fr=mStyle==='frame', fl=fr?o.floor+o.lip:o.floor, il=d.iL/2, ol=d.oL/2;
+  let s=R(il*-1,fl,il,fl+d.iH,'sil');
+  s+=R(-m.L/2,fl,m.L/2,fl+m.H,'a');
+  s+=R(-ol,fr?o.floor:0,-il,d.height,'muted')+R(il,fr?o.floor:0,ol,d.height,'muted');
+  s+=R(-ol,0,ol,o.floor,'muted');
+  if(fr) s+=R(-il,o.floor,il,fl,'muted');
+  s+=`<text x="${cx}" y="${pad-10}" text-anchor="middle">${fmt(d.oL,1)} mm</text>`;
+  s+=`<text x="${X(ol)+5}" y="${Y(d.height/2)}" transform="rotate(90 ${X(ol)+5} ${Y(d.height/2)})" text-anchor="middle">${fmt(d.height,1)} mm</text>`;
+  $('mSvg').setAttribute('viewBox',`0 0 ${W} ${H}`);$('mSvg').innerHTML=s;
+}
+async function mDownload(){
+  if(!mDesign) return;
+  const msg=$('mDlMsg');msg.textContent='';
+  const blob=zipStore(mDesign.parts.map(p=>({name:'mould-box-'+p.name+'.stl',data:stlBinary(p.tris)})));
+  try{
+    const dl=window.claude?await window.claude.use('downloads'):null;
+    if(!dl){msg.textContent='Downloads aren’t available in this view. Open the page in Claude to save the files.';return}
+    await dl.save({filename:'mould-box.zip',data:blob});
+    msg.textContent='Saved. Unzip it, then open the STL files in your slicer.';
+  }catch(e){msg.textContent=e&&e.code==='declined'?'Download cancelled.':'That did not save. Try again.'}
+}
+SILICONES.forEach((s,i)=>{const o=document.createElement('option');o.value=i;o.textContent=s.name;$('mSil').append(o)});
+$('mSil').value=2;
+for(const id of ['mSide','mTop','mWall','mFloor','mLip','mGap','mWaste','mSil']) $(id).addEventListener('input',mCalc);
+$('mDl').onclick=mDownload;
+/* ---- jewellery: outlines. Every shape is a convex polygon around the origin, so a
+   ray from the centre gives its edge, and moving each side in gives an exact rim. ---- */
+function arc(cx,cy,r,a0,a1,n){const p=[];for(let i=0;i<=n;i++){const a=a0+(a1-a0)*i/n;p.push([cx+r*Math.cos(a),cy+r*Math.sin(a)])}return p}
+function hull(pts){
+  const p=pts.slice().sort((a,b)=>a[0]-b[0]||a[1]-b[1]),cross=(o,a,b)=>(a[0]-o[0])*(b[1]-o[1])-(a[1]-o[1])*(b[0]-o[0]);
+  const half=list=>{const h=[];for(const q of list){while(h.length>1&&cross(h[h.length-2],h[h.length-1],q)<=0)h.pop();h.push(q)}h.pop();return h};
+  return [...half(p),...half(p.reverse())];
+}
+function shapePoly(k,W,H){
+  const P=Math.PI;
+  if(k==='circle') return arc(0,0,W/2,0,2*P*(1-1/720),719);
+  if(k==='oval'){const p=[];for(let i=0;i<240;i++){const a=2*P*i/240;p.push([W/2*Math.cos(a),H/2*Math.sin(a)])}return p}
+  if(k==='hex'){const p=[];for(let i=0;i<6;i++){const a=P/2+i*P/3;p.push([W/2*Math.cos(a)/Math.cos(P/6),H/2*Math.sin(a)])}return p}
+  if(k==='square'){
+    const r=Math.min(W,H)*.2,x=W/2-r,y=H/2-r;
+    return [...arc(x,y,r,0,P/2,10),...arc(-x,y,r,P/2,P,10),...arc(-x,-y,r,P,1.5*P,10),...arc(x,-y,r,1.5*P,2*P,10)];
+  }
+  if(k==='wing'){
+    const {L,T}=wingEdges({W,H});
+    return hull([...L,...T,[0,H/2],...bez([-.72*W/2,-.75*H/2],[-.65*W/2,-1.02*H/2],[-.1*W/2,-1.05*H/2],[.12*W/2,-.82*H/2],20)]);
+  }
+  /* teardrop: a circle with a point at the top */
+  const r=W/2, tip=Math.max(H,W*1.05), cy=-tip/2+r, h=tip/2-cy, t=Math.acos(r/h), a0=P/2+t, a1=P/2-t+2*P;
+  return [[0,tip/2],...arc(0,cy,r,a0,a1,120)];
+}
+function edgesOf(p){
+  const out=[];
+  for(let i=0;i<p.length;i++){
+    const a=p[i],b=p[(i+1)%p.length],dx=b[0]-a[0],dy=b[1]-a[1],l=Math.hypot(dx,dy);
+    if(l<1e-9)continue;
+    const nx=dy/l,ny=-dx/l; out.push([nx,ny,nx*a[0]+ny*a[1]]);
+  }
+  return out;
+}
+const JN=720;
+function rayLoop(edges,inset=0,loop=null){
+  const pts=[];
+  for(let i=0;i<JN;i++){
+    const a=2*Math.PI*i/JN,u=[Math.cos(a),Math.sin(a)];
+    let r=1/0;
+    for(const [nx,ny,d] of edges){const c=nx*u[0]+ny*u[1];if(c>1e-9)r=Math.min(r,(d-inset)/c)}
+    if(loop){const b=u[1]*loop.y,disc=b*b-loop.y**2+loop.r**2;if(disc>=0)r=Math.max(r,b+Math.sqrt(disc))}
+    pts.push([r*u[0],r*u[1]]);
+  }
+  return pts;
+}
+const areaOf=p=>Math.abs(p.reduce((s,a,i)=>{const b=p[(i+1)%p.length];return s+a[0]*b[1]-b[0]*a[1]},0))/2;
+function pendant(d){
+  const poly=shapePoly(d.shape,d.W,d.H), e=edgesOf(poly);
+  const top=Math.max(...poly.map(q=>q[1])), bottom=Math.min(...poly.map(q=>q[1]));
+  const L=d.loop?{y:top+d.LD/2-1.5,r:d.LD/2}:null;
+  const outer=rayLoop(e,0,L);
+  const pocket=d.inlay?rayLoop(e,d.rim):null;
+  const hole=L?Array.from({length:48},(_,i)=>{const a=2*Math.PI*i/48;return [d.HD/2*Math.cos(a),L.y+d.HD/2*Math.sin(a)]}):null;
+  const aO=areaOf(outer),aH=hole?areaOf(hole):0,aP=pocket?areaOf(pocket):0;
+  const inlayMl=pocket?aP*d.dep/1000:0, bodyMl=(aO-aH)*d.T/1000-inlayMl;
+  const ys=outer.map(q=>q[1]),xs=outer.map(q=>q[0]);
+  const size=[Math.max(...xs)-Math.min(...xs),Math.max(...ys)-Math.min(...ys),d.T];
+  return {outer,pocket,hole,inlayMl,bodyMl,masterMl:bodyMl,size,bottom,loopY:L&&L.y};
+}
+function pendantTris(p,d){
+  const tris=[], T=d.T, z=(q,h)=>[q[0],q[1],h];
+  const wall=(lp,z0,z1,inward)=>{
+    for(let i=0;i<lp.length;i++){
+      const a=lp[i],b=lp[(i+1)%lp.length];
+      const A=z(a,z0),B=z(b,z0),C=z(b,z1),D=z(a,z1);
+      if(inward) tris.push([A,C,B],[A,D,C]); else tris.push([A,B,C],[A,C,D]);
+    }
+  };
+  const cap=(rings,h,up)=>{
+    const flat=[],holes=[];let pts=[];
+    rings.forEach((r,i)=>{if(i)holes.push(pts.length);pts=pts.concat(r)});
+    for(const q of pts)flat.push(q[0],q[1]);
+    const idx=earcut(flat,holes);
+    for(let i=0;i<idx.length;i+=3){
+      let a=pts[idx[i]],b=pts[idx[i+1]],c=pts[idx[i+2]];
+      const s=(b[0]-a[0])*(c[1]-a[1])-(b[1]-a[1])*(c[0]-a[0]);
+      if((s>0)!==up){const t=b;b=c;c=t}
+      tris.push([z(a,h),z(b,h),z(c,h)]);
+    }
+  };
+  wall(p.outer,0,T,false);
+  if(p.hole) wall(p.hole,0,T,true);
+  const topRings=[p.outer],botRings=[p.outer];
+  if(p.pocket){topRings.push(p.pocket);wall(p.pocket,T-d.dep,T,true);cap([p.pocket],T-d.dep,true)}
+  if(p.hole){topRings.push(p.hole);botRings.push(p.hole)}
+  cap(topRings,T,true);cap(botRings,0,false);
+  return tris;
+}
+
+/* ---- jewellery: filigree. Tapered ribbons are merged into one outline, then thin
+   bits and tiny gaps are removed so that the piece can really be cast. ---- */
+const CS=1000;
+const CL=()=>window.ClipperLib;
+const toPath=p=>p.map(q=>({X:Math.round(q[0]*CS),Y:Math.round(q[1]*CS)}));
+const fromPath=p=>p.map(q=>[q.X/CS,q.Y/CS]);
+function cOp(type,a,b=[]){
+  const L=CL(),c=new L.Clipper(),out=[];
+  c.StrictlySimple=true;
+  c.AddPaths(a,L.PolyType.ptSubject,true);
+  if(b.length)c.AddPaths(b,L.PolyType.ptClip,true);
+  c.Execute(type,out,L.PolyFillType.pftNonZero,L.PolyFillType.pftNonZero);
+  return out;
+}
+const cUnion=(a,b)=>cOp(CL().ClipType.ctUnion,a,b);
+const cAnd=(a,b)=>cOp(CL().ClipType.ctIntersection,a,b);
+const cMinus=(a,b)=>cOp(CL().ClipType.ctDifference,a,b);
+function cOffset(a,mm){
+  const L=CL(),o=new L.ClipperOffset(2,.02*CS),out=[];
+  o.AddPaths(a,L.JoinType.jtRound,L.EndType.etClosedPolygon);o.Execute(out,mm*CS);
+  return out;
+}
+function rng(seed){let s=(seed*2654435761)>>>0||1;return ()=>{s^=s<<13;s>>>=0;s^=s>>>17;s^=s<<5;s>>>=0;return s/4294967296}}
+function bez(a,b,c,d,n=48){
+  const p=[];
+  for(let i=0;i<=n;i++){const t=i/n,u=1-t;p.push([u*u*u*a[0]+3*u*u*t*b[0]+3*u*t*t*c[0]+t*t*t*d[0],u*u*u*a[1]+3*u*u*t*b[1]+3*u*t*t*c[1]+t*t*t*d[1]])}
+  return p;
+}
+/* A ribbon that follows a line, thick at one end and fine at the other. */
+function ribbon(line,w0,w1){
+  const L=[],R=[],n=line.length;
+  for(let i=0;i<n;i++){
+    const a=line[Math.max(0,i-1)],b=line[Math.min(n-1,i+1)];
+    let dx=b[0]-a[0],dy=b[1]-a[1];const l=Math.hypot(dx,dy)||1;dx/=l;dy/=l;
+    const w=(w0+(w1-w0)*i/(n-1))/2;
+    L.push([line[i][0]-dy*w,line[i][1]+dx*w]);R.push([line[i][0]+dy*w,line[i][1]-dx*w]);
+  }
+  return [...L,...R.reverse()];
+}
+function curl(from,dir,size,turn,turns=1.15,n=90){
+  /* A long open spiral that leaves in direction dir and winds in towards its centre. */
+  const p=[[...from]];let a=dir,x=from[0],y=from[1];
+  const len=size*3.4;
+  for(let i=1;i<=n;i++){
+    const t=i/n, step=len/n*(1.45-.9*t);
+    a+=turn*(2*Math.PI*turns/n)*(.25+1.5*t);
+    x+=Math.cos(a)*step;y+=Math.sin(a)*step;p.push([x,y]);
+  }
+  return p;
+}
+/* A long pointed leaf drawn as two fine lines, the most elven shape here. */
+function leafLines(base,tip,wid,lw){
+  const dx=tip[0]-base[0],dy=tip[1]-base[1],l=Math.hypot(dx,dy),nx=-dy/l*wid,ny=dx/l*wid;
+  const c=(t,k)=>[base[0]+dx*t+nx*k,base[1]+dy*t+ny*k];
+  return [ribbon(bez(base,c(.3,.75),c(.7,.55),tip),lw,lw*.9),ribbon(bez(base,c(.3,-.75),c(.7,-.55),tip),lw,lw*.9)];
+}
+function leaf(base,angle,len,wid){
+  const a=[],b=[],c=Math.cos(angle),s=Math.sin(angle);
+  for(let i=0;i<=20;i++){
+    const t=i/20,w=wid/2*Math.sin(Math.PI*t**.75),bend=len*.08*Math.sin(Math.PI*t);
+    const px=len*t,py=bend+w,qy=bend-w;
+    a.push([base[0]+px*c-py*s,base[1]+px*s+py*c]);
+    b.push([base[0]+px*c-qy*s,base[1]+px*s+qy*c]);
+  }
+  return [...a,...b.reverse()];
+}
+const tangent=(l,i)=>{const a=l[Math.max(0,i-1)],b=l[Math.min(l.length-1,i+1)];return Math.atan2(b[1]-a[1],b[0]-a[0])};
+const PATTERNS={
+  vine(d,r,lw){
+    const hw=d.W/2,hh=d.H/2,o=[],j=()=>(r()-.5)*.1;
+    const stem=bez([0,-hh],[hw*(.95+j()),-hh*.8],[hw*(.82+j()),hh*(.1+j())],[hw*.04,hh*.92]);
+    o.push(ribbon(stem,lw*1.25,lw));
+    [.22,.47,.72].forEach((t,k)=>{
+      const i=Math.round(t*(stem.length-1)),a=tangent(stem,i),p=stem[i],sz=hw*(.46-t*.2)*(.95+r()*.2);
+      o.push(ribbon(curl(p,a+.55,sz,1),lw*1.1,lw));
+    });
+    o.push(...leafLines([0,-hh*.86],[0,hh*(.3+r()*.12)],hw*.26,lw));
+    return o;
+  },
+  scroll(d,r,lw){
+    const hw=d.W/2,hh=d.H/2,o=[],sz=hw*(.46+r()*.06);
+    o.push(ribbon(curl([0,-hh*.98],.75,sz*1.05,1),lw*1.2,lw));
+    o.push(ribbon(curl([0,-hh*.1],.5,sz*.95,1),lw*1.2,lw));
+    o.push(ribbon(curl([0,hh*.42],.9,sz*.62,1),lw*1.2,lw));
+    o.push(ribbon(bez([0,-hh],[0,-hh*.3],[0,hh*.3],[0,hh*.95]),lw*1.2,lw));
+    return o;
+  },
+  arch(d,r,lw){
+    const hw=d.W/2,hh=d.H/2,o=[],lift=r()*.08;
+    for(const k of [.72,.4]){
+      o.push(ribbon(bez([hw*k,-hh],[hw*k*1.05,hh*.05],[hw*k*.45,hh*(.2+k*.4)],[0,hh*(.3+k*.75+lift)]),lw*1.15,lw));
+    }
+    o.push(...leafLines([0,-hh*.95],[0,hh*(.35+lift)],hw*.15,lw));
+    o.push(ribbon(bez([hw*.24,-hh*.28],[hw*.5,-hh*.2],[hw*.75,-hh*.05],[hw*.98,hh*.2]),lw,lw));
+    return o;
+  },
+  wing(d,r,lw){
+    const hw=d.W/2,hh=d.H/2,o=[],n=5;
+    const spine=bez([0,-hh],[hw*.06,-hh*.5],[hw*.05,hh*.1],[0,hh*.9]);
+    o.push(ribbon(spine,lw*1.25,lw));
+    for(let k=0;k<n;k++){
+      const t=.1+k*.17,i=Math.round(t*(spine.length-1)),p=spine[i],sw=(.5+t*.55)+(r()-.5)*.08;
+      o.push(ribbon(bez(p,[hw*.3,p[1]+hh*.02],[hw*.75,p[1]+hh*.16],[hw*1.1,p[1]+hh*(sw*.6)]),lw*1.1,lw*.95));
+    }
+    return o;
+  }
+};
+const disc=(x,y,r,n=96)=>Array.from({length:n},(_,i)=>{const a=2*Math.PI*i/n;return [x+r*Math.cos(a),y+r*Math.sin(a)]});
+const ringAt=(x,y,r,lw)=>ribbon([...disc(x,y,r,48),[x+r,y],[x+r*Math.cos(.13),y+r*Math.sin(.13)]],lw,lw);
+function moonStar(d){
+  const R=d.W/2, sr=Math.max(d.lw*4,R*.36);
+  return star(-R*.8+R*.42+sr*.42,0,sr);
+}
+function star(x,y,r){
+  const p=[];
+  for(let i=0;i<8;i++){const a=Math.PI/2+i*Math.PI/4,q=i%2?r*.42:r;p.push([x+q*Math.cos(a),y+q*Math.sin(a)])}
+  return p;
+}
+function centroid(p){
+  let A=0,x=0,y=0;
+  for(let i=0;i<p.length;i++){const a=p[i],b=p[(i+1)%p.length],c=a[0]*b[1]-b[0]*a[1];A+=c;x+=(a[0]+b[0])*c;y+=(a[1]+b[1])*c}
+  return [x/(3*A),y/(3*A)];
+}
+function swell(line,lw,peak){
+  const A=[],B=[],n=line.length;
+  for(let i=0;i<n;i++){
+    const t=i/(n-1),w=(lw+(peak-lw)*Math.sin(Math.PI*t)**2)/2;
+    const p=line[Math.max(0,i-1)],q=line[Math.min(n-1,i+1)];
+    let dx=q[0]-p[0],dy=q[1]-p[1];const l=Math.hypot(dx,dy)||1;dx/=l;dy/=l;
+    A.push([line[i][0]-dy*w,line[i][1]+dx*w]);B.push([line[i][0]+dy*w,line[i][1]-dx*w]);
+  }
+  return [...A,...B.reverse()];
+}
+/* A dragonfly wing hangs from its base at the top, with a straighter leading edge. */
+function wingEdges(d){
+  const hw=d.W/2,hh=d.H/2,P=(x,y)=>[x*hw,y*hh];
+  const lead=bez(P(0,1),P(-.55,.75),P(-.85,0),P(-.72,-.75),40);
+  const trail=bez(P(.12,-.82),P(.75,-.3),P(1,.35),P(.22,.86),40).reverse();
+  return {L:lead,T:trail};
+}
+/* The whole piece takes the outline of the subject, rather than sitting in a frame. */
+const SILHOUETTES={
+  dfly(d){
+    const hw=d.W/2,hh=d.H/2,P=(x,y)=>[x*hw,y*hh],{L,T}=wingEdges(d);
+    const whole=[...L,...bez(P(-.72,-.75),P(-.65,-1.02),P(-.1,-1.05),P(.12,-.82),20).slice(1),...T.slice().reverse().slice(1),...bez(P(.22,.86),P(.12,.93),P(.05,.97),P(0,1),8).slice(1,-1)];
+    return {body:cUnion([toPath(whole)]),free:[],x:0,top:hh,band:0};
+  },
+  moth(d){
+    const hw=d.W/2,hh=d.H/2,P=(x,y)=>[x*hw,y*hh];
+    const half=[
+      ...bez(P(0,.72),P(.25,.95),P(.7,1.02),P(1,.92),30),
+      ...bez(P(1,.92),P(.96,.55),P(.86,.28),P(.7,.1),24).slice(1),
+      ...bez(P(.7,.1),P(.82,-.12),P(.8,-.6),P(.5,-.82),24).slice(1),
+      ...bez(P(.5,-.82),P(.35,-.95),P(.2,-.9),P(.1,-.7),16).slice(1),
+      ...bez(P(.1,-.7),P(.08,-.85),P(.04,-.98),P(0,-1),10).slice(1)
+    ];
+    const whole=[...half,...half.slice(1,-1).reverse().map(q=>[-q[0],q[1]])].reverse();
+    return {body:[toPath(whole)],free:[],x:0,top:hh*.72,band:2.4};
+  },
+  moon(d){
+    const R=d.W/2,s=R*.42,r=R*.8;
+    const body=cMinus([toPath(disc(0,0,R,180))],[toPath(disc(s,0,r,180))]);
+    const c=centroid(fromPath(body[0]));
+    /* The star sits right against the inside of the crescent, joined across its
+       whole arm, so there is no thin stem to snap. */
+    const free=[moonStar(d)];
+    const top=Math.sqrt(R*R-c[0]*c[0]);
+    return {body,free:free.flatMap(q=>cUnion([toPath(q)])),x:c[0],top,band:1.8};
+  }
+};
+Object.assign(PATTERNS,{
+  moth(d,r,lw){
+    const hw=d.W/2,hh=d.H/2,P=(x,y)=>[x*hw,y*hh],o=[];
+    o.push(ribbon(bez(P(.09,.7),P(.1,.2),P(.1,-.3),P(.03,-.92)),lw*1.1,lw));
+    const eyeF=P(.56,.56),eyeH=P(.44,-.42);
+    const j=()=>(r()-.5)*.05;
+    for(const t of [[.82+j(),.9],[.92,.3]]) o.push(ribbon(bez(P(.07,.46),P(.3,.52),P(.55,t[1]),P(t[0],t[1])),lw,lw*.95));
+    for(const t of [[.7,-.12],[.74,-.4],[.56,-.72],[.3,-.8]]) o.push(ribbon(bez(P(.07,.12),P(.22,.0),P(t[0]*.7,t[1]*.8),P(t[0],t[1])),lw,lw*.95));
+    const rF=Math.max(lw*3,hw*.18),rH=Math.max(lw*2.6,hw*.15);
+    o.push(ringAt(eyeF[0],eyeF[1],rF,lw),ringAt(eyeH[0],eyeH[1],rH,lw));
+    o.push(disc(eyeF[0],eyeF[1],rF*.34,32),disc(eyeH[0],eyeH[1],rH*.34,32));
+    o.push(ribbon(bez([eyeF[0],eyeF[1]],[eyeF[0]+rF*.4,eyeF[1]+rF*.2],[eyeF[0]+rF*.7,eyeF[1]+rF*.3],[eyeF[0]+rF,eyeF[1]+rF*.2]),lw,lw));
+    return o;
+  },
+  moon(d,r,lw){
+    const R=d.W/2,o=[moonStar(d)];
+    o.push(ribbon(curl([-R*.86,-R*.1],1.4,R*.2,-1),lw*1.1,lw));
+    o.push(ribbon(curl([-R*.86,R*.1],-1.4,R*.2,1),lw*1.1,lw));
+    o.push(ribbon(bez([-R*.92,R*.05],[-R*.72,R*.6],[-R*.3,R*.82],[R*.2,R*.92]),lw,lw));
+    o.push(ribbon(bez([-R*.92,-R*.05],[-R*.72,-R*.6],[-R*.3,-R*.82],[R*.2,-R*.92]),lw,lw));
+    return o;
+  },
+  nouveau(d,r,lw){
+    const hw=d.W/2,hh=d.H/2,o=[],j=()=>(r()-.5)*.08;
+    /* The whiplash: two long asymmetrical S curves that swell in the middle and
+       flick into a curl, crossing like a stem caught in the wind. */
+    const a=bez([-hw*.25,-hh*1.02],[hw*(2.9+j()),-hh*.5],[-hw*(2.9+j()),hh*(.25+j())],[hw*.45,hh*.74],70);
+    o.push(swell(a,lw,lw*3.4));
+    o.push(ribbon(curl(a[70],tangent(a,70),hw*.3,-1),lw*1.1,lw));
+    const b=bez([hw*.4,-hh*1.02],[-hw*(2.5+j()),-hh*.45],[hw*2.5,hh*.1],[-hw*.5,hh*.62],70);
+    o.push(swell(b,lw,lw*2.6));
+    o.push(ribbon(curl(b[70],tangent(b,70),hw*.24,1),lw*1.1,lw));
+    return o;
+  },
+  dfly(d,r,lw){
+    const {L,T}=wingEdges(d),o=[],n=L.length-1;
+    const at=(t,k)=>{const i=Math.round(t*n),p=L[i],q=T[i];return [p[0]+(q[0]-p[0])*k,p[1]+(q[1]-p[1])*k]};
+    const K=[.3,.64];
+    for(const k of K){
+      const line=[];for(let i=0;i<=n;i++)line.push(at(i/n,k*(1-.25*i/n)+.1*i/n));
+      o.push(ribbon(line,lw*1.25,lw));
+    }
+    /* Cross-veins make the cells of a real wing, offset row by row. */
+    const edges=[0,...K,1], rows=Math.max(4,Math.floor(d.H/7.5));
+    for(let c=0;c<edges.length-1;c++){
+      for(let j=1;j<rows;j++){
+        const t=(j+(c%2?.5:0)+(r()-.5)*.25)/rows;
+        if(t<.08||t>.96)continue;
+        const lean=(r()-.5)*.03;
+        const k0=edges[c],k1=edges[c+1],f=x=>x?x*(1-.25*t)+.1*t:0;
+        o.push(ribbon([at(t,k0&&f(k0)),at(t+lean+.02,k1===1?1:f(k1))],lw,lw));
+      }
+    }
+    /* The pterostigma, the small dark cell near the tip of the leading edge. */
+    o.push([at(.72,0),at(.8,0),at(.81,.2),at(.73,.2)]);
+    return o;
+  }
+});
+PATTERNS.moon.noMirror=true;
+PATTERNS.nouveau.noMirror=true;
+PATTERNS.dfly.noMirror=true;
+/* Drop points that lie exactly on a straight line, so that faces and walls meet cleanly. */
+function decol(p){
+  let q=p,changed=true;
+  while(changed&&q.length>3){
+    changed=false;const out=[];
+    for(let i=0;i<q.length;i++){
+      const a=q[(i+q.length-1)%q.length],b=q[i],c=q[(i+1)%q.length];
+      if((b.X-a.X)*(c.Y-a.Y)-(b.Y-a.Y)*(c.X-a.X)===0){changed=true;continue}
+      out.push(b);
+    }
+    q=out;
+  }
+  return q;
+}
+/* Dragonfly wing only: bends a straight pattern along the wing's curved midline.
+   Width is kept from shrinking much, so lines near the tips stay thick enough to cast. */
+function wingWarp(d){
+  const poly=shapePoly('wing',d.W,d.H),N=200,tab=[],hw=d.W/2;
+  const ys=poly.map(q=>q[1]),y0=Math.min(...ys),y1=Math.max(...ys);
+  for(let i=0;i<=N;i++){
+    const y=y0+(y1-y0)*i/N;let lo=1/0,hi=-1/0;
+    for(let k=0;k<poly.length;k++){
+      const a=poly[k],b=poly[(k+1)%poly.length];
+      if((a[1]-y)*(b[1]-y)<=0&&a[1]!==b[1]){const x=a[0]+(b[0]-a[0])*(y-a[1])/(b[1]-a[1]);lo=Math.min(lo,x);hi=Math.max(hi,x)}
+    }
+    tab.push(lo<=hi?[(lo+hi)/2,(hi-lo)/2]:[0,hw]);
+  }
+  return q=>{
+    const t=Math.min(N,Math.max(0,(q[1]-y0)/(y1-y0)*N)),i=Math.min(N-1,Math.floor(t)),f=t-i;
+    const c=tab[i][0]+(tab[i+1][0]-tab[i][0])*f,w=tab[i][1]+(tab[i+1][1]-tab[i][1])*f;
+    return [c+q[0]*Math.max(.85,Math.min(1,w/hw)),q[1]];
+  };
+}
+function filigree(d){
+  const L=CL(), sil=SILHOUETTES[d.pat]&&SILHOUETTES[d.pat](d);
+  let outerA,inner,lp=null;
+  if(sil){
+    if(d.loop)lp={x:sil.x,y:sil.top+d.LD/2-1.5,r:d.LD/2};
+    outerA=cUnion(sil.body,[...sil.free,...(lp?[toPath(disc(lp.x,lp.y,lp.r))]:[])]);
+    inner=cOffset(sil.body,-d.frame);
+  }else{
+    const e=edgesOf(shapePoly(d.shape,d.W,d.H)),top=Math.max(...shapePoly(d.shape,d.W,d.H).map(q=>q[1]));
+    if(d.loop)lp={x:0,y:top+d.LD/2-1.5,r:d.LD/2};
+    outerA=[toPath(rayLoop(e,0,lp))];inner=[toPath(rayLoop(e,d.frame))];
+  }
+  const ring=cMinus(outerA,inner);
+  const strokes=[], warp=!sil&&d.shape==='wing'?wingWarp(d):null;
+  for(const poly of PATTERNS[d.pat](d,rng(d.seed*7+3),d.lw)){
+    for(const m of PATTERNS[d.pat].noMirror?[1]:[1,-1]){
+      const placed=m>0?poly:poly.map(q=>[-q[0],q[1]]);
+      strokes.push(...cUnion([toPath(warp?placed.map(warp):placed)]));
+    }
+  }
+  if(sil&&sil.band){
+    const a=cOffset(sil.body,-(d.frame+sil.band)),b=cOffset(sil.body,-(d.frame+sil.band+d.lw));
+    strokes.push(...cMinus(a,b));
+  }
+  let all=cUnion(ring,cAnd(cUnion(strokes),outerA));
+  /* Remove gaps too narrow for silicone, then lines too thin to cast. */
+  all=cOffset(cOffset(all,.3),-.3);
+  all=cOffset(cOffset(all,-d.lw*.4),d.lw*.4);
+  let hang=null;
+  if(lp){hang=disc(lp.x,lp.y,d.HD/2,48);all=cMinus(all,[toPath(hang)])}
+  all=L.JS.Clean(all,.02*CS).map(decol);
+  const outers=all.filter(p=>L.Clipper.Area(p)>0).sort((a,b)=>L.Clipper.Area(b)-L.Clipper.Area(a));
+  const main=outers[0], dropped=outers.slice(1);
+  const inHole=p=>dropped.some(o=>L.Clipper.PointInPolygon(p[0],o)!==0);
+  let holes=all.filter(p=>L.Clipper.Area(p)<0&&!inHole(p));
+  let through=[],gaps=[];
+  const mm2=p=>Math.abs(L.Clipper.Area(p))/(CS*CS);
+  for(const h of holes){
+    const isHang=lp&&L.Clipper.PointInPolygon({X:Math.round(lp.x*CS),Y:Math.round(lp.y*CS)},h)!==0;
+    if(!isHang&&mm2(h)<1.2)continue;       /* too small to leave a sturdy silicone pin */
+    const q=fromPath(h).reverse();         /* counter-clockwise, like the outline */
+    (isHang?through:gaps).push(q);
+  }
+  const outer=fromPath(main), T=d.T;
+  const aO=areaOf(outer),aT=through.reduce((s,h)=>s+areaOf(h),0),aG=gaps.reduce((s,h)=>s+areaOf(h),0);
+  const backed=d.struct==='backed';
+  const bodyMl=backed?((aO-aT)*d.back+(aO-aT-aG)*(T-d.back))/1000:(aO-aT-aG)*T/1000;
+  const inlayMl=backed?aG*(T-d.back)/1000:0;
+  const xs=outer.map(q=>q[0]),ys=outer.map(q=>q[1]);
+  return {fili:true,outer,gaps,through,bodyMl,inlayMl,back:d.back,backed,dropped:dropped.length,
+    size:[Math.max(...xs)-Math.min(...xs),Math.max(...ys)-Math.min(...ys),T]};
+}
+function filigreeTris(p,d){
+  const tris=[],T=d.T,z=(q,h)=>[q[0],q[1],h];
+  const wall=(lp,z0,z1,inward)=>{
+    for(let i=0;i<lp.length;i++){
+      const a=lp[i],b=lp[(i+1)%lp.length],A=z(a,z0),B=z(b,z0),C=z(b,z1),D=z(a,z1);
+      if(inward)tris.push([A,C,B],[A,D,C]);else tris.push([A,B,C],[A,C,D]);
+    }
+  };
+  const cap=(rings,h,up)=>{
+    const flat=[],hs=[];let pts=[];
+    rings.forEach((r,i)=>{if(i)hs.push(pts.length);pts=pts.concat(r)});
+    for(const q of pts)flat.push(q[0],q[1]);
+    const idx=earcut(flat,hs);
+    for(let i=0;i<idx.length;i+=3){
+      let a=pts[idx[i]],b=pts[idx[i+1]],c=pts[idx[i+2]];
+      const s=(b[0]-a[0])*(c[1]-a[1])-(b[1]-a[1])*(c[0]-a[0]);
+      if((s>0)!==up){const t=b;b=c;c=t}
+      tris.push([z(a,h),z(b,h),z(c,h)]);
+    }
+  };
+  wall(p.outer,0,T,false);
+  for(const h of p.through)wall(h,0,T,true);
+  cap([p.outer,...p.gaps,...p.through],T,true);
+  if(p.backed){
+    for(const g of p.gaps){wall(g,p.back,T,true);cap([g],p.back,true)}
+    cap([p.outer,...p.through],0,false);
+  }else{
+    for(const g of p.gaps)wall(g,0,T,true);
+    cap([p.outer,...p.gaps,...p.through],0,false);
+  }
+  return tris;
+}
+
+/* ---- jewellery: page ---- */
+let jShape='teardrop', jLoop=true, jInlay=true, jP=null, jD=null, jStyle='solid', jPat='vine', jStruct='open', jSeedN=1;
+const jOwnShape=()=>jStyle==='fili'&&!!SILHOUETTES[jPat];
+const jRound=()=>jOwnShape()?jPat==='moon':jShape==='circle';
+function jSetSize(w,h){
+  const known=[['26','36'],['32','46'],['46','34'],['38','38'],['26','60']];
+  if(known.some(k=>k[0]===$('jW').value&&(k[1]===$('jH').value))){$('jW').value=w;$('jH').value=h}
+}
+function jRead(){
+  const round=jRound();
+  const W=num($('jW'),26);
+  return {shape:jShape,W,H:round?W:num($('jH'),36),T:num($('jT'),4),loop:jLoop,LD:num($('jLD'),8),HD:num($('jHD'),3),inlay:jInlay&&jStyle==='solid',rim:num($('jRim'),2),dep:num($('jDep'),2),
+    style:jStyle,pat:jPat,struct:jStruct,seed:jSeedN,lw:num($('jLw'),1.2),frame:num($('jFrame'),1.6),back:num($('jBack'),1.2)};
+}
+function drawJ(){
+  segs($('jShapes'),[['teardrop','Teardrop'],['circle','Circle'],['oval','Oval'],['hex','Hexagon'],['square','Rounded square'],['wing','Dragonfly wing']],jShape,k=>{jShape=k;if(k==='wing')jSetSize('26','60');else jSetSize(...(jStyle==='fili'?['32','46']:['26','36']));drawJ();jCalc()});
+  segs($('jLoopSeg'),[['y','With loop'],['n','No loop']],jLoop?'y':'n',k=>{jLoop=k==='y';drawJ();jCalc()});
+  segs($('jInlaySeg'),[['y','With inlay'],['n','Plain']],jInlay?'y':'n',k=>{jInlay=k==='y';drawJ();jCalc()});
+  segs($('jStyleSeg'),[['solid','Solid'],['fili','Filigree']],jStyle,k=>{
+    jStyle=k;
+    if(k==='fili'){if($('jT').value==='4')$('jT').value='2.5';if($('jW').value==='26'&&$('jH').value==='36'){$('jW').value='32';$('jH').value='46'}}
+    if(k==='solid'){if($('jT').value==='2.5')$('jT').value='4';if($('jW').value==='32'&&$('jH').value==='46'){$('jW').value='26';$('jH').value='36'}}
+    drawJ();jCalc();
+  });
+  segs($('jPatSeg'),[['vine','Vine'],['scroll','Scroll'],['arch','Arch'],['wing','Leaf'],['nouveau','Art Nouveau'],['moth','Moth'],['moon','Crescent moon'],['dfly','Dragonfly wing']],jPat,k=>{
+    jPat=k;
+    if(k==='moth')jSetSize('46','34');else if(k==='moon')jSetSize('38','38');else if(k==='dfly')jSetSize('26','60');else jSetSize('32','46');
+    drawJ();jCalc();
+  });
+  segs($('jStructSeg'),[['open','Openwork'],['backed','With backing']],jStruct,k=>{jStruct=k;drawJ();jCalc()});
+  const fili=jStyle==='fili';
+  $('jFili').hidden=!fili;$('jInlaySec').hidden=fili;
+  $('jBackWrap').hidden=jStruct!=='backed';
+  $('jFiliHint').textContent=jStruct==='backed'
+    ?'A thin back holds the pattern together, which is much stronger. You can fill the spaces with a second colour.'
+    :'The spaces go right through, for the most delicate look. Openwork is fragile in resin, so keep lines at 1 mm or more.';
+  $('jShapes').hidden=jOwnShape();
+  $('jHWrap').hidden=jRound();
+  $('jWLabel').textContent=jRound()?'Diameter (mm)':'Width (mm)';
+  $('jLoopFields').hidden=!jLoop;$('jInlayFields').hidden=!jInlay;
+  const hasInlay=fili?jStruct==='backed':jInlay;
+  $('jToInlay').hidden=!hasInlay;
+  $('jToBody').textContent=hasInlay?'Pour the body':'Pour this piece';
+}
+function jCalc(){
+  const d=jRead(), note=[]; let valid=d.W>0&&d.H>0&&d.T>0;
+  if(d.inlay&&d.rim>=Math.min(...edgesOf(shapePoly(d.shape,d.W,d.H)).map(q=>q[2]))*.8){valid=false;note.push('The rim is too wide for this size. Make it narrower or make the pendant bigger.')}
+  if(d.inlay&&d.dep>=d.T){valid=false;note.push('The recess must be shallower than the pendant.')}
+  if(d.loop&&d.HD>=d.LD-1){valid=false;note.push('The hole is too big for the loop. Leave at least 0.5 mm of material around it.')}
+  for(const id of ['jDl','jToMould','jToBody','jToInlay']) $(id).disabled=!valid;
+  $('jNote').hidden=!note.length;$('jNote').textContent=note.join(' ');
+  if(!valid){jP=null;return}
+  if(d.inlay&&d.T-d.dep<1.5){note.push('Less than 1.5 mm stays behind the inlay, so the pendant may be fragile.')}
+  if(d.loop&&(d.LD-d.HD)/2<1.5){note.push('The loop is thin, so it may break. Keep at least 1.5 mm around the hole.')}
+  if(d.loop&&d.HD<2.5){note.push('A thin silicone pin may tear. Try a hole of at least 2.5 mm, or drill it after casting.')}
+  $('jNote').hidden=!note.length;$('jNote').textContent=note.join(' ');
+  const fili=d.style==='fili';
+  if(fili){
+    if(!window.ClipperLib||!window.earcut){jP=null;$('jNote').hidden=false;$('jNote').textContent='The filigree tools could not load. Reload the page and try again.';return}
+    if(d.struct==='backed'&&d.back>=d.T){jP=null;$('jNote').hidden=false;$('jNote').textContent='The backing must be thinner than the pendant.';for(const id of ['jDl','jToMould','jToBody','jToInlay']) $(id).disabled=true;return}
+    if(d.lw<1) note.push('Lines under 1 mm may not print on a 0.4 mm nozzle or survive casting.');
+  }
+  const p=fili?filigree(d):pendant(d);jP=p;jD=d;
+  $('jNote').hidden=!note.length;$('jNote').textContent=note.join(' ');
+  const rows=[['Finished size',p.size.map(n=>fmt(n,1)).join(' × ')+' mm'],['Body resin',fmt(p.bodyMl,2)+' ml']];
+  if(p.inlayMl>0) rows.push(['Inlay resin',fmt(p.inlayMl,2)+' ml']);
+  $('jTotal').innerHTML='';
+  for(const [x,y] of rows){const e=document.createElement('div'),u=document.createElement('span'),w=document.createElement('span');u.textContent=x;w.textContent=y;e.append(u,w);$('jTotal').append(e)}
+  drawPendant(p);
+}
+function drawPendant(p){
+  const xs=p.outer.map(q=>q[0]),ys=p.outer.map(q=>q[1]);
+  const minX=Math.min(...xs),maxX=Math.max(...xs),minY=Math.min(...ys),maxY=Math.max(...ys);
+  const W=360,H=260,sc=Math.min((W-60)/(maxX-minX),(H-60)/(maxY-minY));
+  const cx=W/2-(minX+maxX)/2*sc, cy=(H-22)/2+(minY+maxY)/2*sc;
+  const path=l=>'M'+l.map(q=>(cx+q[0]*sc).toFixed(1)+' '+(cy-q[1]*sc).toFixed(1)).join('L')+'Z';
+  let s;
+  if(p.fili){
+    const gaps=p.gaps.map(path).join(''), thru=p.through.map(path).join('');
+    if(p.backed) s=`<path d="${path(p.outer)}${thru}" fill="${$('jC2').value}" fill-rule="evenodd"/>`;
+    else s='';
+    s+=`<path d="${path(p.outer)}${gaps}${thru}" fill="${$('jC1').value}" fill-rule="evenodd"/>`;
+  }else{
+    s=`<path d="${path(p.outer)}${p.hole?path(p.hole):''}" fill="${$('jC1').value}" fill-rule="evenodd" stroke="var(--muted)"/>`;
+    if(p.pocket) s+=`<path d="${path(p.pocket)}" fill="${$('jC2').value}" stroke="var(--muted)"/>`;
+  }
+  s+=`<line x1="16" x2="${16+10*sc}" y1="${H-10}" y2="${H-10}" stroke="var(--muted)" stroke-width="2"/><text x="16" y="${H-16}">10 mm</text>`;
+  $('jSvg').setAttribute('viewBox',`0 0 ${W} ${H}`);$('jSvg').innerHTML=s;
+}
+function jName(){if(jOwnShape())return {moth:'Moth',moon:'Crescent moon',dfly:'Dragonfly wing'}[jPat]+' pendant';return {teardrop:'Teardrop',circle:'Circle',oval:'Oval',hex:'Hexagon',square:'Rounded square',wing:'Dragonfly wing'}[jShape]+' pendant'}
+async function jDownload(){
+  if(!jP) return;
+  const msg=$('jMsg');msg.textContent='';
+  try{
+    const blob=zipStore([{name:'pendant-master.stl',data:stlBinary(jP.fili?filigreeTris(jP,jD):pendantTris(jP,jD))}]);
+    const dl=window.claude?await window.claude.use('downloads'):null;
+    if(!dl){msg.textContent='Downloads aren’t available in this view. Open the page in Claude to save the file.';return}
+    await dl.save({filename:'pendant-master.zip',data:blob});
+    msg.textContent='Saved. Unzip it, then print it with the back flat on the bed.';
+  }catch(e){msg.textContent=e&&e.code==='declined'?'Download cancelled.':'That did not save. Try again.'}
+}
+function jToMould(){
+  if(!jP) return;
+  mShape='stl';mStlData={size:jP.size,ml:jP.bodyMl,closed:true};
+  $('mStl').textContent=jName()+': '+jP.size.map(n=>n.toFixed(1)).join(' × ')+' mm, '+fmt(jP.bodyMl)+' ml';
+  drawM();mCalc();view('mould');
+}
+function jToPour(ml,label){
+  if(!jP) return;
+  shape='stl';stl={ml,size:jP.size,tris:0,closed:true};
+  $('stlInfo').textContent=jName()+': '+label+', '+fmt(ml,2)+' ml';
+  drawShapes();drawFields();calc();view('pour');
+}
+const once=fn=>{let w=0;return()=>{if(w)return;w=requestAnimationFrame(()=>{w=0;fn()})}};
+for(const id of ['jW','jH','jT','jLD','jHD','jRim','jDep','jLw','jFrame','jBack']) $(id).addEventListener('input',once(jCalc));
+for(const id of ['jC1','jC2']) $(id).addEventListener('input',()=>{if(jP)drawPendant(jP)});
+$('jSeed').onclick=()=>{jSeedN++;jCalc()};
+$('jDl').onclick=jDownload;$('jToMould').onclick=jToMould;
+$('jToBody').onclick=()=>jP&&jToPour(jP.bodyMl,'body');
+$('jToInlay').onclick=()=>jP&&jToPour(jP.inlayMl,'inlay');
+
+/* ---- seal: glyphs are drawn as strokes on a 100 × 100 grid, in the even, squared
+   line of Han seals, so that they fill their cell the way carved characters do. ---- */
+const FONT_GLYPHS={"brush":{"李":[[[644.0,553.0],[647.3,554.2],[650.7,555.2],[654.0,555.9],[657.3,556.3],[660.7,556.5],[664.0,556.5],[668.0,556.2],[673.2,555.4],[679.8,554.4],[687.6,552.9],[696.6,551.2],[707.0,549.0],[723.7,545.2],[738.3,541.2],[751.0,537.0],[761.7,532.6],[770.3,527.9],[777.0,523.0],[779.2,521.7],[781.6,520.4],[784.4,519.2],[787.4,518.1],[790.8,517.0],[794.5,516.0],[798.3,514.9],[801.9,513.4],[805.4,511.8],[808.7,509.8],[811.9,507.5],[815.0,505.0],[826.2,494.8],[835.9,485.7],[844.0,477.5],[850.6,470.3],[855.6,464.2],[859.0,459.0],[861.3,454.3],[862.8,449.4],[863.5,444.5],[863.4,439.4],[862.6,434.3],[861.0,429.0],[859.5,424.8],[858.2,421.0],[857.2,417.5],[856.6,414.3],[856.1,411.5],[856.0,409.0],[855.6,406.6],[854.5,404.1],[852.6,401.4],[850.0,398.6],[846.6,395.6],[842.5,392.5],[838.1,389.6],[834.0,387.2],[830.1,385.4],[826.5,384.1],[823.1,383.3],[820.0,383.0],[816.0,383.6],[810.7,385.6],[804.1,388.8],[796.2,393.2],[787.0,399.0],[776.5,406.0],[765.5,413.6],[755.0,421.2],[744.9,428.8],[735.2,436.2],[725.9,443.6],[717.0,451.0],[707.5,460.4],[698.2,469.1],[689.2,477.2],[680.6,484.8],[672.1,491.7],[664.0,498.0],[656.5,504.2],[650.1,510.3],[644.6,516.1],[640.2,521.8],[636.8,527.2],[634.5,532.5],[633.2,537.4],[633.1,541.7],[634.1,545.4],[636.3,548.5],[639.6,551.0],[644.0,553.0]],[[416.0,619.0],[418.0,620.7],[420.1,621.7],[422.2,622.0],[424.4,621.7],[426.7,620.7],[429.0,619.0],[432.9,616.4],[436.7,613.3],[440.4,609.8],[443.9,605.7],[447.3,601.1],[450.5,596.0],[453.4,590.8],[455.8,585.9],[457.6,581.2],[458.9,576.9],[459.7,572.8],[460.0,569.0],[459.7,565.6],[458.7,562.0],[457.1,558.2],[454.9,554.3],[452.0,550.2],[448.5,546.0],[443.5,540.6],[436.3,533.1],[426.9,523.5],[415.2,511.8],[401.2,497.9],[385.0,482.0],[353.4,451.6],[325.3,425.7],[300.8,404.2],[279.7,387.3],[262.1,374.9],[248.0,367.0],[242.6,364.3],[236.9,361.3],[231.0,358.2],[224.9,355.0],[218.6,351.6],[212.0,348.0],[206.9,345.3],[200.9,342.4],[194.0,339.4],[186.2,336.2],[177.6,332.9],[168.0,329.5],[158.8,326.3],[151.1,323.9],[145.0,322.1],[140.4,321.1],[137.4,320.7],[136.0,321.0],[136.1,322.0],[137.2,323.8],[139.2,326.2],[142.2,329.4],[146.1,333.4],[151.0,338.0],[159.5,345.6],[171.8,357.2],[187.8,372.6],[207.4,392.0],[230.9,415.3],[258.0,442.5],[284.9,469.6],[307.4,492.4],[325.8,511.1],[339.8,525.6],[349.5,535.9],[355.0,542.0],[378.0,572.0],[387.4,584.1],[395.6,594.6],[402.5,603.2],[408.2,610.2],[412.7,615.5],[416.0,619.0]],[[499.0,813.0],[506.7,816.5],[514.6,818.2],[522.5,818.2],[530.6,816.6],[538.7,813.1],[547.0,808.0],[551.3,804.6],[555.0,801.8],[558.0,799.5],[560.3,797.8],[562.0,796.6],[563.0,796.0],[563.7,794.6],[564.3,791.0],[565.0,785.2],[565.7,777.3],[566.3,767.2],[567.0,755.0],[569.0,716.0],[648.0,715.0],[729.0,714.0],[737.0,704.0],[739.5,700.5],[741.5,696.5],[743.1,692.1],[744.3,687.3],[745.1,682.1],[745.5,676.5],[745.5,670.9],[745.0,665.7],[744.1,660.9],[742.8,656.5],[741.1,652.5],[739.0,649.0],[737.1,646.8],[734.7,644.9],[731.8,643.4],[728.3,642.1],[724.4,641.2],[720.0,640.5],[715.3,640.2],[710.7,640.2],[706.0,640.6],[701.3,641.4],[696.7,642.5],[692.0,644.0],[687.8,645.3],[681.2,646.3],[672.2,647.2],[660.9,648.0],[647.1,648.6],[631.0,649.0],[614.9,649.1],[601.4,648.9],[590.5,648.2],[582.1,647.2],[576.3,645.8],[573.0,644.0],[571.6,641.9],[570.2,638.3],[568.8,633.2],[567.2,626.7],[565.6,618.6],[564.0,609.0],[562.5,599.4],[561.4,591.2],[560.8,584.5],[560.4,579.2],[560.5,575.4],[561.0,573.0],[561.5,570.6],[561.7,565.4],[561.5,557.5],[561.0,546.8],[560.2,533.3],[559.0,517.0],[557.7,500.4],[556.6,486.1],[555.5,474.0],[554.6,464.1],[553.7,456.4],[553.0,451.0],[550.0,439.0],[567.0,439.0],[572.8,438.8],[579.7,438.0],[587.5,436.8],[596.3,435.0],[606.2,432.8],[617.0,430.0],[627.1,427.0],[636.2,423.9],[644.2,420.8],[651.2,417.6],[657.1,414.3],[662.0,411.0],[665.9,407.5],[668.9,403.8],[671.0,399.8],[672.2,395.4],[672.6,390.9],[672.0,386.0],[671.1,381.7],[669.7,377.6],[667.8,373.5],[665.3,369.6],[662.4,365.7],[659.0,362.0],[655.4,358.6],[651.9,355.9],[648.5,353.8],[645.2,352.2],[642.1,351.3],[639.0,351.0],[635.4,350.8],[631.8,350.3],[628.2,349.5],[624.8,348.3],[621.4,346.8],[618.0,345.0],[609.8,340.8],[602.7,336.9],[596.5,333.2],[591.3,329.9],[587.2,326.8],[584.0,324.0],[582.2,322.7],[580.3,321.3],[578.2,320.0],[576.0,318.7],[573.6,317.3],[571.0,316.0],[569.8,315.0],[568.8,314.1],[568.0,313.1],[567.4,312.2],[567.1,311.3],[567.0,310.5],[567.1,309.5],[567.6,308.3],[568.2,306.9],[569.2,305.2],[570.5,303.2],[572.0,301.0],[574.3,297.3],[576.4,293.7],[578.5,290.0],[580.4,286.3],[582.3,282.7],[584.0,279.0],[588.0,268.0],[686.0,270.0],[709.4,270.2],[729.8,270.3],[747.0,270.1],[761.1,269.8],[772.1,269.2],[780.0,268.5],[786.2,267.4],[792.2,265.9],[798.0,263.9],[803.6,261.4],[808.9,258.4],[814.0,255.0],[817.2,251.5],[819.6,246.9],[821.1,241.2],[821.8,234.6],[821.6,226.8],[820.5,218.0],[818.7,209.2],[816.4,201.3],[813.6,194.5],[810.3,188.7],[806.4,183.8],[802.0,180.0],[800.6,178.8],[798.4,178.1],[795.4,177.6],[791.6,177.6],[786.9,177.8],[781.5,178.5],[776.0,179.3],[771.3,180.2],[767.4,181.1],[764.2,182.1],[761.7,183.0],[760.0,184.0],[757.9,185.1],[754.8,186.3],[750.9,187.6],[746.0,189.1],[740.2,190.7],[733.5,192.5],[726.5,194.3],[720.0,195.9],[713.9,197.4],[708.2,198.7],[702.9,199.9],[698.0,201.0],[692.7,202.0],[686.1,202.9],[678.2,203.8],[669.1,204.6],[658.7,205.3],[647.0,206.0],[611.0,207.0],[611.0,192.0],[611.1,187.9],[611.6,184.2],[612.2,181.0],[613.2,178.2],[614.5,175.9],[616.0,174.0],[617.5,171.0],[618.8,165.2],[619.8,156.6],[620.4,145.3],[620.9,131.3],[621.0,114.5],[620.9,97.7],[620.4,83.4],[619.8,71.9],[618.8,62.9],[617.5,56.7],[616.0,53.0],[614.4,51.0],[613.0,48.4],[611.8,45.2],[610.7,41.4],[609.8,37.0],[609.0,32.0],[607.9,26.4],[606.0,20.3],[603.2,13.6],[599.7,6.4],[595.2,-1.3],[590.0,-9.5],[584.7,-17.6],[580.0,-24.8],[576.0,-31.1],[572.7,-36.6],[570.0,-41.2],[568.0,-45.0],[562.1,-54.9],[555.0,-64.0],[546.8,-72.2],[537.3,-79.7],[526.8,-86.2],[515.0,-92.0],[508.0,-95.2],[501.7,-98.1],[496.0,-100.8],[491.0,-103.1],[486.7,-105.2],[483.0,-107.0],[477.4,-109.5],[472.1,-111.2],[467.0,-111.9],[462.1,-111.7],[457.4,-110.5],[453.0,-108.5],[448.6,-105.5],[444.1,-101.6],[439.5,-96.6],[434.8,-90.7],[429.9,-83.8],[425.0,-76.0],[420.4,-68.6],[414.6,-60.3],[407.5,-51.2],[399.2,-41.3],[389.7,-30.6],[379.0,-19.0],[360.5,0.6],[344.9,17.4],[332.2,31.5],[322.6,42.8],[315.8,51.3],[312.0,57.0],[310.8,59.5],[310.1,61.8],[309.6,63.9],[309.6,65.7],[309.8,67.2],[310.5,68.5],[311.5,69.4],[312.8,69.9],[314.4,69.9],[316.3,69.4],[318.5,68.4],[321.0,67.0],[324.0,65.3],[326.9,63.7],[329.9,62.0],[332.8,60.3],[335.7,58.7],[338.5,57.0],[341.6,55.1],[345.1,52.6],[349.1,49.5],[353.6,45.9],[358.6,41.7],[364.0,37.0],[373.1,29.6],[382.6,22.8],[392.2,16.6],[402.2,11.0],[412.5,6.0],[423.0,1.5],[433.4,-2.2],[443.1,-4.8],[452.2,-6.4],[460.8,-6.9],[468.7,-6.5],[476.0,-5.0],[480.1,-3.8],[484.2,-2.2],[488.5,-0.2],[492.9,2.1],[497.4,4.9],[502.0,8.0],[506.3,11.2],[509.8,14.1],[512.5,16.8],[514.4,19.1],[515.6,21.2],[516.0,23.0],[516.3,25.1],[517.0,28.0],[518.2,31.8],[520.0,36.3],[522.2,41.8],[525.0,48.0],[534.2,69.8],[541.0,91.9],[545.5,114.2],[547.7,136.9],[547.5,159.8],[545.0,183.0],[542.0,202.0],[500.0,199.0],[485.6,198.1],[471.0,196.9],[456.2,195.2],[441.3,193.2],[426.2,190.8],[411.0,188.0],[396.5,185.0],[383.8,182.0],[372.8,179.0],[363.4,176.0],[355.9,173.0],[350.0,170.0],[338.7,164.4],[328.0,160.1],[318.0,157.2],[308.7,155.8],[300.0,155.7],[292.0,157.0],[287.7,158.4],[284.2,159.8],[281.4,161.2],[279.3,162.8],[278.0,164.4],[277.5,166.0],[277.3,167.8],[277.1,169.8],[276.9,172.0],[276.6,174.4],[276.3,177.1],[276.0,180.0],[275.8,183.9],[276.3,188.2],[277.8,193.0],[280.0,198.2],[283.1,203.9],[287.0,210.0],[291.9,213.8],[300.7,217.7],[313.2,221.8],[329.7,226.0],[349.9,230.4],[374.0,235.0],[382.2,237.0],[390.2,238.9],[398.0,240.8],[405.6,242.6],[412.9,244.3],[420.0,246.0],[431.8,249.0],[444.7,251.9],[458.5,254.7],[473.3,257.6],[489.2,260.3],[506.0,263.0],[510.9,263.7],[515.1,264.4],[518.5,265.2],[521.1,266.1],[522.9,267.0],[524.0,268.0],[524.5,269.2],[524.6,270.7],[524.2,272.5],[523.6,274.7],[522.5,277.2],[521.0,280.0],[518.1,286.8],[516.2,293.2],[515.2,299.2],[515.2,304.9],[516.1,310.1],[518.0,315.0],[520.7,319.2],[524.1,322.4],[528.2,324.8],[533.1,326.1],[538.7,326.5],[545.0,326.0],[557.0,323.0],[570.0,353.0],[574.2,362.9],[577.6,371.4],[580.0,378.4],[581.6,383.9],[582.2,387.9],[582.0,390.5],[580.7,392.1],[578.2,393.3],[574.5,394.1],[569.6,394.5],[563.4,394.5],[556.0,394.0],[548.3,393.0],[541.8,392.0],[536.5,391.0],[532.4,390.0],[529.6,389.0],[528.0,388.0],[526.6,387.1],[524.3,386.2],[521.2,385.5],[517.3,384.9],[512.6,384.4],[507.0,384.0],[501.8,383.8],[496.0,383.1],[489.8,381.9],[483.0,380.2],[475.8,378.1],[468.0,375.5],[460.4,372.7],[453.7,369.8],[447.8,366.9],[442.7,363.9],[438.4,361.0],[435.0,358.0],[433.4,356.5],[431.9,355.2],[430.5,354.1],[429.2,353.3],[428.1,352.8],[427.0,352.5],[425.8,352.4],[424.3,352.6],[422.5,352.9],[420.3,353.4],[417.8,354.1],[415.0,355.0],[406.8,358.8],[400.0,363.0],[394.8,367.5],[391.0,372.3],[388.8,377.5],[388.0,383.0],[388.5,387.9],[389.9,392.7],[392.4,397.4],[395.8,401.9],[400.2,406.3],[405.5,410.5],[411.6,414.5],[418.2,418.0],[425.4,421.1],[433.1,423.8],[441.3,426.1],[450.0,428.0],[460.2,430.1],[468.0,432.4],[473.5,435.0],[476.7,437.8],[477.5,440.8],[476.0,444.0],[474.9,445.9],[474.2,448.3],[474.0,451.1],[474.2,454.4],[474.9,458.2],[476.0,462.5],[477.2,467.8],[478.2,474.8],[478.9,483.5],[479.3,493.8],[479.5,505.8],[479.5,519.5],[479.5,533.9],[479.7,548.0],[480.1,561.9],[480.8,575.5],[481.8,588.9],[483.0,602.0],[485.0,641.0],[454.0,639.0],[436.1,636.9],[420.9,634.6],[408.5,632.0],[398.9,629.2],[392.1,626.2],[388.0,623.0],[386.7,621.5],[384.7,620.3],[382.1,619.5],[378.9,619.0],[375.0,618.8],[370.5,619.0],[365.7,619.5],[361.0,620.3],[356.4,621.5],[351.8,623.0],[347.4,624.8],[343.0,627.0],[339.3,628.7],[336.1,630.4],[333.4,632.2],[331.2,634.1],[329.6,636.0],[328.5,638.0],[327.8,640.3],[327.3,643.3],[327.1,647.0],[327.2,651.3],[327.5,656.3],[328.0,662.0],[329.7,665.1],[333.4,668.3],[339.2,671.8],[347.1,675.3],[357.0,679.1],[369.0,683.0],[381.9,686.8],[394.6,690.2],[407.0,693.2],[419.2,695.9],[431.2,698.1],[443.0,700.0],[454.4,701.3],[463.8,702.4],[471.4,703.4],[477.0,704.2],[480.7,704.9],[482.5,705.5],[483.3,707.1],[483.9,710.8],[484.4,716.6],[484.7,724.6],[484.9,734.7],[485.0,747.0],[484.8,758.6],[484.7,768.9],[484.9,777.8],[485.2,785.2],[485.8,791.3],[486.5,796.0],[487.5,799.8],[489.0,803.2],[490.9,806.2],[493.2,808.9],[495.9,811.1],[499.0,813.0]]],"岩":[[[555.0,408.0],[572.5,409.0],[586.9,409.9],[598.4,410.9],[606.8,411.8],[612.2,412.7],[614.5,413.5],[616.4,414.2],[620.6,414.7],[627.0,414.9],[635.6,414.8],[646.4,414.5],[659.5,414.0],[672.8,413.1],[684.6,411.9],[694.6,410.2],[703.1,408.2],[709.8,405.8],[715.0,403.0],[718.7,399.8],[721.8,396.3],[724.4,392.4],[726.3,388.1],[727.7,383.5],[728.5,378.5],[728.6,373.3],[728.0,368.0],[726.6,362.6],[724.5,357.2],[721.6,351.6],[718.0,346.0],[713.9,340.5],[709.4,335.9],[704.8,332.2],[699.8,329.6],[694.5,327.8],[689.0,327.0],[682.7,327.1],[675.2,328.0],[666.5,329.8],[656.6,332.3],[645.4,335.8],[633.0,340.0],[624.4,343.4],[615.4,346.3],[606.0,348.8],[596.1,350.7],[585.8,352.1],[575.0,353.0],[543.0,354.0],[543.0,337.0],[542.8,331.2],[542.1,325.9],[541.0,321.1],[539.4,316.8],[537.4,312.9],[535.0,309.5],[532.4,305.9],[529.8,301.4],[527.2,296.1],[524.8,289.9],[522.4,282.9],[520.0,275.0],[517.8,267.3],[515.7,260.8],[513.8,255.6],[512.0,251.7],[510.4,249.0],[509.0,247.5],[507.8,246.5],[506.8,245.3],[506.0,243.9],[505.4,242.2],[505.1,240.2],[505.0,238.0],[504.8,235.5],[504.2,232.7],[503.2,229.6],[501.9,226.2],[500.1,222.5],[498.0,218.5],[496.0,214.6],[494.6,211.2],[493.8,208.2],[493.6,205.8],[494.0,203.9],[495.0,202.5],[497.2,201.7],[501.0,201.4],[506.5,201.9],[513.7,202.9],[522.5,204.7],[533.0,207.0],[551.5,211.1],[572.2,214.1],[595.1,215.9],[620.3,216.6],[647.8,216.1],[677.5,214.5],[706.4,212.0],[731.6,208.8],[752.9,204.9],[770.4,200.3],[784.1,195.0],[794.0,189.0],[804.0,180.9],[811.9,173.4],[817.8,166.5],[821.6,160.1],[823.3,154.3],[823.0,149.0],[821.2,141.7],[818.7,133.6],[815.2,124.9],[811.0,115.4],[805.9,105.3],[800.0,94.5],[793.8,83.9],[787.8,74.3],[782.0,65.9],[776.4,58.5],[771.1,52.2],[766.0,47.0],[761.9,42.9],[758.4,39.2],[755.5,35.9],[753.1,33.0],[751.3,30.5],[750.0,28.5],[749.1,26.7],[748.6,24.8],[748.2,22.9],[748.2,20.9],[748.5,19.0],[749.0,17.0],[750.6,13.3],[752.2,10.1],[753.8,7.5],[755.2,5.4],[756.6,3.9],[758.0,3.0],[760.2,0.6],[761.5,-2.8],[761.9,-7.0],[761.3,-12.1],[759.9,-18.1],[757.5,-25.0],[754.5,-32.0],[751.2,-38.3],[747.6,-44.0],[743.7,-49.0],[739.5,-53.3],[735.0,-57.0],[727.6,-60.5],[718.8,-62.3],[708.5,-62.5],[696.8,-61.0],[683.6,-57.8],[669.0,-53.0],[662.2,-50.5],[654.3,-48.2],[645.5,-46.1],[635.7,-44.3],[624.8,-42.8],[613.0,-41.5],[601.1,-40.5],[589.9,-40.0],[579.5,-39.9],[569.9,-40.2],[561.1,-40.9],[553.0,-42.0],[545.6,-43.0],[539.4,-43.9],[534.5,-44.8],[530.8,-45.6],[528.3,-46.3],[527.0,-47.0],[524.6,-49.8],[522.0,-53.7],[519.2,-58.5],[516.3,-64.3],[513.2,-71.2],[510.0,-79.0],[507.2,-82.9],[503.7,-84.7],[499.2,-84.2],[494.0,-81.7],[487.9,-76.9],[481.0,-70.0],[477.0,-64.9],[473.1,-59.0],[469.1,-52.2],[465.2,-44.7],[461.3,-36.2],[457.5,-27.0],[454.0,-17.6],[451.1,-8.9],[448.9,-0.8],[447.3,6.8],[446.3,13.7],[446.0,20.0],[445.8,24.5],[445.3,29.2],[444.4,34.2],[443.1,39.6],[441.5,45.1],[439.5,51.0],[437.5,56.9],[435.9,62.7],[434.6,68.2],[433.7,73.7],[433.2,78.9],[433.0,84.0],[433.0,86.2],[432.8,88.3],[432.6,90.1],[432.3,91.8],[432.0,93.2],[431.5,94.5],[431.0,95.5],[430.6,96.2],[430.1,96.6],[429.7,96.7],[429.3,96.5],[429.0,96.0],[424.3,93.7],[416.9,88.8],[406.8,81.2],[393.9,71.1],[378.3,58.4],[360.0,43.0],[352.9,36.6],[346.1,30.8],[339.8,25.5],[333.8,20.8],[328.2,16.6],[323.0,13.0],[318.3,9.8],[314.1,6.9],[310.5,4.2],[307.4,1.9],[304.9,-0.2],[303.0,-2.0],[294.9,-9.4],[285.2,-17.4],[273.9,-26.2],[261.0,-35.8],[246.5,-46.0],[230.5,-57.0],[215.0,-67.2],[202.1,-75.3],[191.9,-81.2],[184.3,-85.0],[179.3,-86.6],[177.0,-86.0],[176.5,-84.4],[177.7,-81.1],[180.5,-76.0],[185.0,-69.1],[191.2,-60.4],[199.0,-50.0],[207.9,-38.7],[217.1,-27.3],[226.8,-16.0],[236.8,-4.7],[247.2,6.7],[258.0,18.0],[265.8,26.9],[275.2,38.1],[286.2,51.8],[298.9,67.8],[313.1,86.2],[329.0,107.0],[344.3,127.4],[356.8,144.4],[366.5,158.2],[373.4,168.8],[377.6,176.0],[379.0,180.0],[379.5,181.7],[381.0,185.4],[383.5,191.2],[387.0,199.1],[391.5,209.0],[397.0,221.0],[410.4,251.2],[421.4,277.0],[430.0,298.5],[436.1,315.7],[439.8,328.5],[441.0,337.0],[440.3,340.0],[438.3,341.8],[435.0,342.2],[430.3,341.4],[424.3,339.4],[417.0,336.0],[415.3,334.7],[413.7,333.4],[412.0,332.2],[410.3,331.1],[408.7,330.0],[407.0,329.0],[403.0,326.7],[398.9,325.1],[394.8,324.2],[390.6,324.1],[386.3,324.7],[382.0,326.0],[375.1,329.7],[369.8,334.1],[366.0,339.2],[363.8,345.1],[363.1,351.7],[364.0,359.0],[365.1,362.9],[367.0,366.4],[369.8,369.8],[373.3,372.8],[377.8,375.5],[383.0,378.0],[392.1,381.3],[402.7,384.6],[414.8,387.9],[428.3,391.1],[443.4,394.3],[460.0,397.5],[477.1,400.4],[493.7,402.9],[509.8,404.9],[525.3,406.4],[540.4,407.4],[555.0,408.0]],[[656.0,150.0],[645.6,151.8],[634.4,153.1],[622.4,153.9],[609.6,154.2],[595.9,154.1],[581.5,153.5],[567.3,152.5],[554.6,151.1],[543.1,149.4],[533.1,147.3],[524.3,144.8],[517.0,142.0],[513.3,141.0],[510.1,139.9],[507.5,138.8],[505.4,137.6],[503.9,136.3],[503.0,135.0],[502.4,133.5],[501.9,131.6],[501.5,129.2],[501.2,126.6],[501.1,123.5],[501.0,120.0],[501.2,114.1],[501.6,107.1],[502.4,98.9],[503.4,89.6],[504.8,79.1],[506.5,67.5],[508.2,56.2],[509.8,46.8],[511.1,39.1],[512.3,33.3],[513.2,29.2],[514.0,27.0],[516.5,25.3],[521.3,24.0],[528.4,23.2],[537.8,23.0],[549.5,23.2],[563.5,24.0],[577.6,25.1],[589.6,26.4],[599.4,28.0],[607.1,29.8],[612.6,31.8],[616.0,34.0],[618.1,35.7],[619.9,37.3],[621.2,39.0],[622.2,40.7],[622.8,42.3],[623.0,44.0],[623.5,46.5],[624.9,50.7],[627.4,56.5],[630.8,64.0],[635.2,73.2],[640.5,84.0],[645.9,95.1],[650.6,105.1],[654.4,114.0],[657.4,121.8],[659.6,128.4],[661.0,134.0],[661.9,136.8],[662.5,139.3],[662.9,141.5],[663.0,143.3],[662.9,144.8],[662.5,146.0],[661.9,146.9],[661.1,147.8],[660.1,148.5],[658.9,149.1],[657.6,149.6],[656.0,150.0]],[[481.0,775.0],[483.4,780.5],[486.1,785.1],[488.9,788.6],[491.9,791.2],[495.1,792.8],[498.5,793.5],[502.5,793.2],[507.6,792.1],[513.6,790.1],[520.7,787.3],[528.8,783.6],[538.0,779.0],[545.7,774.8],[552.3,770.8],[557.6,767.1],[561.8,763.7],[564.7,760.5],[566.5,757.5],[567.4,753.9],[567.8,748.8],[567.6,742.1],[566.9,733.9],[565.7,724.2],[564.0,713.0],[562.8,704.2],[561.7,693.0],[560.8,679.5],[560.0,663.7],[559.4,645.5],[559.0,625.0],[556.0,560.0],[624.0,564.0],[644.6,564.7],[661.6,565.4],[675.1,566.1],[685.1,566.9],[691.6,567.7],[694.5,568.5],[695.4,570.1],[695.9,573.2],[696.0,577.8],[695.6,583.8],[694.8,591.4],[693.5,600.5],[692.3,609.8],[691.8,618.1],[691.9,625.4],[692.6,631.6],[694.0,636.8],[696.0,641.0],[697.8,644.4],[699.7,647.3],[701.8,649.8],[704.0,651.7],[706.4,653.1],[709.0,654.0],[712.1,654.5],[715.9,654.8],[720.5,654.8],[725.9,654.4],[732.1,653.9],[739.0,653.0],[746.5,651.7],[753.7,649.9],[760.5,647.5],[767.0,644.6],[773.2,641.1],[779.0,637.0],[784.3,632.5],[788.9,627.8],[792.8,622.8],[795.9,617.4],[798.3,611.9],[800.0,606.0],[812.0,567.0],[814.1,558.4],[815.6,549.4],[816.5,539.9],[816.9,529.9],[816.7,519.4],[816.0,508.5],[814.8,498.0],[813.1,488.8],[811.0,480.9],[808.4,474.3],[805.4,469.0],[802.0,465.0],[798.9,462.1],[796.4,459.3],[794.5,456.8],[793.1,454.3],[792.3,452.1],[792.0,450.0],[791.7,447.9],[790.7,445.7],[789.1,443.4],[786.9,440.9],[784.0,438.3],[780.5,435.5],[776.8,432.9],[773.3,430.8],[770.1,429.1],[767.2,427.9],[764.5,427.2],[762.0,427.0],[757.9,427.4],[753.6,428.4],[749.1,430.2],[744.4,432.8],[739.6,436.0],[734.5,440.0],[729.7,444.4],[725.4,448.8],[721.9,453.2],[718.9,457.8],[716.7,462.4],[715.0,467.0],[713.3,470.5],[711.7,473.6],[710.1,476.2],[708.6,478.6],[707.0,480.5],[705.5,482.0],[703.8,483.4],[701.6,484.8],[698.9,486.2],[695.7,487.8],[692.1,489.4],[688.0,491.0],[681.3,493.0],[675.4,494.8],[670.1,496.6],[665.6,498.3],[661.7,500.0],[658.5,501.5],[654.7,502.9],[648.9,504.1],[641.2,505.0],[631.6,505.7],[620.0,506.2],[606.5,506.5],[592.8,506.5],[580.6,506.3],[569.9,505.9],[560.7,505.2],[553.1,504.2],[547.0,503.0],[541.8,501.6],[537.3,500.0],[533.8,498.2],[531.0,496.3],[529.1,494.2],[528.0,492.0],[526.9,489.8],[525.5,488.0],[523.9,486.5],[522.0,485.3],[519.9,484.5],[517.5,484.0],[515.0,483.9],[512.4,484.1],[509.9,484.8],[507.3,485.8],[504.7,487.2],[502.0,489.0],[495.5,492.0],[487.3,493.6],[477.5,493.8],[466.0,492.6],[452.8,490.0],[438.0,486.0],[426.8,482.8],[415.7,479.2],[404.9,475.2],[394.2,470.9],[383.8,466.1],[373.5,461.0],[363.8,455.8],[355.2,450.7],[347.6,445.8],[341.1,441.0],[335.5,436.4],[331.0,432.0],[326.5,426.5],[322.4,422.0],[318.8,418.5],[315.4,416.0],[312.5,414.5],[310.0,414.0],[307.5,414.3],[304.8,415.3],[301.8,417.0],[298.4,419.3],[294.9,422.3],[291.0,426.0],[287.9,428.6],[285.2,431.2],[282.9,433.8],[281.0,436.2],[279.5,438.6],[278.5,441.0],[277.7,443.8],[276.9,447.3],[276.1,451.8],[275.4,457.0],[274.7,463.1],[274.0,470.0],[273.3,480.3],[273.1,489.2],[273.4,496.6],[274.2,502.7],[275.6,507.3],[277.5,510.5],[279.7,513.3],[282.0,516.8],[284.4,520.9],[286.8,525.6],[289.4,531.0],[292.0,537.0],[294.6,543.0],[297.0,548.2],[299.2,552.8],[301.3,556.6],[303.2,559.6],[305.0,562.0],[308.3,567.0],[312.0,574.0],[316.2,583.0],[321.0,594.0],[326.2,607.0],[332.0,622.0],[335.3,628.1],[339.1,631.9],[343.5,633.2],[348.4,632.2],[353.9,628.8],[360.0,623.0],[366.6,614.1],[370.6,604.0],[371.8,592.8],[370.2,580.3],[366.0,566.8],[359.0,552.0],[354.1,541.9],[350.7,533.7],[348.8,527.2],[348.3,522.7],[349.4,519.9],[352.0,519.0],[353.7,519.2],[356.3,519.8],[359.6,520.8],[363.8,522.1],[368.7,523.9],[374.5,526.0],[381.1,528.3],[388.5,530.6],[396.8,532.9],[405.8,535.1],[415.8,537.3],[426.5,539.5],[436.8,541.5],[445.3,543.3],[452.1,544.9],[457.2,546.2],[460.5,547.2],[462.0,548.0],[462.5,548.8],[462.6,550.1],[462.2,551.6],[461.6,553.6],[460.5,555.8],[459.0,558.5],[457.6,561.2],[456.8,563.6],[456.5,565.8],[456.8,567.6],[457.6,569.2],[459.0,570.5],[460.6,571.5],[462.2,572.2],[463.8,572.6],[465.2,572.7],[466.6,572.5],[468.0,572.0],[469.3,571.7],[470.4,572.1],[471.5,573.2],[472.4,575.1],[473.3,577.7],[474.0,581.0],[475.2,588.8],[476.1,599.6],[476.8,613.2],[477.1,629.9],[477.2,649.5],[477.0,672.0],[476.3,697.9],[476.1,720.3],[476.5,739.2],[477.4,754.7],[478.9,766.6],[481.0,775.0]]]},"print":{"李":[[[854.0,293.0],[854.4,292.7],[855.4,291.9],[857.2,290.6],[859.8,288.8],[863.0,286.4],[867.0,283.5],[871.5,280.2],[876.4,276.4],[881.6,272.4],[887.2,267.9],[893.2,263.2],[899.5,258.0],[906.1,252.6],[912.7,247.1],[919.5,241.5],[926.4,235.8],[933.4,229.9],[940.5,224.0],[947.6,218.0],[954.4,212.1],[961.1,206.2],[967.6,200.4],[973.9,194.7],[980.0,189.0],[978.1,184.4],[975.2,180.7],[971.2,177.8],[966.2,175.7],[960.1,174.4],[953.0,174.0],[32.0,174.0],[25.0,202.0],[785.0,202.0]],[[603.0,285.0],[602.5,281.5],[601.6,278.2],[600.2,275.2],[598.6,272.6],[596.5,270.1],[594.0,268.0],[591.1,266.1],[587.8,264.4],[584.0,263.0],[579.8,261.8],[575.1,260.8],[570.0,260.0],[570.0,61.0],[569.7,46.0],[568.7,31.8],[567.0,18.4],[564.7,5.7],[561.7,-6.3],[558.0,-17.5],[553.3,-27.9],[547.2,-37.6],[539.6,-46.5],[530.7,-54.6],[520.3,-61.9],[508.5,-68.5],[494.9,-74.3],[479.1,-79.4],[461.1,-83.9],[440.9,-87.6],[418.6,-90.7],[394.0,-93.0],[393.3,-82.6],[392.3,-72.7],[391.2,-63.2],[390.0,-54.3],[388.6,-45.9],[387.0,-38.0],[385.1,-30.5],[382.8,-23.4],[380.0,-16.8],[376.8,-10.4],[373.1,-4.5],[369.0,1.0],[364.8,5.6],[360.3,10.0],[355.5,14.2],[350.3,18.3],[344.8,22.2],[339.0,26.0],[332.4,29.6],[324.6,32.9],[315.5,36.0],[305.2,38.9],[293.7,41.6],[281.0,44.0],[281.0,57.0],[281.5,57.0],[282.8,56.9],[285.1,56.8],[288.3,56.6],[292.5,56.3],[297.5,56.0],[303.2,55.7],[309.2,55.3],[315.6,54.9],[322.4,54.4],[329.5,54.0],[337.0,53.5],[344.6,53.0],[352.1,52.6],[359.4,52.1],[366.6,51.7],[373.6,51.3],[380.5,51.0],[387.0,50.7],[392.7,50.4],[397.6,50.2],[401.8,50.1],[405.3,50.0],[408.0,50.0],[411.2,50.1],[413.9,50.4],[416.4,50.9],[418.4,51.6],[420.2,52.4],[421.5,53.5],[422.6,54.8],[423.4,56.3],[424.1,58.1],[424.6,60.2],[424.9,62.5],[425.0,65.0],[425.0,299.0]],[[701.0,391.0],[701.0,363.0],[210.0,363.0],[202.0,391.0]],[[839.0,796.0],[839.4,795.7],[840.4,794.9],[842.2,793.6],[844.8,791.8],[848.0,789.4],[852.0,786.5],[856.5,783.2],[861.4,779.4],[866.8,775.4],[872.4,770.9],[878.5,766.2],[885.0,761.0],[891.7,755.6],[898.5,750.1],[905.4,744.5],[912.3,738.8],[919.4,732.9],[926.5,727.0],[933.6,721.0],[940.4,715.1],[947.1,709.2],[953.6,703.4],[959.9,697.7],[966.0,692.0],[964.1,687.4],[961.2,683.7],[957.2,680.8],[952.2,678.7],[946.1,677.4],[939.0,677.0],[44.0,677.0],[37.0,705.0],[769.0,705.0]],[[606.0,841.0],[605.5,837.7],[604.7,834.6],[603.5,831.6],[602.0,828.8],[600.2,826.1],[598.0,823.5],[595.3,821.1],[591.8,818.9],[587.5,816.9],[582.4,815.1],[576.6,813.4],[570.0,812.0],[570.0,458.0],[569.5,456.6],[568.0,454.9],[565.5,453.0],[562.0,450.9],[557.5,448.6],[552.0,446.0],[545.7,443.4],[538.9,440.9],[531.6,438.5],[523.8,436.2],[515.4,434.1],[506.5,432.0],[497.3,430.2],[488.0,428.7],[478.6,427.5],[469.2,426.7],[459.6,426.2],[450.0,426.0],[425.0,426.0],[425.0,856.0]],[[529.0,689.0],[512.6,665.0],[494.6,641.8],[475.1,619.4],[454.1,597.7],[431.6,576.7],[407.5,556.5],[382.1,537.1],[355.4,518.4],[327.6,500.5],[298.6,483.4],[268.4,467.1],[237.0,451.5],[204.5,436.7],[171.1,422.8],[136.8,409.6],[101.4,397.3],[65.2,385.7],[28.0,375.0],[21.0,386.0],[46.0,399.4],[70.4,413.4],[94.1,428.2],[117.2,443.8],[139.7,460.0],[161.5,477.0],[182.6,494.5],[202.9,512.4],[222.4,530.8],[241.1,549.4],[258.9,568.5],[276.0,588.0],[292.1,607.6],[307.2,627.2],[321.2,646.8],[334.2,666.2],[346.1,685.6],[357.0,705.0],[529.0,705.0]],[[585.0,705.0],[595.1,692.9],[606.1,681.2],[617.9,670.0],[630.6,659.2],[644.1,648.9],[658.5,639.0],[673.6,629.5],[689.2,620.5],[705.2,611.9],[721.8,603.7],[738.9,595.9],[756.5,588.5],[774.4,581.5],[792.6,574.9],[810.9,568.8],[829.4,562.9],[848.1,557.5],[867.0,552.5],[885.9,547.8],[904.6,543.4],[923.0,539.4],[941.2,535.6],[959.2,532.2],[977.0,529.0],[976.0,517.0],[963.0,513.0],[950.8,507.7],[939.4,501.0],[928.7,493.0],[918.7,483.7],[909.5,473.0],[901.1,461.2],[893.4,448.3],[886.6,434.5],[880.6,419.7],[875.4,403.8],[871.0,387.0],[854.2,395.8],[837.7,404.9],[821.5,414.2],[805.7,423.9],[790.2,433.8],[775.0,444.0],[760.2,454.5],[745.8,465.4],[731.9,476.8],[718.3,488.4],[705.2,500.5],[692.5,513.0],[680.2,525.9],[668.4,539.2],[657.0,553.0],[646.1,567.2],[635.6,581.9],[625.5,597.0],[615.9,612.6],[606.8,628.8],[598.1,645.5],[589.9,662.8],[582.2,680.6],[575.0,699.0]],[[629.0,391.0],[696.0,457.0],[811.0,349.0],[808.9,347.1],[806.7,345.4],[804.4,343.9],[801.9,342.6],[799.3,341.4],[796.5,340.5],[793.4,339.7],[789.9,339.0],[785.9,338.4],[781.4,337.8],[776.4,337.4],[771.0,337.0],[761.7,332.7],[751.9,328.3],[741.5,324.0],[730.6,319.7],[719.1,315.3],[707.0,311.0],[694.6,306.7],[682.1,302.6],[669.4,298.6],[656.6,294.8],[643.6,291.1],[630.5,287.5],[617.5,284.1],[604.9,280.9],[592.6,277.9],[580.7,275.1],[569.2,272.4],[558.0,270.0],[551.0,277.0],[556.1,282.5],[561.3,288.2],[566.6,294.1],[572.1,300.3],[577.7,306.8],[583.5,313.5],[589.3,320.3],[594.9,327.2],[600.4,334.0],[605.7,340.8],[610.9,347.7],[616.0,354.5],[620.8,361.2],[625.3,367.7],[629.5,373.9],[633.3,379.8],[636.8,385.5],[640.0,391.0]]],"岩":[[[374.0,-51.0],[373.6,-52.8],[372.4,-54.9],[370.5,-57.2],[367.8,-59.9],[364.3,-62.8],[360.0,-66.0],[355.0,-69.3],[349.3,-72.5],[342.9,-75.6],[335.8,-78.7],[328.0,-81.6],[319.5,-84.5],[310.3,-87.1],[300.6,-89.2],[290.1,-90.9],[279.1,-92.1],[267.3,-92.8],[255.0,-93.0],[227.0,-93.0],[227.0,191.0],[310.0,290.0],[388.0,262.0],[374.0,262.0]],[[507.0,426.0],[491.8,398.7],[474.8,371.9],[456.1,345.9],[435.7,320.4],[413.5,295.7],[389.5,271.5],[364.1,248.1],[337.6,225.7],[310.0,204.2],[281.3,183.7],[251.4,164.1],[220.5,145.5],[188.7,127.9],[156.3,111.3],[123.4,95.9],[89.8,81.5],[55.7,68.2],[21.0,56.0],[16.0,65.0],[38.1,80.7],[59.7,97.2],[80.9,114.5],[101.6,132.6],[121.8,151.4],[141.5,171.0],[160.6,191.2],[178.7,211.7],[196.0,232.6],[212.4,253.9],[227.9,275.5],[242.5,297.5],[256.0,319.5],[268.0,341.3],[278.6,362.9],[287.8,384.2],[295.6,405.2],[302.0,426.0]],[[709.0,262.0],[775.0,334.0],[911.0,232.0],[909.5,230.0],[907.7,228.0],[905.6,226.0],[903.2,224.0],[900.5,222.0],[897.5,220.0],[894.2,218.1],[890.4,216.2],[886.4,214.5],[881.9,212.9],[877.2,211.4],[872.0,210.0],[872.0,-51.0],[871.1,-52.1],[869.1,-53.6],[865.9,-55.2],[861.6,-57.2],[856.1,-59.5],[849.5,-62.0],[842.1,-64.6],[834.3,-67.2],[826.1,-69.6],[817.5,-72.0],[808.5,-74.3],[799.0,-76.5],[789.4,-78.5],[780.1,-80.1],[771.0,-81.4],[762.1,-82.3],[753.4,-82.8],[745.0,-83.0],[719.0,-83.0],[719.0,262.0]],[[759.0,28.0],[759.0,0.0],[322.0,0.0],[322.0,28.0]],[[760.0,262.0],[760.0,234.0],[318.0,234.0],[318.0,262.0]],[[850.0,520.0],[850.4,519.7],[851.5,518.8],[853.4,517.4],[856.0,515.3],[859.4,512.7],[863.5,509.5],[868.2,505.8],[873.2,501.9],[878.6,497.6],[884.4,493.1],[890.5,488.2],[897.0,483.0],[903.7,477.6],[910.6,472.1],[917.6,466.4],[924.8,460.6],[932.1,454.6],[939.5,448.5],[946.9,442.4],[954.0,436.4],[960.9,430.6],[967.5,424.9],[973.9,419.4],[980.0,414.0],[978.1,409.1],[975.0,405.1],[970.8,402.0],[965.3,399.8],[958.8,398.4],[951.0,398.0],[36.0,398.0],[28.0,426.0],[778.0,426.0]],[[246.0,754.0],[281.0,733.0],[281.0,551.0],[286.0,551.0],[244.0,491.0],[101.0,560.0],[104.8,564.7],[109.1,569.4],[113.6,574.1],[118.6,578.9],[123.8,583.7],[129.5,588.5],[135.2,593.1],[140.8,597.1],[146.1,600.6],[151.3,603.6],[156.2,606.1],[161.0,608.0],[139.0,571.0],[139.0,754.0]],[[318.0,787.0],[317.5,783.4],[316.6,780.1],[315.2,776.9],[313.6,773.9],[311.5,771.1],[309.0,768.5],[306.0,766.1],[302.3,764.0],[298.0,762.1],[293.0,760.5],[287.3,759.1],[281.0,758.0],[281.0,727.0],[139.0,727.0],[139.0,787.0],[139.0,804.0]],[[903.0,798.0],[902.5,794.7],[901.6,791.6],[900.4,788.6],[898.8,785.8],[896.8,783.1],[894.5,780.5],[891.6,778.1],[888.0,776.0],[883.6,774.1],[878.5,772.5],[872.6,771.1],[866.0,770.0],[866.0,526.0],[865.5,524.6],[864.0,523.1],[861.5,521.4],[858.0,519.6],[853.5,517.6],[848.0,515.5],[841.7,513.4],[834.9,511.3],[827.5,509.2],[819.6,507.3],[811.1,505.4],[802.0,503.5],[792.6,501.8],[783.2,500.4],[773.8,499.4],[764.2,498.6],[754.6,498.2],[745.0,498.0],[721.0,498.0],[721.0,813.0]],[[610.0,841.0],[609.5,837.7],[608.6,834.6],[607.4,831.6],[605.8,828.8],[603.8,826.1],[601.5,823.5],[598.7,821.1],[595.1,819.0],[590.9,817.1],[585.9,815.5],[580.3,814.1],[574.0,813.0],[574.0,560.0],[430.0,560.0],[430.0,855.0]],[[780.0,579.0],[780.0,551.0],[224.0,551.0],[224.0,579.0]]]}};
+const GLYPHS={
+  '李':[
+    [[50,0],[50,50]],[[8,17],[92,17]],
+    [[50,27],[14,50]],[[50,27],[86,50]],
+    [[38,60],[62,60],[62,73],[38,73],[38,60]],
+    [[50,73],[50,100],[32,100]],[[8,78],[8,86],[92,86],[92,78]]
+  ],
+  '岩':[
+    [[12,16],[12,40],[88,40],[88,16]],[[50,0],[50,40]],
+    [[6,52],[94,52]],[[24,52],[24,100]],
+    [[42,68],[90,68],[90,100],[42,100],[42,68]]
+  ]
+};
+/* Elegant strokes: flowing curves with rounded corners, nearer to small seal script. */
+const qv=(a,c,b,n=16)=>Array.from({length:n+1},(_,i)=>{const t=i/n,u=1-t;return [u*u*a[0]+2*u*t*c[0]+t*t*b[0],u*u*a[1]+2*u*t*c[1]+t*t*b[1]]});
+const curve=(...segs)=>segs.reduce((o,sg)=>o.concat(o.length?sg.slice(1):sg),[]);
+const oval=(cx,cy,rx,ry)=>Array.from({length:37},(_,i)=>{const a=2*Math.PI*i/36;return [cx+rx*Math.cos(a),cy+ry*Math.sin(a)]});
+const GLYPHS_ELEGANT={
+  '李':[
+    [[50,0],[50,52]],
+    qv([50,25],[24,25],[13,5]),qv([50,25],[76,25],[87,5]),
+    qv([50,28],[26,31],[10,52]),qv([50,28],[74,31],[90,52]),
+    oval(50,68,10.5,8.5),
+    curve([[50,76.5],[50,90]],qv([50,90],[50,100],[36,100])),
+    qv([50,84],[28,86],[12,75]),qv([50,84],[72,86],[88,75])
+  ],
+  '岩':[
+    curve(qv([13,12],[10,28],[13,34]),qv([13,34],[15,40],[24,40]),[[24,40],[76,40]],qv([76,40],[85,40],[87,34]),qv([87,34],[90,28],[87,12])),
+    [[50,0],[50,40]],
+    qv([7,55],[50,48],[93,54]),
+    qv([32,52],[34,80],[14,100]),
+    curve([[52,68],[80,68]],qv([80,68],[90,68],[90,78]),[[90,78],[90,90]],qv([90,90],[90,100],[80,100]),[[80,100],[52,100]],qv([52,100],[42,100],[42,90]),[[42,90],[42,78]],qv([42,78],[42,68],[52,68]))
+  ]
+};
+function cOpen(lines,w){
+  const L=CL(),o=new L.ClipperOffset(2,.02*CS),out=[];
+  for(const l of lines)o.AddPath(toPath(l),L.JoinType.jtRound,L.EndType.etOpenRound);
+  o.Execute(out,w/2*CS);
+  return out;
+}
+function exPolys(paths){
+  const L=CL(),c=new L.Clipper(),t=new L.PolyTree();
+  c.StrictlySimple=true;c.AddPaths(paths,L.PolyType.ptSubject,true);
+  c.Execute(L.ClipType.ctUnion,t,L.PolyFillType.pftNonZero,L.PolyFillType.pftNonZero);
+  return L.JS.PolyTreeToExPolygons(t);
+}
+function fontGlyph(ch,d,c){
+  const conts=FONT_GLYPHS[d.stroke][ch],xs=conts.flat().map(q=>q[0]),ys=conts.flat().map(q=>q[1]);
+  const x0=Math.min(...xs),x1=Math.max(...xs),y0=Math.min(...ys),y1=Math.max(...ys);
+  const cw=Math.abs(c.x1-c.x0),ch2=Math.abs(c.y1-c.y0),k=Math.min(cw/(x1-x0),ch2/(y1-y0));
+  const cx=(c.x0+c.x1)/2,cy=(c.y0+c.y1)/2;
+  return conts.map(p=>toPath(p.map(q=>[cx+(q[0]-(x0+x1)/2)*k,cy+(q[1]-(y0+y1)/2)*k])));
+}
+function sealOutline(d){
+  const S=d.S/2,L=CL();
+  if(d.shape==='rect'){const h=S*.56,r=Math.min(1.6,h*.2);return cOffset([toPath([[-S+r,-h+r],[S-r,-h+r],[S-r,h-r],[-S+r,h-r]])],r)}
+  if(d.shape==='round')return [toPath(disc(0,0,S,180))];
+  if(d.shape==='oval')return [toPath(Array.from({length:180},(_,i)=>{const a=2*Math.PI*i/180;return [S*.76*Math.cos(a),S*Math.sin(a)]}))];
+  const r=Math.min(1.6,S*.12);
+  return cOffset([toPath([[-S+r,-S+r],[S-r,-S+r],[S-r,S-r],[-S+r,S-r]])],r);
+}
+function sealGlyphs(d){
+  /* Cells follow the classical reading order: right column first, top to bottom. */
+  const font=!!FONT_GLYPHS[d.stroke], pad=font?0:d.line/2;
+  const S=d.S/2, sq=d.shape==='square'||d.shape==='rect', k=sq?1:d.shape==='round'?.74:.7;
+  const hw=(d.shape==='oval'?S*.76:S)*k-d.border-d.margin-pad;
+  const hh=(d.shape==='rect'?S*.56:S*(sq?1:.8))-d.border-d.margin-pad;
+  const gap=font?Math.max(.8,hw*.07):hw*.06+d.line/2, sideR=d.layout==='ltr'?['岩','李']:['李','岩'];
+  const cells=d.layout!=='stack'
+    ?[{ch:sideR[0],x0:gap,x1:hw,y0:hh,y1:-hh},{ch:sideR[1],x0:-hw,x1:-gap,y0:hh,y1:-hh}]
+    :[{ch:'李',x0:-hw,x1:hw,y0:hh,y1:hh*.05+d.line/2},{ch:'岩',x0:-hw,x1:hw,y0:-hh*.05-d.line/2,y1:-hh}];
+  if(font){
+    const paths=cells.flatMap(c=>cUnion(fontGlyph(c.ch,d,c)));
+    return d.bold>0?cOffset(paths,d.bold):paths;
+  }
+  const lines=[];
+  for(const c of cells)for(const l of (d.stroke==='elegant'?GLYPHS_ELEGANT:GLYPHS)[c.ch])lines.push(l.map(([x,y])=>[c.x0+(c.x1-c.x0)*x/100,c.y0+(c.y1-c.y0)*y/100]));
+  return cOpen(lines,d.line);
+}
+function seal(d){
+  const outline=sealOutline(d), glyphs=cAnd(glyphsSafe(d),cOffset(outline,-d.border));
+  let relief;
+  if(d.style==='zhu'){
+    const frame=cMinus(outline,cOffset(outline,-d.border));
+    relief=cUnion(frame,glyphs);
+  }else{
+    relief=cMinus(outline,glyphs);
+  }
+  if(d.aged){
+    const r=rng(d.seed*11+5),nicks=[],pts=fromPath(outline[0]),n=7+Math.floor(r()*5);
+    for(let i=0;i<n;i++){
+      const p=pts[Math.floor(r()*pts.length)];
+      nicks.push(...cUnion([toPath(disc(p[0],p[1],d.border*(.5+r()*.9),24))]));
+    }
+    relief=cMinus(relief,cUnion(nicks));
+  }
+  relief=CL().JS.Clean(cOffset(cOffset(relief,-.15),.15),.03*CS).filter(p=>p.length>2);
+  return {outline,relief};
+}
+const glyphsSafe=d=>sealGlyphs(d);
+function shellTris(ex,z0,z1,taper=1){
+  const tris=[],ring=p=>fromPath(decol(p)),O=ring(ex.outer),H=(ex.holes||[]).map(ring);
+  const orient=p=>{const a=p.reduce((s,q,i)=>{const b=p[(i+1)%p.length];return s+q[0]*b[1]-b[0]*q[1]},0);return a<0?p.slice().reverse():p};
+  const o=orient(O),hs=H.map(orient);
+  const wall=(lp,inward)=>{
+    for(let i=0;i<lp.length;i++){
+      const a=lp[i],b=lp[(i+1)%lp.length],A=[a[0]*taper,a[1]*taper,z0],B=[b[0]*taper,b[1]*taper,z0],C=[b[0],b[1],z1],D=[a[0],a[1],z1];
+      if(inward)tris.push([A,C,B],[A,D,C]);else tris.push([A,B,C],[A,C,D]);
+    }
+  };
+  wall(o,false);hs.forEach(h=>wall(h,true));
+  const cap=(z,up,sc)=>{
+    const pts=[o,...hs].flat(),flat=pts.flat(),hi=[];let n=o.length;
+    for(const h of hs){hi.push(n);n+=h.length}
+    const idx=earcut(flat,hi);
+    for(let i=0;i<idx.length;i+=3){
+      let a=pts[idx[i]],b=pts[idx[i+1]],c=pts[idx[i+2]];
+      const s=(b[0]-a[0])*(c[1]-a[1])-(b[1]-a[1])*(c[0]-a[0]);
+      if((s>0)!==up){const t=b;b=c;c=t}
+      tris.push([a,b,c].map(q=>[q[0]*sc,q[1]*sc,z]));
+    }
+  };
+  cap(z1,true,1);cap(z0,false,taper);
+  return tris;
+}
+function sealMesh(s,d){
+  const mirror=p=>p.map(q=>({X:-q.X,Y:q.Y}));
+  const tris=shellTris({outer:s.outline[0],holes:[]},0,d.H,.78);
+  for(const ex of exPolys(s.relief.map(mirror))) tris.push(...shellTris(ex,d.H-.3,d.H+d.depth));
+  return tris;
+}
+function sealVolume(s,d){
+  const a=p=>Math.abs(CL().Clipper.Area(p))/(CS*CS);
+  const A=a(s.outline[0]), R=s.relief.reduce((t,p)=>t+CL().Clipper.Area(p),0)/(CS*CS);
+  const body=d.H*A*(1+.78+.78*.78)/3;
+  return (body+Math.abs(R)*d.depth)/1000;
+}
+
+/* ---- seal: page ---- */
+let sStroke='brush',sShape='rect',sStyle='zhu',sLayout='ltr',sAged=false,sSeedN=1,sNow=null,sD=null;
+function sRead(){return {bold:num($('sBold'),.1),stroke:sStroke,shape:sShape,style:sStyle,layout:sLayout,aged:sAged,seed:sSeedN,S:num($('sS'),25),line:num($('sLine'),.9),border:num($('sBorder'),1.4),margin:num($('sMargin'),.8),depth:num($('sDepth'),1.2),H:num($('sH'),30)}}
+function drawS(){
+  segs($('sStrokeSeg'),[['brush','Brush strokes'],['print','Print'],['elegant','Elegant curves'],['squared','Squared Han seal']],sStroke,k=>{sStroke=k;drawS();sCalc()});
+  segs($('sStyleSeg'),[['zhu','Zhuwen, raised characters'],['bai','Baiwen, carved characters']],sStyle,k=>{sStyle=k;drawS();sCalc()});
+  segs($('sShapeSeg'),[['square','Square'],['rect','Rectangle'],['round','Round'],['oval','Oval']],sShape,k=>{sShape=k;drawS();sCalc()});
+  segs($('sLayoutSeg'),[['ltr','Left to right'],['columns','Right to left'],['stack','Top to bottom']],sLayout,k=>{sLayout=k;drawS();sCalc()});
+  segs($('sAgedSeg'),[['n','Clean edge'],['y','Aged edge']],sAged?'y':'n',k=>{sAged=k==='y';drawS();sCalc()});
+  $('sSeedRow').hidden=!sAged;
+  const f=!!FONT_GLYPHS[sStroke];
+  $('sLineWrap').hidden=f;$('sBoldWrap').hidden=!f;
+}
+const sealDims=d=>[d.shape==='oval'?d.S*.76:d.S,d.shape==='rect'?d.S*.56:d.S,d.H+d.depth];
+function sCalc(){
+  const d=sRead(),note=[];
+  if(!window.ClipperLib||!window.earcut){$('sNote').hidden=false;$('sNote').textContent='The seal tools could not load. Reload the page and try again.';return}
+  const s=seal(d);sNow=s;sD=d;
+  if(!FONT_GLYPHS[d.stroke]&&d.line<.8) note.push('Lines under 0.8 mm may not print on a 0.4 mm nozzle.');
+  if(d.S<20) note.push('Under 20 mm, the strokes may run together when printed.');
+  $('sNote').hidden=!note.length;$('sNote').textContent=note.join(' ');
+  const W=170,sc=(W-20)/d.S;
+  const path=(p,m)=>'M'+fromPath(p).map(q=>((W/2+q[0]*sc*m)).toFixed(1)+' '+(W/2-q[1]*sc).toFixed(1)).join('L')+'Z';
+  const svg=(m)=>`<path d="${s.relief.map(p=>path(p,m)).join('')}" fill-rule="evenodd" fill="${m>0?'var(--seal)':'var(--muted)'}"/>`;
+  for(const [id,m] of [['sImp',1],['sFace',-1]]){$(id).setAttribute('viewBox',`0 0 ${W} ${W}`);$(id).innerHTML=svg(m)}
+  const ml=sealVolume(s,d);
+  const rows=[['Stamp size',sealDims(d).map(n=>fmt(n,1)).join(' × ')+' mm'],['Volume',fmt(ml,1)+' ml']];
+  $('sTotal').innerHTML='';
+  for(const [x,y] of rows){const e=document.createElement('div'),u=document.createElement('span'),w=document.createElement('span');u.textContent=x;w.textContent=y;e.append(u,w);$('sTotal').append(e)}
+}
+async function sDownload(){
+  if(!sNow)return;const msg=$('sMsg');msg.textContent='';
+  try{
+    const blob=zipStore([{name:'seal-li-yan.stl',data:stlBinary(sealMesh(sNow,sD))}]);
+    const dl=window.claude?await window.claude.use('downloads'):null;
+    if(!dl){msg.textContent='Downloads aren’t available in this view. Open the page in Claude to save the file.';return}
+    await dl.save({filename:'seal-li-yan.zip',data:blob});
+    msg.textContent='Saved. Unzip it and print with the carved face up.';
+  }catch(e){msg.textContent=e&&e.code==='declined'?'Download cancelled.':'That did not save. Try again.'}
+}
+function sToMould(){
+  if(!sNow)return;
+  mShape='stl';mStlData={size:sealDims(sD),ml:sealVolume(sNow,sD),closed:true};
+  $('mStl').textContent='李岩 seal: '+mStlData.size.map(n=>n.toFixed(1)).join(' × ')+' mm, '+fmt(mStlData.ml)+' ml';
+  drawM();mCalc();view('mould');
+}
+for(const id of ['sBold','sS','sLine','sBorder','sMargin','sDepth','sH']) $(id).addEventListener('input',once(sCalc));
+$('sDl').onclick=sDownload;$('sToMould').onclick=sToMould;$('sSeed').onclick=()=>{sSeedN++;sCalc()};
+
+const VIEWS={pour:['viewPour','tabPour'],mould:['viewMould','tabMould'],jewellery:['viewJewel','tabJewel'],seal:['viewSeal','tabSeal']};
+function view(v){
+  for(const k in VIEWS){const on=k===v;$(VIEWS[k][0]).hidden=!on;$(VIEWS[k][1]).setAttribute('aria-selected',on)}
+  if(location.hash!=='#'+v){try{location.hash=v}catch{}}
+}
+const fromHash=()=>{const h=location.hash.slice(1);return VIEWS[h]?h:'pour'};
+for(const k in VIEWS) $(VIEWS[k][1]).onclick=()=>view(k);
+addEventListener('hashchange',()=>view(fromHash()));
+drawM();mCalc();drawJ();jCalc();drawS();sCalc();view(fromHash());
+</script>
+
+</body></html>
