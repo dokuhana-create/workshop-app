@@ -97,26 +97,47 @@ const GARMENTS={
       return {pieces:[{name:'Skirt quarter',cut:'Cut 2 on the fold',fold:true,poly,grain:1}],
       steps:['Sew the side seams, leaving 18 cm open at the top of one for a zip.','Add a waistband or facing, and put in the zip.','Hang the skirt for a day before hemming, as the bias edges stretch.']}}},
   top:{label:'Boxy top',f:[['bust','Bust or chest',96],['sh','Shoulder width',42],['len','Top length',62],['sl','Sleeve length',22]],sa:1.5,
-    make(m){
-      const B=(m.bust+14)/4,neck=8.5,drop=3,ad=m.bust*.22+1,S=m.sh/2;
-      const piece=(depth)=>{
-        const nc=bez([0,depth],[neck*.6,depth],[neck,depth*.5],[neck,0],16);
-        const ah=bez([S,drop],[S-1.5,ad*.5],[S-.5,ad*.9],[B,ad],24);
-        return {poly:[...nc,...ah,[B,m.len],[0,m.len]],nc,ah};
-      };
-      const f=piece(9),b=piece(2.5),a=lenOf(f.ah),cap=8,hw=Math.sqrt(Math.max(1,a*a-cap*cap));
-      const head=bez([hw,cap],[hw*.6,cap],[hw*.45,0],[0,0],24).reverse();
-      const slv=[...head,[hw,cap],[hw*.86,cap+m.sl],[0,cap+m.sl]];
-      const nl=2*(lenOf(f.nc)+lenOf(b.nc));
-      return {pieces:[
-        {name:'Front',cut:'Cut 1 on the fold',fold:true,poly:f.poly,grain:1},{name:'Back',cut:'Cut 1 on the fold',fold:true,poly:b.poly,grain:1},
-        {name:'Sleeve',cut:'Cut 2 on the fold',fold:true,poly:slv,grain:1},{name:'Neck binding',cut:'Cut 1, across the stretch',poly:[[0,0],[nl*.92,0],[nl*.92,5],[0,5]],grain:1}],
-      steps:['Sew the shoulders.','Attach the neck binding, stretching it gently.','Sew the sleeves into the armholes, then sew each side and underarm in one seam.','Hem the sleeves and bottom.']};
-    }}
+    make(m){return tunicDraft(m,1,9,['Sew the shoulders.','Attach the neck binding, stretching it gently.','Sew the sleeves into the armholes, then sew each side and underarm in one seam.','Hem the sleeves and bottom.'])}},
+  tunic:{label:'Elven tunic',f:[['bust','Bust or chest',96],['sh','Shoulder width',42],['len','Tunic length',92],['sl','Sleeve length',58],['flare','Sleeve flare',1.5]],sa:1.5,
+    make(m){return tunicDraft(m,m.flare,11,['Sew the shoulders, then attach the neck binding.','Sew the sleeves into the armholes.','Sew each underarm and side seam, stopping 25 cm above the hem for side slits.','Press the slit edges under and stitch them, then hem the sleeves and bottom.'])}},
+  cloak:{label:'Hooded cloak',f:[['neck','Neck',44],['len','Cloak length',120],['hood','Hood height',38]],sa:1.5,
+    make(m){const r=(m.neck+3)/Math.PI,o=r+m.len,d=(m.neck+3)/2,h=m.hood;
+      const quarter=[...arc(0,0,r,0,Math.PI/2),...arc(0,0,o,Math.PI/2,0)];
+      const hood=[[0,0],[d*.62,0],...bez([d*.62,0],[d*.95,0],[d,h*.25],[d,h*.55],16).slice(1),[d,h],[0,h]];
+      return {pieces:[{name:'Cloak quarter',cut:'Cut 2',poly:quarter,grain:1},{name:'Hood',cut:'Cut 2',poly:hood,grain:1},{name:'Neck tie',cut:'Cut 2',poly:[[0,0],[6,0],[6,45],[0,45]],grain:1}],
+      steps:['The cloak quarter is too big to print sensibly. Instead, chalk it straight onto the fabric: from one corner, draw arcs at '+fmt(r-1.5,1)+' cm and '+fmt(o+1.5,1)+' cm. Print only the hood.','Sew the two cloak quarters together along one straight edge. This is the centre back.','Sew the hood pieces along the curved back and top.','Sew the neck ties, turn them, and pin them to the front neck edge.','Sew the hood to the neck edge, matching the hood seam to the centre back.','Hem the hood front and both front edges, then let the cloak hang for a day before hemming the bottom.']}}},
+  apron:{label:'Apron',f:[['bib','Bib width',28],['wide','Skirt width',70],['chest','Bib height',28],['len','Total length',85]],sa:1.5,
+    make(m){const b=m.bib/2,w=m.wide/2,poly=[[0,0],[b,0],...bez([b,0],[b,m.chest*.7],[w*.8,m.chest*.8],[w,m.chest+4],18).slice(1),[w,m.len],[0,m.len]];
+      return {pieces:[{name:'Apron',cut:'Cut 1 on the fold',fold:true,poly,grain:1},{name:'Neck strap',cut:'Cut 1',poly:[[0,0],[6,0],[6,62],[0,62]],grain:1},{name:'Waist tie',cut:'Cut 2',poly:[[0,0],[7,0],[7,80],[0,80]],grain:1}],
+      steps:['Fold each strap and tie lengthwise, sew, and turn.','Hem the curved sides.','Hem the bottom and outer sides.','Hem the top, catching the neck strap at each corner.','Stitch a waist tie to each side, where the curve ends.']}}},
+  cushion:{label:'Cushion cover',f:[['size','Cushion size',45]],sa:1.5,
+    make(m){const c=m.size-2,back=Math.round(c*.68);return {pieces:[{name:'Front',cut:'Cut 1',poly:[[0,0],[c,0],[c,c],[0,c]],grain:1},{name:'Back panel',cut:'Cut 2',poly:[[0,0],[c,0],[c,back],[0,back]],grain:1}],
+      steps:['Hem one long edge of each back panel.','Lay the front right side up, then the back panels right side down, with their hems overlapping in the middle.','Sew all around the outside.','Clip the corners and turn it through the opening. The cover is cut 2 cm under size so the cushion fills it.']}}},
+  zip:{label:'Zip pouch',f:[['pw','Pouch width',22],['ph','Pouch height',14]],sa:1,
+    make(m){return {pieces:[{name:'Outer',cut:'Cut 2',poly:[[0,0],[m.pw,0],[m.pw,m.ph],[0,m.ph]],grain:1},{name:'Lining',cut:'Cut 2',poly:[[0,0],[m.pw,0],[m.pw,m.ph],[0,m.ph]],grain:1}],
+      steps:['Use a zip at least '+fmt(m.pw+2,0)+' cm long.','Sew the zip between one outer and one lining piece, right sides facing the zip. Repeat on the other side.','Open the zip halfway. This matters, or you can\u2019t turn the pouch.','Sew around the outers and the linings, leaving a 7 cm gap in the lining.','Turn through the gap, then stitch the gap closed.']}}},
+  drawstring:{label:'Drawstring pouch',f:[['pw','Pouch width',18],['ph','Pouch height',22]],sa:1,
+    make(m){return {pieces:[{name:'Pouch',cut:'Cut 2',poly:[[0,0],[m.pw,0],[m.pw,m.ph+5],[0,m.ph+5]],grain:1}],
+      steps:['Sew the sides and bottom, stopping 5 cm below the top on each side.','Press those open side edges under and stitch them flat.','Fold the top over by 2.5 cm to make a channel, and stitch it.','Thread a cord through both channels, and knot the ends.']}}}
 };
+function tunicDraft(m,flare,frontDepth,steps){
+  const B=(m.bust+14)/4,neck=8.5,drop=3,ad=m.bust*.22+1,S=m.sh/2;
+  const piece=(depth)=>{
+    const nc=bez([0,depth],[neck*.6,depth],[neck,depth*.5],[neck,0],16);
+    const ah=bez([S,drop],[S-1.5,ad*.5],[S-.5,ad*.9],[B,ad],24);
+    return {poly:[...nc,...ah,[B,m.len],[0,m.len]],nc,ah};
+  };
+  const f=piece(frontDepth),b=piece(2.5),a=lenOf(f.ah),cap=8,hw=Math.sqrt(Math.max(1,a*a-cap*cap));
+  const head=bez([hw,cap],[hw*.6,cap],[hw*.45,0],[0,0],24).reverse();
+  const slv=[...head,[hw*Math.max(.86,flare),cap+m.sl],[0,cap+m.sl]];
+  const nl=2*(lenOf(f.nc)+lenOf(b.nc));
+  return {pieces:[
+    {name:'Front',cut:'Cut 1 on the fold',fold:true,poly:f.poly,grain:1},{name:'Back',cut:'Cut 1 on the fold',fold:true,poly:b.poly,grain:1},
+    {name:'Sleeve',cut:'Cut 2 on the fold',fold:true,poly:slv,grain:1},{name:'Neck binding',cut:'Cut 1, across the stretch',poly:[[0,0],[nl*.92,0],[nl*.92,5],[0,5]],grain:1}],steps};
+}
 let tab='pattern',gar='tote',M={},fab=140,saOn=true,db=null,userId=null,dl=null,draft=null;
 /* True body measurements are shared across garments; everything else belongs to one garment. */
-const BODY=['bust','waist','hip','sh'];
+const BODY=['bust','waist','hip','sh','neck'];
 const mk=k=>BODY.includes(k)?k:gar+'.'+k;
 function loadBody(){try{M=JSON.parse(localStorage.getItem('sewing-m'))||{}}catch{}}
 let saveT;function saveBody(){try{localStorage.setItem('sewing-m',JSON.stringify(M))}catch{}
@@ -152,7 +173,7 @@ function patternView(){
   for(const k in GARMENTS)seg.append(el('button',{type:'button',textContent:GARMENTS[k].label,'aria-pressed':String(k===gar),on:{click(){gar=k;render()}}}));
   const fields=el('div',{className:'fields'});
   for(const [k,l,d] of GARMENTS[gar].f){
-    fields.append(el('label',{className:'f'},l+(k==='full'?' (times hip)':' (cm)'),el('input',{id:'m_'+k,type:'number',step:'any',min:'0',value:M[mk(k)]??d,on:{input(e){M[mk(k)]=e.target.value;saveBody();drawPattern()}}})));
+    fields.append(el('label',{className:'f'},l+(k==='full'?' (times hip)':k==='flare'?' (1 is straight)':' (cm)'),el('input',{id:'m_'+k,type:'number',step:'any',min:'0',value:M[mk(k)]??d,on:{input(e){M[mk(k)]=e.target.value;saveBody();drawPattern()}}})));
   }
   const fw=el('select',{'aria-label':'Fabric width',on:{change(e){fab=+e.target.value;drawPattern()}}},...[110,140,150].map(w=>el('option',{value:w,textContent:w+' cm',selected:w===fab})));
   return el('div',{className:'grid'},
@@ -182,7 +203,7 @@ function drawPattern(){
   for(const [a,b] of rows)tot.append(el('div',{},el('span',{textContent:a}),el('span',{textContent:b})));
   const m=el('div',{className:'msg',role:'status',id:'pm'});
   r.append(tot,el('button',{className:'btn solid',type:'button',textContent:'Download A4 pattern PDF',on:{click:savePdf}}),m);
-  if(gar==='top'||gar==='circle')r.append(el('div',{className:'warn',textContent:'This is a first draft. Sew a test in cheap fabric before cutting anything special.'}));
+  if(['top','circle','tunic','cloak','apron'].includes(gar))r.append(el('div',{className:'warn',textContent:'This is a first draft. Sew a test in cheap fabric before cutting anything special.'}));
   if(d.fabric==null)r.append(el('div',{className:'warn',textContent:'A piece is wider than this fabric. Choose wider fabric or a shorter length.'}));
   const st=$('steps');st.innerHTML='';st.append(el('h2',{textContent:'How to sew it'}),el('ol',{style:'margin:0;padding-left:20px'},...(GARMENTS[gar].make(curM()).steps.map(t=>el('li',{textContent:t})))),el('p',{className:'note',textContent:'Solid line: cut. Dashed line: sew. Red edge: place on the fold of the fabric.'}));
 }
