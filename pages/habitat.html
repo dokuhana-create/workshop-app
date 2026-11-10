@@ -1,6 +1,10 @@
 <!doctype html><html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
 <title>Habitat</title>
 <script src="../shim.js"></script>
+<script src="../lib/clipper.js"></script>
+<script src="../lib/earcut.min.js"></script>
+<script src="../lib/geo.js"></script>
+<script src="habitat-parts.js"></script>
 <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Bricolage+Grotesque:opsz,wght@12..96,600;12..96,750&family=IBM+Plex+Mono:wght@500&family=IBM+Plex+Sans:wght@400;500;600&display=swap">
 <style>
 /* Same layout as the Resin Workshop: inputs on the left, the 3D preview and downloads beside them. */
@@ -89,15 +93,20 @@ h3{font:600 15px var(--body);margin:0 0 6px}
       <section aria-labelledby="h-size">
         <h2 id="h-size">Size</h2>
         <div class="fields">
-          <label class="f">Width (mm)<input id="W" type="number" min="60" step="5"></label>
-          <label class="f">Depth (mm)<input id="D" type="number" min="60" step="5"></label>
+          <label class="f" style="grid-column:1/-1">Shape<select id="eShape"></select></label>
+          <label class="f"><span id="Wlab">Width (mm)</span><input id="W" type="number" min="60" step="5"></label>
+          <label class="f" id="Dwrap">Depth (mm)<input id="D" type="number" min="60" step="5"></label>
           <label class="f">Height above substrate (mm)<input id="H" type="number" min="60" step="5"></label>
           <label class="f">Substrate depth (mm)<input id="S" type="number" min="10" max="120" step="5"></label>
+          <label class="f roundOnly">Clear sheet thickness (mm)<input id="ts" type="number" min="0.3" max="1.5" step="0.05"></label>
+          <label class="f">Floor pegs<select id="pegs"></select></label>
         </div>
-        <p class="hint">Width and depth are measured between the panel centres. The base holds the substrate, so the panels start above it and the front panel can slide up without spilling soil.</p>
+        <p class="hint rectOnly">Width and depth are measured between the panel centres. The base holds the substrate, so the panels start above it and the front panel can slide up without spilling soil.</p>
+        <p class="hint roundOnly">The wall is a clear PET sheet (0.5–1 mm, sold as "PET-Folie" or "PETG-Platte") rolled into grooves in the base and lid. You open it by lifting the lid, and a small hatch in the lid lets you feed without taking it off.</p>
+        <p class="hint">Floor pegs stand on the base under the substrate, 40 mm apart. Pots, dishes and twig holders made with a floor socket push onto them, so they stay put when the mantis climbs on them.</p>
       </section>
 
-      <section aria-labelledby="h-panels">
+      <section aria-labelledby="h-panels" class="rectOnly">
         <h2 id="h-panels">Panels</h2>
         <div class="fields">
           <label class="f">Front door<select id="pFront"></select></label>
@@ -107,10 +116,12 @@ h3{font:600 15px var(--body);margin:0 0 6px}
           <label class="f">Panel thickness (mm)<input id="T" type="number" min="1.5" max="6" step="0.5"></label>
           <label class="f">Mesh hole (mm)<input id="hole" type="number" min="1" max="5" step="0.1"></label>
           <label class="f">Mesh bar (mm)<input id="bar" type="number" min="0.8" max="4" step="0.1"></label>
+          <label class="f">Clip rails<select id="rails"></select></label>
           <label class="f swingF">Door magnet diameter (mm)<input id="dMagD" type="number" min="4" max="20" step="1"></label>
           <label class="f swingF">Door magnet height (mm)<input id="dMagH" type="number" min="1" max="6" step="0.5"></label>
         </div>
         <p class="hint swingF">The swing door hangs on a hinge along its left edge, with a 1.75 mm filament strand as the pin, and closes onto a raised rim with two round magnets. It opens outwards, so the mantis isn't disturbed from above.</p>
+        <p class="hint">Clip rails are small channels on the inside of printed mesh panels, 40 mm apart. Accessories made with a clip back drop into them and click in place, like IKEA Skådis.</p>
         <p class="hint">The lid is always a printed mesh, so the mantis has a grippy ceiling to hang from when it moults. Clear panels are acrylic sheet cut to the sizes on the right. Mesh sides add cross-ventilation, which mantises from warm, humid places need.</p>
       </section>
 
@@ -165,10 +176,10 @@ h3{font:600 15px var(--body);margin:0 0 6px}
         <h2 id="h-mount">Mounting</h2>
         <div class="fields">
           <label class="f" id="mountWrap">Mount<select id="mount"></select></label>
-          <label class="f">Magnet diameter (mm)<input id="magD" type="number" min="4" max="20" step="1"></label>
-          <label class="f">Magnet height (mm)<input id="magH" type="number" min="1" max="6" step="0.5"></label>
+          <label class="f magF">Magnet diameter (mm)<input id="magD" type="number" min="4" max="20" step="1"></label>
+          <label class="f magF">Magnet height (mm)<input id="magH" type="number" min="1" max="6" step="0.5"></label>
         </div>
-        <p class="hint">Magnet mounting holds the piece against a panel with a second magnet on the outside, so nothing needs drilling. Disc magnets of 10 × 3 mm hold small pieces through 3 mm acrylic. Glue each magnet into its pocket, and check the poles face the right way before the glue sets.</p>
+        <p class="hint" id="mountHint"></p>
       </section>
     </div>
     <aside class="result" aria-label="Accessory result">
@@ -337,7 +348,7 @@ const SPECIES=[
 ];
 const MATS={petg:{name:'PETG',rho:1.27},asa:{name:'ASA',rho:1.07},pla:{name:'PLA',rho:1.24}};
 const PANEL={clear:'Clear acrylic',mesh:'Printed mesh'};
-const DEF={species:'orchidF',body:65,W:200,D:200,H:300,S:40,T:3,hole:1.6,bar:1.2,front:'clear',back:'clear',left:'mesh',right:'mesh',bx:350,by:350,bz:350,mat:'petg',dMagD:10,dMagH:3};
+const DEF={species:'orchidF',body:65,W:200,D:200,H:300,S:40,T:3,hole:1.6,bar:1.2,front:'clear',back:'clear',left:'mesh',right:'mesh',bx:350,by:350,bz:350,mat:'petg',dMagD:10,dMagH:3,shape:'rect',ts:.75,pegs:'none',rails:'no'};
 const E=Object.assign({},DEF,state.enc||{});
 
 function opt(sel,pairs){for(const [v,l] of pairs){const o=document.createElement('option');o.value=v;o.textContent=l;sel.append(o)}}
@@ -346,7 +357,10 @@ const FRONT={clear:'Sliding, clear acrylic',mesh:'Sliding, printed mesh',swingWi
 opt($('pFront'),Object.entries(FRONT));
 for(const id of ['pBack','pLeft','pRight'])opt($(id),Object.entries(PANEL));
 opt($('mat'),Object.entries(MATS).map(([k,m])=>[k,m.name]));
-const encIds={species:'species',body:'body',W:'W',D:'D',H:'H',S:'S',T:'T',hole:'hole',bar:'bar',front:'pFront',back:'pBack',left:'pLeft',right:'pRight',bx:'bx',by:'by',bz:'bz',mat:'mat',dMagD:'dMagD',dMagH:'dMagH'};
+opt($('eShape'),[['rect','Rectangular, with panels'],['round','Round, rolled clear sheet'],['oval','Oval, rolled clear sheet']]);
+opt($('pegs'),[['none','None'],['grid','Pegs for accessories']]);
+opt($('rails'),[['no','None'],['yes','On printed mesh panels']]);
+const encIds={species:'species',body:'body',W:'W',D:'D',H:'H',S:'S',T:'T',hole:'hole',bar:'bar',front:'pFront',back:'pBack',left:'pLeft',right:'pRight',bx:'bx',by:'by',bz:'bz',mat:'mat',dMagD:'dMagD',dMagH:'dMagH',shape:'eShape',ts:'ts',pegs:'pegs',rails:'rails'};
 for(const k in encIds)$(encIds[k]).value=E[k];
 
 function recommend(){
@@ -388,7 +402,7 @@ function encDesign(p,forPreview){
     else{bAdd.push([0,v-band,0,W,v+band,S],[0,v-band,S,W,v-g/2,S+s],[0,v+g/2,S,W,v+band,S+s])}
   }
   for(const [x,y] of corners){bAdd.push([x-Eh,y-Eh,0,x+Eh,y+Eh,S+s]);bSub.push([x-a-c,y-a-c,S,x+a+c,y+a+c,S+s+1])}
-  const base=mesh({adds:bAdd,subs:bSub});
+  const base=HabitatParts.rectBase({W,D,S,s,g,band,Eh,f,a},p);
   /* post: square with a full-height slot for each of the two panels that meet at the corner */
   const Hp=H-.5;
   const post=mesh({adds:[[-a,-a,0,a,a,Hp]],subs:[[g/2,-g/2,-1,a+1,g/2,Hp+1],[-g/2,g/2,-1,g/2,a+1,Hp+1]]});
@@ -410,7 +424,12 @@ function encDesign(p,forPreview){
     {k:'left',label:'Left',w:lrW,h:pH},
     {k:'right',label:'Right',w:lrW,h:pH}
   ].map(q=>({...q,type:q.k==='front'&&swing?'swing':p[q.k]}));
-  const meshPanel=q=>{const bd=s+2,top=q.k==='front'?Lt+20+bd:bd;return mesh({adds:[[0,0,0,q.w,q.h,p.T]],lat:lat(bd,bd,q.w-bd,q.h-top,0,p.T)})};
+  const meshPanel=q=>{
+    const bd=s+2,top=q.k==='front'?Lt+20+bd:bd,adds=[[0,0,0,q.w,q.h,p.T]];
+    /* clip rails: a U channel along the inner face, opening upwards (see HabitatParts.RAIL) */
+    if(p.rails==='yes'&&q.k!=='front'){const R=HabitatParts.RAIL,T=p.T;for(let yr=R.pitch;yr+R.lipH<=q.h-s-2;yr+=R.pitch)adds.push([s+1,yr,T,q.w-s-1,yr+R.floor,T+R.slot+R.lip],[s+1,yr,T+R.slot,q.w-s-1,yr+R.lipH,T+R.slot+R.lip])}
+    return mesh({adds,lat:lat(bd,bd,q.w-bd,q.h-top,0,p.T)});
+  };
   /* swing door, in the front panel's own frame: x along the width, y outwards from its outer face, z up from the base groove */
   let sw=null;
   if(swing){
@@ -443,8 +462,16 @@ const enc={cur:null};
 function encChanged(){
   const p=readEnc();state.enc=p;persist();recommend();encCalc();
 }
+function shapeUI(p){
+  const rect=p.shape==='rect';
+  document.querySelectorAll('.rectOnly').forEach(el=>el.hidden=!rect);
+  document.querySelectorAll('.roundOnly').forEach(el=>el.hidden=rect);
+  $('Dwrap').hidden=p.shape==='round';
+  $('Wlab').textContent=p.shape==='round'?'Diameter (mm)':'Width (mm)';
+}
 function encCalc(){
-  const p=readEnc(),notes=[];
+  const p=readEnc(),notes=[];shapeUI(p);
+  if(p.shape!=='rect')return roundCalc(p);
   if(!(p.W>=60&&p.D>=60&&p.H>=60&&p.S>=10&&p.T>=1.5&&p.hole>=1&&p.bar>=.8)){$('encNote').hidden=false;$('encNote').textContent='Enter all sizes to see the design. Width, depth and height start at 60 mm.';$('encDl').disabled=true;return}
   $('encDl').disabled=false;
   const d=encDesign(p,true);enc.cur={p};
@@ -457,11 +484,11 @@ function encCalc(){
   /* parts table */
   const bed=[p.bx,p.by,p.bz],mat=MATS[p.mat];
   const rows=[
-    {name:'Base',n:1,size:d.base.size,vol:d.base.vol,mesh:false},
+    {name:'Base',n:1,size:bbox(d.base.tris),vol:d.base.vol,mesh:false},
     {name:'Corner post',n:4,size:[d.Hp,2*d.a,2*d.a],vol:d.post.vol,mesh:false},
     {name:'Lid with mesh',n:1,size:d.lid.size,vol:null,mesh:true}
   ];
-  for(const q of d.panels)if(q.type==='mesh')rows.push({name:q.label+' panel',n:1,size:[q.w,q.h,p.T],vol:null,mesh:true});
+  for(const q of d.panels)if(q.type==='mesh')rows.push({name:q.label+' panel'+(p.rails==='yes'&&q.k!=='front'?' with clip rails':''),n:1,size:[q.w,q.h,p.T+(p.rails==='yes'&&q.k!=='front'?HabitatParts.RAIL.slot+HabitatParts.RAIL.lip:0)],vol:null,mesh:true});
   if(d.sw&&d.sw.ok){rows.push({name:'Front frame',n:1,size:bbox(place(d.sw.frameM.tris,(x,y,z)=>[x,-z,y]))});rows.push({name:'Swing door',n:1,size:bbox(place(d.sw.doorM.tris,(x,y,z)=>[x,-z,y]))})}
   const fits=sz=>{const [x,y]=[Math.max(sz[0],sz[1]),Math.min(sz[0],sz[1])],[bx,by]=[Math.max(bed[0],bed[1]),Math.min(bed[0],bed[1])];return x<=bx&&y<=by&&sz[2]<=bed[2]};
   const fitsDiag=sz=>!fits(sz)&&Math.max(sz[0],sz[1])<=Math.hypot(bed[0],bed[1])-20&&Math.min(sz[0],sz[1])<=20&&sz[2]<=bed[2];
@@ -483,6 +510,38 @@ function encCalc(){
   if(cl.some(q=>q.k==='front')){const r=document.createElement('tr');r.innerHTML=`<td colspan="2" style="color:var(--muted)">The front door is taller than the rest, so its top sticks out of the lid as a handle. DIY stores usually cut acrylic to size for you.</td>`;ct.append(r)}
   const n=$('encNote');n.hidden=!notes.length;n.innerHTML='';for(const x of notes){const dv=document.createElement('div');dv.textContent=x;n.append(dv)}
   drawEnc(d);
+}
+function roundCalc(p){
+  const notes=[];if(p.shape==='round')p.D=p.W;
+  if(!(p.W>=80&&p.D>=80&&p.H>=60&&p.S>=10&&p.ts>=.3&&p.hole>=1&&p.bar>=.8)){$('encNote').hidden=false;$('encNote').textContent='Enter all sizes to see the design. Width and depth start at 80 mm, height at 60 mm.';$('encDl').disabled=true;return}
+  $('encDl').disabled=false;
+  const r=HabitatParts.roundEnclosure(p,true),{minW,minH}=recommend();
+  if(Math.min(p.W,p.D)<minW||p.H<minH)notes.push(`This is smaller than the ${fmt(minW)} × ${fmt(minW)} × ${fmt(minH)} mm the size rule suggests for this animal.`);
+  if(p.hole>2.5)notes.push('Holes over 2.5 mm let many feeder insects escape.');
+  const bed=[p.bx,p.by,p.bz],mat=MATS[p.mat],t=$('encParts');t.innerHTML='<tr><th>Part</th><th>Size (mm)</th><th></th></tr>';
+  for(const [name,m] of [['Base',r.base],['Lid with mesh',r.lid],['Feeding hatch',r.cover]]){
+    const sz=bbox(m.tris),ok=Math.max(sz[0],sz[1])<=Math.max(bed[0],bed[1])&&Math.min(sz[0],sz[1])<=Math.min(bed[0],bed[1])&&sz[2]<=bed[2];
+    const tr=document.createElement('tr');tr.innerHTML=`<td>${name}</td><td class="n">${sz.map(v=>fmt(v)).join(' × ')}</td><td class="n">${ok?'':'too big'}</td>`;t.append(tr);
+    if(!ok)notes.push(`The ${name.toLowerCase()} is bigger than your print bed. Make the enclosure smaller.`);
+  }
+  const tr=document.createElement('tr');tr.innerHTML=`<td colspan="3" style="color:var(--muted)">Print in ${mat.name}. The hatch needs 4 round magnets of ${p.dMagD} × ${p.dMagH} mm.</td>`;t.append(tr);
+  $('cutWrap').hidden=false;const ct=$('cutList');
+  ct.innerHTML=`<tr><th>Sheet</th><th>Cut size (mm)</th></tr><tr><td>Clear PET sheet, ${fmt(p.ts,2)} mm, rolled into the grooves</td><td class="n">${fmt(r.sheet[0],0)} × ${fmt(r.sheet[1],1)}</td></tr><tr><td colspan="2" style="color:var(--muted)">The length includes 15 mm of overlap. Join the ends with clear tape on the outside.</td></tr>`;
+  const n=$('encNote');n.hidden=!notes.length;n.innerHTML='';for(const x of notes){const dv=document.createElement('div');dv.textContent=x;n.append(dv)}
+  const col=v=>cssColor(getComputedStyle(document.documentElement).getPropertyValue(v).trim()),frame=col('--frame'),meshC=col('--mesh');
+  const Ztop=r.S+r.H+r.Lt,lo=place0(r.lid.tris,(x,y,z)=>[x,-y,Ztop-z]),co=place0(r.cover.tris,(x,y,z)=>[x,y,Ztop+z]);
+  const sheet=Geo.build([Geo.prism(r.S,r.S+r.H,Geo.subtract(Geo.offset(r.C,.4),Geo.offset(r.C,-.4)))]).tris;
+  render($('encCv'),[{tris:r.base.tris,color:frame},{tris:lo,color:meshC,alpha:.55},{tris:co,color:frame},{tris:sheet,color:{r:120,g:170,b:215},alpha:.3}]);
+}
+/* transform without moving to the origin */
+function place0(t,fn){const o=new Float32Array(t.length);for(let i=0;i<t.length;i+=3){const q=fn(t[i],t[i+1],t[i+2]);o[i]=q[0];o[i+1]=q[1];o[i+2]=q[2]}return o}
+async function roundDownload(p){
+  const msg=$('encMsg');if(p.shape==='round')p.D=p.W;
+  const r=HabitatParts.roundEnclosure(p,false),tag=p.shape==='round'?`d${p.W}x${p.H}`:`${p.W}x${p.D}x${p.H}`;
+  const files=[{name:`base-${p.shape}-${tag}.stl`,data:stl(place(r.base.tris))},{name:`lid-mesh-${p.shape}-${tag}.stl`,data:stl(place(r.lid.tris))},{name:'feeding-hatch.stl',data:stl(place(r.cover.tris))}];
+  const txt=`Insect enclosure, ${p.shape}, ${p.shape==='round'?'diameter '+p.W:p.W+' x '+p.D} mm, ${p.H} mm tall above ${p.S} mm of substrate\nPrint: base, lid (printed upside down, as the file lies) and feeding hatch.\nSuggested filament: ${MATS[p.mat].name}.\n\nClear wall: PET sheet ${p.ts} mm thick, cut to ${r.sheet[0].toFixed(0)} x ${r.sheet[1].toFixed(1)} mm. Roll it into the base groove, overlap the ends by 15 mm, and tape the seam on the outside.\nMagnets: 4 round magnets, ${p.dMagD} x ${p.dMagH} mm (2 in the lid around the hatch, 2 in the hatch). Check the poles attract before gluing.\n\nAssembly: fill the substrate, stand the rolled sheet in the base groove, then press the lid on so the sheet sits in its groove.\n`;
+  files.push({name:'read-me.txt',data:new TextEncoder().encode(txt)});
+  await save(`mantis-enclosure-${p.shape}-${tag}.zip`,zipStore(files),msg,'Saved. Unzip it, then open the STL files in Creality Print.');
 }
 function drawEnc(d){
   const col=v=>cssColor(getComputedStyle(document.documentElement).getPropertyValue(v).trim());
@@ -524,6 +583,7 @@ async function save(filename,blob,msg,done){
 $('encDl').onclick=async()=>{
   const p=readEnc(),msg=$('encMsg');msg.textContent='Building the files…';
   await new Promise(r=>setTimeout(r,30));
+  if(p.shape!=='rect')return roundDownload(p);
   const d=encDesign(p,false),files=[],tag=`${p.W}x${p.D}x${p.H}`;
   files.push({name:`base-${tag}.stl`,data:stl(place(d.base.tris))});
   files.push({name:`corner-post-print-4.stl`,data:stl(place(d.post.tris,(x,y,z)=>[-z,y,x]))});
@@ -535,6 +595,8 @@ $('encDl').onclick=async()=>{
   let txt=`Insect enclosure ${p.W} x ${p.D} x ${p.H} mm (substrate ${p.S} mm)\nPrint: 1 base, 4 corner posts, 1 lid${d.sw?', the front frame and the swing door':''}${d.panels.some(q=>q.type==='mesh')?', mesh panels as listed':''}.\nSuggested filament: ${MATS[p.mat].name}.\n`;
   if(cl.length)txt+=`\nAcrylic, ${p.T} mm thick:\n`+cl.map(q=>`- ${q.label}: ${q.w.toFixed(1)} x ${q.h.toFixed(1)} mm`).join('\n')+'\n';
   if(d.sw&&d.sw.win)txt+=`\nDoor window: ${d.sw.win[0].toFixed(1)} x ${d.sw.win[1].toFixed(1)} mm acrylic, 2-3 mm thick, glued over the outside of the door's opening.\n`;
+  if(d.base.pegs&&d.base.pegs.length)txt+=`\nThe base has ${d.base.pegs.length} floor pegs for accessories with a floor socket.\n`;
+  if(p.rails==='yes'&&d.panels.some(q=>q.type==='mesh'&&q.k!=='front'))txt+='\nThe mesh panels have clip rails. Put the rails on the inside, with the open side of each channel facing up.\n';
   if(d.sw)txt+=`\nSwing door: 4 round magnets, ${p.dMagD} x ${p.dMagH} mm (2 in the frame rim, 2 in the door). Check the poles attract before gluing.\nHinge pin: a strand of 1.75 mm filament, about ${Math.ceil(d.sw.pinLen+10)} mm long. Push it down through all five knuckles, then melt or bend the ends so it stays in.\n\nAssembly: dry-fit the posts in the base sockets, slide the front frame, back and side panels into the grooves, put the lid on, then hang the door with the pin.\n`;
   else txt+='\nAssembly: dry-fit the posts in the base sockets, slide the back and side panels into the grooves, put the lid on, then drop the front door in through the slot in the lid.\n';
   files.push({name:'read-me.txt',data:new TextEncoder().encode(txt)});
@@ -543,108 +605,105 @@ $('encDl').onclick=async()=>{
 for(const k in encIds)$(encIds[k]).addEventListener('input',()=>{if(k!=='species')encChanged()});
 
 /* ---------- accessories ---------- */
+const SHAPES={round:'Round',oval:'Oval',pebble:'Pebble',hex:'Hexagon',square:'Rounded square',cylinder:'Cylinder',rock:'Rock',cone:'Cone',fungus:'Bracket fungus',leaf:'Leaf',classic:'Rounded'};
+const RANDOM=['pebble','rock','fungus'];
+const MOUNT={free:'Stands on its own',peg:'Floor peg',magnet:'Magnets',clip:'Clip rail',glue:'Glue or tape'};
+const LIGHT_LINK='<a href="https://insektenliebe.com/en/?p=158875" target="_blank" rel="noopener">Repto Compact LED</a>';
 const ITEMS={
-  dish:{name:'Pearl dish',fields:[['L','Length',50],['Wd','Width',50],['depth','Depth',12],['wall','Wall',2.4]],mounts:['free','magnet'],
+  dish:{name:'Pearl dish',fields:[['L','Length',50],['W','Width',40],['depth','Depth',12],['wall','Wall',2.4]],shapes:['round','oval','pebble','hex'],mounts:['free','peg','magnet','clip'],
     hint:'A shallow dish for water gel pearls such as Aqua Pearls Calcium. Its stepped inner edge lets feeder insects and small nymphs climb in and out. Replace the pearls every few days, since they go mouldy in a warm, humid enclosure.'},
-  pot:{name:'Plant pot',fields:[['L','Length',60],['Wd','Width',50],['Hh','Height',60],['wall','Wall',2]],mounts:['free','magnet'],drain:true,
-    hint:'A square pot with small feet and drainage holes. Turn the holes off if it stands straight on the substrate and shouldn\'t drip. For live plants, print in PETG so the pot stays watertight.'},
-  ledge:{name:'Wall ledge',fields:[['L','Length',70],['dep','Depth',45],['Hh','Back height',35]],mounts:['magnet','glue'],
-    hint:'A perch shelf with fine ridges for grip and a small lip at the front. It prints lying on its back, so it needs no supports.'},
-  twig:{name:'Twig holder',fields:[['dia','Twig thickness',6],['Hh','Height',30]],mounts:['magnet','glue'],
-    hint:'A socket that holds a branch upright against a panel. Measure the thickest part of the twig end and it adds a little play.'},
-  label:{name:'Label holder',fields:[['cw','Card width',70],['ch','Card height',30]],mounts:['magnet','glue'],twoColour:true,
-    hint:'A frame you slide a paper card into, with the species, name and moult dates. It comes as two files, a plate and a frame, so you can print the frame in a second colour with the CFS.'}
+  pot:{name:'Plant pot',fields:[['L','Length',60],['W','Width',50],['H','Height',60],['wall','Wall',2],['taper','Wider at the top (%)',12]],shapes:['round','oval','hex','square','pebble'],mounts:['free','peg','magnet','clip'],drain:true,
+    hint:'A pot with small feet and drainage holes. Turn the holes off if it shouldn\'t drip onto the substrate. For live plants, print in PETG so the pot stays watertight.'},
+  twig:{name:'Twig holder',fields:[['dia','Twig thickness',6],['H','Height',30]],shapes:['cylinder','rock','cone','hex'],mounts:['free','peg','magnet','clip'],
+    hint:'Holds a branch upright. Standing or pegged versions have a wide base for the floor, and wall versions sit against a panel. Measure the thickest part of the twig end. The socket adds a little play.'},
+  ledge:{name:'Wall ledge',fields:[['L','Length',70],['dep','Depth',45],['Hh','Back height',35]],shapes:['fungus','leaf','pebble','classic'],mounts:['magnet','clip','glue'],
+    hint:'A perch shelf with irregular natural edges and ridges for grip: a bracket fungus with growth rings, a leaf with veins, or a pebble. It prints lying on its back, so it needs no supports.'},
+  label:{name:'Label holder',fields:[['cw','Card width',70],['ch','Card height',30]],mounts:['magnet','clip','glue'],
+    hint:'A frame you slide a paper card into, with the species, name and moult dates. It comes as two files, a plate and a frame, so you can print the frame in a second colour with the CFS.'},
+  light:{name:'Light holder',kinds:{clamp:{name:'Clamp lamp bridge',fields:[['tab','Tab thickness',4],['tabH','Tab height',30]]},puck:{name:'Round light cradle',fields:[['pd','Light diameter',60]]},bar:{name:'LED bar cradle',fields:[['bl','Bar length',120],['bw','Bar width',15]]}},mounts:[],
+    hint:`A bridge across the lid with a tab for a clip-on gooseneck lamp, or a cradle that holds a round or bar light just above the mesh. A cheap fit is the ${LIGHT_LINK} (about €14, USB, 3.5 W, 7100 K daylight): its screw clamp grips the tab. Daylight around 6500 K suits live plants too. Keep lights on top of the mesh, never inside, and check the enclosure doesn't overheat.`}
 };
-const MOUNT={free:'Stands on its own',magnet:'Magnets',glue:'Glue or tape'};
-const A=Object.assign({item:'dish',magD:10,magH:3,mount:{},v:{},drain:true},state.acc||{});
+const A=Object.assign({item:'dish',magD:10,magH:3,mount:{},v:{},drain:true,shape:{},seed:{},kind:'clamp'},state.acc||{});
+for(const k of ['mount','v','shape','seed'])A[k]=A[k]||{};
 for(const k in ITEMS){const b=document.createElement('button');b.type='button';b.textContent=ITEMS[k].name;b.dataset.k=k;b.onclick=()=>{A.item=k;accSetup()};$('items').append(b)}
 $('magD').value=A.magD;$('magH').value=A.magH;
+let accT;const accSoon=()=>{clearTimeout(accT);accT=setTimeout(accCalc,180)};
+function field(box,label,el){const lab=document.createElement('label');lab.className='f';lab.textContent=label;lab.append(el);box.append(lab);return lab}
 function accSetup(){
   const it=ITEMS[A.item],box=$('accFields');box.innerHTML='';
   document.querySelectorAll('#items button').forEach(b=>b.setAttribute('aria-pressed',b.dataset.k===A.item));
   A.v[A.item]=A.v[A.item]||{};
-  for(const [k,l,dv] of it.fields){
-    const lab=document.createElement('label');lab.className='f';lab.textContent=l+' (mm)';
-    const i=document.createElement('input');i.type='number';i.min=1;i.step=k==='wall'?.2:1;i.value=A.v[A.item][k]??dv;i.dataset.k=k;
-    i.oninput=()=>{A.v[A.item][k]=+i.value;accCalc()};lab.append(i);box.append(lab);
+  if(it.kinds){
+    const s=document.createElement('select');opt(s,Object.entries(it.kinds).map(([k,v])=>[k,v.name]));s.value=A.kind in it.kinds?A.kind:'clamp';s.onchange=()=>{A.kind=s.value;accSetup()};
+    field(box,'Type',s).style.gridColumn='1/-1';
   }
-  if(it.drain){const lab=document.createElement('label');lab.className='f';lab.textContent='Drainage holes';const s=document.createElement('select');opt(s,[['yes','Yes'],['no','No']]);s.value=A.drain?'yes':'no';s.onchange=()=>{A.drain=s.value==='yes';accCalc()};lab.append(s);box.append(lab)}
-  const m=$('mount');m.innerHTML='';opt(m,it.mounts.map(k=>[k,MOUNT[k]]));m.value=A.mount[A.item]&&it.mounts.includes(A.mount[A.item])?A.mount[A.item]:it.mounts[0];
-  $('accHint').textContent=it.hint;
+  if(it.shapes){
+    const s=document.createElement('select');opt(s,it.shapes.map(k=>[k,SHAPES[k]]));s.value=it.shapes.includes(A.shape[A.item])?A.shape[A.item]:it.shapes[0];
+    s.onchange=()=>{A.shape[A.item]=s.value;accSetup()};field(box,'Shape',s);
+    if(RANDOM.includes(s.value)){const b=document.createElement('button');b.type='button';b.className='btn';b.textContent='Shuffle shape';b.style.alignSelf='end';b.onclick=()=>{A.seed[A.item]=(A.seed[A.item]||1)+1;accCalc()};box.append(b)}
+  }
+  const shape=it.shapes?(it.shapes.includes(A.shape[A.item])?A.shape[A.item]:it.shapes[0]):null;
+  const fields=it.kinds?it.kinds[A.kind in it.kinds?A.kind:'clamp'].fields:it.fields;
+  for(const [k,l,dv] of fields){
+    if(k==='W'&&shape==='round')continue;
+    const i=document.createElement('input');i.type='number';i.min=k==='taper'?0:1;i.step=k==='wall'?.2:1;i.value=A.v[A.item][k]??dv;
+    i.oninput=()=>{A.v[A.item][k]=+i.value;accSoon()};
+    field(box,k==='taper'?l:(k==='L'&&shape==='round'?'Diameter':l)+(k==='taper'?'':' (mm)'),i);
+  }
+  if(it.drain){const s=document.createElement('select');opt(s,[['yes','Yes'],['no','No']]);s.value=A.drain?'yes':'no';s.onchange=()=>{A.drain=s.value==='yes';accCalc()};field(box,'Drainage holes',s)}
+  const m=$('mount');m.innerHTML='';$('h-mount').parentElement.hidden=!it.mounts.length;
+  if(it.mounts.length){opt(m,it.mounts.map(k=>[k,MOUNT[k]]));m.value=it.mounts.includes(A.mount[A.item])?A.mount[A.item]:it.mounts[0]}
+  $('accHint').innerHTML=it.hint;
   accCalc();
 }
 $('mount').onchange=()=>{A.mount[A.item]=$('mount').value;accCalc()};
-for(const id of ['magD','magH'])$(id).addEventListener('input',()=>{A[id]=+$(id).value;accCalc()});
-function val(k){const it=ITEMS[A.item],f=it.fields.find(x=>x[0]===k);const v=A.v[A.item][k];return v>0?v:f[2]}
-/* Each builder returns parts in print orientation, with a filament role per part. */
+for(const id of ['magD','magH'])$(id).addEventListener('input',()=>{A[id]=+$(id).value;accSoon()});
+const MOUNT_HINT={
+  free:'It stands on the substrate or floor.',
+  peg:'A socket underneath pushes onto one of the floor pegs, so it stays put. Turn on floor pegs for the enclosure base.',
+  magnet:'Round magnets hold the piece against a panel, with a second magnet on the outside, so nothing needs drilling. Disc magnets of 10 × 3 mm hold small pieces through 3 mm acrylic. Check the poles attract before gluing.',
+  clip:'The back plate drops into a clip rail on a printed mesh panel and clicks in place, like IKEA Skådis. Lift it straight up to take it off. Turn on clip rails for the enclosure.',
+  glue:'Stick it on with glue or strong double-sided tape.'
+};
+function encInfo(){
+  const e=Object.assign({},DEF,state.enc||{}),bed=Math.max(e.bx||350,e.by||350);
+  if(e.shape==='rect'){const band=(e.T+.6)/2+2.4;return {span:e.W+2*band,bed}}
+  return {span:e.W+e.ts+.6+4.8,bed};
+}
 function accDesign(){
-  const mount=$('mount').value,md=Math.max(4,+$('magD').value||10),mh=Math.max(1,+$('magH').value||3),mag=mount==='magnet';
-  const pk=md+.4,pd=mh+.2,bt=pd+1.4;
-  /* magnet pockets in a back plate that stands at y=-bt..0, opening towards -y */
-  const backPlate=(x0,x1,z0,z1)=>{
-    const adds=[[x0,-bt,z0,x1,0,z1]],subs=[],zc=(z0+z1)/2,w=x1-x0;
-    const xs=w>=2*pk+16?[x0+w/4,x1-w/4]:[(x0+x1)/2];
-    for(const x of xs)subs.push(...disc('xz',x,zc,md,-bt-1,-bt+pd));
-    return {adds,subs,n:xs.length};
-  };
-  const parts=[],notes=[];let magnets=0;
-  if(A.item==='dish'){
-    const L=val('L'),Wd=val('Wd'),dep=val('depth'),w=val('wall'),fl=2,top=fl+dep,sw=3,sh=3,n=Math.max(1,Math.ceil(dep/sh));
-    const adds=[[0,0,0,L,Wd,top]],subs=[];
-    for(let k=0;k<n;k++){const ins=w+k*sw;if(L-2*ins<6||Wd-2*ins<6)break;subs.push([ins,ins,Math.max(fl,top-(k+1)*sh),L-ins,Wd-ins,top+1])}
-    if(mag){const plH=Math.max(top,pk+6);const bp=backPlate(0,L,0,plH);adds.push(...bp.adds);subs.push(...bp.subs);magnets=bp.n}
-    parts.push({file:'pearl-dish.stl',role:'Main colour',m:mesh({adds,subs})});
-  }else if(A.item==='pot'){
-    const L=val('L'),Wd=val('Wd'),Hh=val('Hh'),w=val('wall'),ft=3,fl=2,fs=Math.min(8,L/4,Wd/4);
-    const adds=[[0,0,ft,L,Wd,Hh]],subs=[[w,w,ft+fl,L-w,Wd-w,Hh+1]];
-    for(const [x,y] of [[0,0],[L-fs,0],[0,Wd-fs],[L-fs,Wd-fs]])adds.push([x,y,0,x+fs,y+fs,ft]);
-    if(A.drain){const hs=3,step=10,x0=fs+3,x1=L-fs-3,y0=w+3,y1=Wd-w-3;let cnt=0;
-      for(let x=x0;x+hs<=x1;x+=step)for(let y=y0;y+hs<=y1;y+=step){subs.push([x,y,ft-1,x+hs,y+hs,ft+fl+.01]);cnt++}
-      if(!cnt)notes.push('The pot is too small for drainage holes.')}
-    if(mag){const bp=backPlate(0,L,ft,Hh);adds.push(...bp.adds);subs.push(...bp.subs);magnets=bp.n}
-    parts.push({file:'plant-pot.stl',role:'Main colour',m:mesh({adds,subs})});
-  }else if(A.item==='ledge'){
-    /* lying on its back: back plate on the bed, shelf standing up from its lower edge */
-    const L=val('L'),dep=val('dep'),Hb=Math.max(val('Hh'),pk+12),st=4,bp=mag?Math.max(2.4,pd+1.4):2.4;
-    const adds=[[0,0,0,L,Hb,bp],[0,0,bp,L,st,bp+dep],[0,st,bp+dep-2.4,L,st+3,bp+dep]],subs=[];
-    for(let z=bp+4;z+1.2<=bp+dep-4;z+=4)adds.push([0,st,z,L,st+.8,z+1.2]);
-    if(mag){const yc=st+(Hb-st)/2,xs=L>=2*pk+16?[L/4,3*L/4]:[L/2];for(const x of xs)subs.push(...disc('xy',x,yc,md,-1,pd));magnets=xs.length}
-    parts.push({file:'wall-ledge.stl',role:'Main colour',m:mesh({adds,subs})});
-  }else if(A.item==='twig'){
-    const dia=val('dia')+.6,Hh=val('Hh'),w=Math.max(dia+6,mag?pk+6:0,14),back=mag?pd+1.6:2,dp=back+dia+3;
-    const adds=[[0,0,0,w,dp,Hh]],subs=[[(w-dia)/2,back,2,(w+dia)/2,back+dia,Hh+1]];
-    if(mag){subs.push(...disc('xz',w/2,Hh/2,md,-1,pd));magnets=1;if(Hh<pk+6)notes.push('Make it taller so the magnet fits.')}
-    parts.push({file:'twig-holder.stl',role:'Main colour',m:mesh({adds,subs})});
-  }else{
-    const cw=val('cw'),ch=val('ch'),sp=4,ov=3,pt=mag?Math.max(2,pd+1.4):2,Lp=cw+2*sp,Hp=ch+sp-3;
-    const pAdd=[[0,0,0,Lp,Hp,pt]],pSub=[];
-    if(mag){const yc=Hp/2,xs=Lp>=2*pk+16?[Lp/4,3*Lp/4]:[Lp/2];for(const x of xs)pSub.push(...disc('xy',x,yc,md,-1,pd));magnets=xs.length;if(Hp<pk+4)notes.push('The card is too short for the magnets. Make it taller.')}
-    const gz=.8,lz=1.2,fAdd=[[0,0,pt,sp,Hp,pt+gz],[Lp-sp,0,pt,Lp,Hp,pt+gz],[0,0,pt,Lp,sp,pt+gz],
-      [0,0,pt+gz,sp+ov,Hp,pt+gz+lz],[Lp-sp-ov,0,pt+gz,Lp,Hp,pt+gz+lz],[0,0,pt+gz,Lp,sp+ov,pt+gz+lz]];
-    parts.push({file:'label-plate.stl',role:'Colour 1',m:mesh({adds:pAdd,subs:pSub})});
-    parts.push({file:'label-frame.stl',role:'Colour 2',m:mesh({adds:fAdd}),same:true});
-  }
-  return {parts,notes,magnets,mount};
+  const it=ITEMS[A.item],mount=it.mounts.length?$('mount').value:'none';
+  const o={mount,md:Math.max(4,+$('magD').value||10),mh:Math.max(1,+$('magH').value||3),seed:A.seed[A.item]||1,drain:A.drain,kind:A.kind in (it.kinds||{})?A.kind:'clamp'};
+  const fields=it.kinds?it.kinds[o.kind].fields:it.fields;
+  for(const [k,,dv] of fields){const v=A.v[A.item][k];o[k]=v>0||(k==='taper'&&v===0)?v:dv}
+  if(it.shapes){o.shape=it.shapes.includes(A.shape[A.item])?A.shape[A.item]:it.shapes[0];if(o.shape==='round')o.W=o.L}
+  const r=HabitatParts[A.item](o,encInfo());r.mount=mount;return r;
 }
 let accCur=null;
 function accCalc(){
   state.acc=A;persist();
-  const d=accDesign();accCur=d;
+  document.querySelectorAll('.magF').forEach(el=>el.hidden=$('mount').value!=='magnet');
+  $('mountHint').textContent=MOUNT_HINT[$('mount').value]||'';
+  let d;try{d=accDesign()}catch(e){$('accNote').hidden=false;$('accNote').textContent='These sizes don\'t make a valid shape. Try larger values.';return}
+  accCur=d;
   const col=v=>cssColor(getComputedStyle(document.documentElement).getPropertyValue(v).trim()),c1=col('--acc'),c2=col('--acc2');
   render($('accCv'),d.parts.map((p,i)=>({tris:p.m.tris,color:i?c2:c1})));
   const lg=$('accLegend');lg.innerHTML='';
   if(d.parts.length>1)d.parts.forEach((p,i)=>{const s=document.createElement('span');s.innerHTML=`<i class="dot" style="background:var(${i?'--acc2':'--acc'})"></i>${p.role}: ${p.file}`;lg.append(s)});
   const t=$('accParts'),bed=[+$('bx').value||350,+$('by').value||350,+$('bz').value||350],mat=MATS[$('mat').value]||MATS.petg;
   t.innerHTML='<tr><th>File</th><th>Size (mm)</th><th>Solid</th></tr>';
-  const notes=[...d.notes];let vol=0;
+  const notes=[...d.notes];
   for(const p of d.parts){
-    const sz=bbox(p.m.tris);vol+=p.m.vol;
+    const sz=bbox(p.m.tris);
     const tr=document.createElement('tr');tr.innerHTML=`<td>${p.file}</td><td class="n">${sz.map(v=>fmt(v)).join(' × ')}</td><td class="n">${fmt(p.m.vol/1000*mat.rho,1)} g</td>`;t.append(tr);
     if(sz[2]>bed[2]||Math.max(sz[0],sz[1])>Math.max(bed[0],bed[1])||Math.min(sz[0],sz[1])>Math.min(bed[0],bed[1]))notes.push(`${p.file} is bigger than your print bed.`);
   }
-  if(d.magnets)notes.push(`Needs ${d.magnets} magnet${d.magnets>1?'s':''} in the piece and the same number outside the panel.`);
+  if(d.magnets)notes.push(`Needs ${d.magnets} round magnet${d.magnets>1?'s':''} in the piece and the same number outside the panel.`);
+  const e=Object.assign({},DEF,state.enc||{});
+  if(d.mount==='peg'&&e.pegs!=='grid')notes.push('Your enclosure has no floor pegs yet. Turn them on under Enclosure, Size.');
+  if(d.mount==='clip'&&(e.shape!=='rect'||e.rails!=='yes'))notes.push('Clip rails are on printed mesh panels of a rectangular enclosure. Turn them on under Enclosure, Panels.');
   if(d.parts.length>1)notes.push('In Creality Print, add both files as one object (Add part), then give each a different CFS slot.');
   if(A.item==='dish')notes.push('Wash the dish with hot water when you refill it, since layer lines collect residue.');
+  if(A.item==='light'&&d.mount==='none'&&A.kind==='clamp')notes.push(`Made for your enclosure's lid, ${fmt(encInfo().span)} mm across. The bridge sits on the lid edge, and the end hooks keep it from sliding.`);
   $('accDl').textContent=d.parts.length>1?'Download STL files':'Download STL';
   const n=$('accNote');n.hidden=!notes.length;n.innerHTML='';for(const x of notes){const dv=document.createElement('div');dv.textContent=x;n.append(dv)}
 }
