@@ -249,11 +249,18 @@
     const pupils=unite(circle(-7,5.4,2.5,32),circle(13.9,5.4,2.5,32));
     /* both antennae have the same length: the hooked one is shorter in its straight part by what the hook takes */
     const aL=HP.bez([-2.2,2.5],[-5,16],[-10,20],[-15,26],120),len=q=>q.reduce((t,p,i)=>i?t+Math.hypot(p[0]-q[i-1][0],p[1]-q[i-1][1]):0,0);
-    const hk=[2,1.5],aR0=aL.map(([x,y])=>[-x,y]),target=len(aL)-hk[0]-hk[1],aR=[aR0[0]];
+    const hk=[1.8,1.8],aR0=aL.map(([x,y])=>[-x,y]),target=len(aL)-hk[0]-hk[1],aR=[aR0[0]];
     for(let i=1,t=0;i<aR0.length;i++){const d=Math.hypot(aR0[i][0]-aR0[i-1][0],aR0[i][1]-aR0[i-1][1]);if(t+d>=target){const f=(target-t)/d;aR.push([aR0[i-1][0]+(aR0[i][0]-aR0[i-1][0])*f,aR0[i-1][1]+(aR0[i][1]-aR0[i-1][1])*f]);break}t+=d;aR.push(aR0[i])}
-    const e=aR[aR.length-1],e0=aR[aR.length-3],an=Math.atan2(e[1]-e0[1],e[0]-e0[0]),h1=[e[0]+hk[0]*Math.cos(an-1.5),e[1]+hk[0]*Math.sin(an-1.5)],h2=[h1[0]+hk[1]*Math.cos(an-2.5),h1[1]+hk[1]*Math.sin(an-2.5)];
-    const ant=stroke([aL,[...aR,h1,h2]],1.8);
-    const smirk=stroke([HP.bez([-2.6,-6.9],[-.6,-7.7],[2,-7.3],[3.9,-4.7])],1.15);
+    const e=aR[aR.length-1],e0=aR[aR.length-3],an=Math.atan2(e[1]-e0[1],e[0]-e0[0]),hook=[];{let [x,y]=e;for(let k=1;k<=18;k++){const a=an-k*2.7/18;x+=.2*Math.cos(a);y+=.2*Math.sin(a);hook.push([x,y])}}
+    /* a line whose width follows wf(t), t running 0..1 along it */
+    const taper=(q,wf)=>{const d=[0];for(let i=1;i<q.length;i++)d.push(d[i-1]+Math.hypot(q[i][0]-q[i-1][0],q[i][1]-q[i-1][1]));const L=d[d.length-1],ws=d.map(v=>wf(v/L)),parts=[];
+      for(let i=0;i<q.length;i++){parts.push(circle(q[i][0],q[i][1],ws[i]/2,16)[0]);if(i<q.length-1){const [x0,y0]=q[i],[x1,y1]=q[i+1],l=Math.hypot(x1-x0,y1-y0);if(l<1e-6)continue;const nx=-(y1-y0)/l,ny=(x1-x0)/l;
+        parts.push([[x0+nx*ws[i]/2,y0+ny*ws[i]/2],[x0-nx*ws[i]/2,y0-ny*ws[i]/2],[x1-nx*ws[i+1]/2,y1-ny*ws[i+1]/2],[x1+nx*ws[i+1]/2,y1+ny*ws[i+1]/2]].map(p=>p))}}
+      return unite(parts.map(r=>sarea(r)<0?r.slice().reverse():r))};
+    const fine=q=>{const o=[q[0]];for(let i=1;i<q.length;i++){const a=q[i-1],b=q[i],n=Math.max(1,Math.ceil(Math.hypot(b[0]-a[0],b[1]-a[1])/.3));for(let k=1;k<=n;k++)o.push([a[0]+(b[0]-a[0])*k/n,a[1]+(b[1]-a[1])*k/n])}return o};
+    const antW=t=>2*(1-.8*Math.pow(t,1.3));
+    const ant=unite(taper(aL,antW),taper(fine([...aR,...hook]),antW));
+    const smirk=taper(HP.bez([-2.8,-6.9],[-.6,-7.8],[2,-7.4],[4,-4.6],80),t=>.15+1.25*Math.pow(Math.sin(Math.PI*t),.7));
     let mark=unite(face,ant);
     mark=unite(subtract(subtract(mark,vis),smirk),pupils);
     const b=bounds(mark),k=W/(b.x1-b.x0);
