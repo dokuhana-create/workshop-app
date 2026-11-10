@@ -100,14 +100,17 @@ h3{font:600 15px var(--body);margin:0 0 6px}
       <section aria-labelledby="h-panels">
         <h2 id="h-panels">Panels</h2>
         <div class="fields">
-          <label class="f">Front (sliding door)<select id="pFront"></select></label>
+          <label class="f">Front door<select id="pFront"></select></label>
           <label class="f">Back<select id="pBack"></select></label>
           <label class="f">Left<select id="pLeft"></select></label>
           <label class="f">Right<select id="pRight"></select></label>
           <label class="f">Panel thickness (mm)<input id="T" type="number" min="1.5" max="6" step="0.5"></label>
           <label class="f">Mesh hole (mm)<input id="hole" type="number" min="1" max="5" step="0.1"></label>
           <label class="f">Mesh bar (mm)<input id="bar" type="number" min="0.8" max="4" step="0.1"></label>
+          <label class="f swingF">Door magnet diameter (mm)<input id="dMagD" type="number" min="4" max="20" step="1"></label>
+          <label class="f swingF">Door magnet height (mm)<input id="dMagH" type="number" min="1" max="6" step="0.5"></label>
         </div>
+        <p class="hint swingF">The swing door hangs on a hinge along its left edge, with a 1.75 mm filament strand as the pin, and closes onto a raised rim with two round magnets. It opens outwards, so the mantis isn't disturbed from above.</p>
         <p class="hint">The lid is always a printed mesh, so the mantis has a grippy ceiling to hang from when it moults. Clear panels are acrylic sheet cut to the sizes on the right. Mesh sides add cross-ventilation, which mantises from warm, humid places need.</p>
       </section>
 
@@ -202,8 +205,11 @@ function mesh(spec){
     for(let i=0;i<n;i++){const s=a0+off+i*pitch;out.push([q(s),q(s+hole)])}
     return out;
   };
-  const L=lats.map(l=>({...l,hx:holes(l.x0,l.x1,l.hole,l.bar),hy:holes(l.y0,l.y1,l.hole,l.bar)}));
-  for(const l of L){for(const [a,b] of l.hx){X.add(a);X.add(b)}for(const [a,b] of l.hy){Y.add(a);Y.add(b)}Z.add(q(l.z0));Z.add(q(l.z1))}
+  /* a mesh region normally lies flat (holes through z); plane 'xz' stands it upright, with holes through y */
+  const L=lats.map(l=>l.plane==='xz'?{...l,xz:true,hx:holes(l.x0,l.x1,l.hole,l.bar),hy:holes(l.z0,l.z1,l.hole,l.bar)}:{...l,hx:holes(l.x0,l.x1,l.hole,l.bar),hy:holes(l.y0,l.y1,l.hole,l.bar)});
+  for(const l of L){for(const [a,b] of l.hx){X.add(a);X.add(b)}
+    if(l.xz){for(const [a,b] of l.hy){Z.add(a);Z.add(b)}Y.add(q(l.y0));Y.add(q(l.y1))}
+    else{for(const [a,b] of l.hy){Y.add(a);Y.add(b)}Z.add(q(l.z0));Z.add(q(l.z1))}}
   const xs=[...X].sort((a,b)=>a-b),ys=[...Y].sort((a,b)=>a-b),zs=[...Z].sort((a,b)=>a-b);
   const nx=xs.length-1,ny=ys.length-1,nz=zs.length-1;
   if(nx<1||ny<1||nz<1)return {tris:new Float32Array(0),vol:0,size:[0,0,0]};
@@ -212,7 +218,7 @@ function mesh(spec){
   const inA=(c,a0,a1)=>c>a0&&c<a1;
   /* per-axis membership tables keep the cell test fast even with thousands of holes */
   const inHoles=(arr,iv)=>{const m=new Uint8Array(arr.length);let p=0;for(let i=0;i<arr.length;i++){while(p<iv.length&&iv[p][1]<arr[i])p++;if(p<iv.length&&arr[i]>iv[p][0]&&arr[i]<iv[p][1])m[i]=1}return m};
-  for(const l of L){l.mx=inHoles(cx,l.hx);l.my=inHoles(cy,l.hy)}
+  for(const l of L){l.mx=inHoles(cx,l.hx);l.my=l.xz?inHoles(cz,l.hy):inHoles(cy,l.hy)}
   const K=new Uint8Array(nx*ny*nz);let vol=0;
   for(let k=0;k<nz;k++)for(let j=0;j<ny;j++)for(let i=0;i<nx;i++){
     const x=cx[i],y=cy[j],z=cz[k];let on=false;
@@ -220,7 +226,7 @@ function mesh(spec){
     if(!on)continue;
     for(const b of subs)if(inA(x,b[0],b[3])&&inA(y,b[1],b[4])&&inA(z,b[2],b[5])){on=false;break}
     if(!on)continue;
-    for(const l of L)if(l.mx[i]&&l.my[j]&&inA(z,l.z0,l.z1)){on=false;break}
+    for(const l of L)if(l.xz?(l.mx[i]&&l.my[k]&&inA(y,l.y0,l.y1)):(l.mx[i]&&l.my[j]&&inA(z,l.z0,l.z1))){on=false;break}
     if(!on)continue;
     K[(k*ny+j)*nx+i]=1;vol+=(xs[i+1]-xs[i])*(ys[j+1]-ys[j])*(zs[k+1]-zs[k]);
   }
@@ -331,14 +337,16 @@ const SPECIES=[
 ];
 const MATS={petg:{name:'PETG',rho:1.27},asa:{name:'ASA',rho:1.07},pla:{name:'PLA',rho:1.24}};
 const PANEL={clear:'Clear acrylic',mesh:'Printed mesh'};
-const DEF={species:'orchidF',body:65,W:200,D:200,H:300,S:40,T:3,hole:1.6,bar:1.2,front:'clear',back:'clear',left:'mesh',right:'mesh',bx:350,by:350,bz:350,mat:'petg'};
+const DEF={species:'orchidF',body:65,W:200,D:200,H:300,S:40,T:3,hole:1.6,bar:1.2,front:'clear',back:'clear',left:'mesh',right:'mesh',bx:350,by:350,bz:350,mat:'petg',dMagD:10,dMagH:3};
 const E=Object.assign({},DEF,state.enc||{});
 
 function opt(sel,pairs){for(const [v,l] of pairs){const o=document.createElement('option');o.value=v;o.textContent=l;sel.append(o)}}
 opt($('species'),SPECIES.map(s=>[s.id,s.name]));
-for(const id of ['pFront','pBack','pLeft','pRight'])opt($(id),Object.entries(PANEL));
+const FRONT={clear:'Sliding, clear acrylic',mesh:'Sliding, printed mesh',swingWindow:'Swing door with window',swingMesh:'Swing door with mesh'};
+opt($('pFront'),Object.entries(FRONT));
+for(const id of ['pBack','pLeft','pRight'])opt($(id),Object.entries(PANEL));
 opt($('mat'),Object.entries(MATS).map(([k,m])=>[k,m.name]));
-const encIds={species:'species',body:'body',W:'W',D:'D',H:'H',S:'S',T:'T',hole:'hole',bar:'bar',front:'pFront',back:'pBack',left:'pLeft',right:'pRight',bx:'bx',by:'by',bz:'bz',mat:'mat'};
+const encIds={species:'species',body:'body',W:'W',D:'D',H:'H',S:'S',T:'T',hole:'hole',bar:'bar',front:'pFront',back:'pBack',left:'pLeft',right:'pRight',bx:'bx',by:'by',bz:'bz',mat:'mat',dMagD:'dMagD',dMagH:'dMagH'};
 for(const k in encIds)$(encIds[k]).value=E[k];
 
 function recommend(){
@@ -357,6 +365,16 @@ function recommend(){
 }
 $('species').onchange=()=>{const sp=SPECIES.find(s=>s.id===$('species').value);$('body').value=sp.len;encChanged()};
 
+/* Round magnet pocket: thin strips that together enclose a circle 0.2 mm wider than the magnet.
+   The steps are 0.5 mm, close to one nozzle line, so the printed pocket comes out round. */
+function disc(plane,ca,cb,d,w0,w1){
+  const R=d/2+.2,st=.5,out=[];
+  for(let a0=ca-R;a0<ca+R-1e-6;a0+=st){
+    const a1=Math.min(a0+st,ca+R),m=(a0<=ca&&a1>=ca)?0:Math.min(Math.abs(a0-ca),Math.abs(a1-ca)),h=Math.sqrt(Math.max(0,R*R-m*m));
+    out.push(plane==='xz'?[a0,w0,cb-h,a1,w1,cb+h]:[a0,cb-h,w0,a1,cb+h,w1]);
+  }
+  return out;
+}
 /* ---------- enclosure design ---------- */
 function readEnc(){const o={};for(const k in encIds){const el=$(encIds[k]);o[k]=el.tagName==='SELECT'?el.value:+el.value}return o}
 function encDesign(p,forPreview){
@@ -375,7 +393,8 @@ function encDesign(p,forPreview){
   const Hp=H-.5;
   const post=mesh({adds:[[-a,-a,0,a,a,Hp]],subs:[[g/2,-g/2,-1,a+1,g/2,Hp+1],[-g/2,g/2,-1,g/2,a+1,Hp+1]]});
   /* lid, built upright: rails hang down into the panel tops; the front has a through slot for the door */
-  const lAdd=[[-band,-band,s,W+band,D+band,s+Lt]],lSub=[[g/2,-g/2,-1,W-g/2,g/2,s+Lt+1]];
+  const swing=p.front.startsWith('swing');
+  const lAdd=[[-band,-band,s,W+band,D+band,s+Lt]],lSub=swing?[]:[[g/2,-g/2,-1,W-g/2,g/2,s+Lt+1]];
   for(const [ax,v] of lines){
     if(ax==='x')lAdd.push([v-band,0,0,v-g/2,D,s],[v+g/2,0,0,v+band,D,s]);
     else lAdd.push([0,v-band,0,W,v-g/2,s],[0,v+g/2,0,W,v+band,s]);
@@ -386,13 +405,39 @@ function encDesign(p,forPreview){
   /* panels */
   const fbW=W-g-1,lrW=D-g-1,pH=H-.5,doorH=H+Lt+20;
   const panels=[
-    {k:'front',label:'Front door',w:fbW,h:doorH},
+    {k:'front',label:swing?'Front frame':'Front door',w:fbW,h:swing?pH:doorH},
     {k:'back',label:'Back',w:fbW,h:pH},
     {k:'left',label:'Left',w:lrW,h:pH},
     {k:'right',label:'Right',w:lrW,h:pH}
-  ].map(q=>({...q,type:p[q.k]}));
+  ].map(q=>({...q,type:q.k==='front'&&swing?'swing':p[q.k]}));
   const meshPanel=q=>{const bd=s+2,top=q.k==='front'?Lt+20+bd:bd;return mesh({adds:[[0,0,0,q.w,q.h,p.T]],lat:lat(bd,bd,q.w-bd,q.h-top,0,p.T)})};
-  return {g,s,a,band,Eh,f,Lt,W,D,H,S,Hp,base,post,lid,panels,meshPanel,corners};
+  /* swing door, in the front panel's own frame: x along the width, y outwards from its outer face, z up from the base groove */
+  let sw=null;
+  if(swing){
+    const md=Math.max(4,p.dMagD||10),mh=Math.max(1,p.dMagH||3),pd=mh+.2,off=mh+1.6,dt=Math.max(p.T,mh+1.6),k=8,ph=1.05,R=md/2+.2;
+    const e=g/2+.5,postX=a-e,xh=postX+.5+.7071*k+.3,yh=off+k/2,zd0=s+1,zd1=pH-s-1,Lh=zd1-zd0,xd1=fbW-postX-1.5;
+    const rw=4,rwR=2*R+4,xr0=xh+.7071*k+.8,xo0=xr0+rw,xo1=xd1-1-rwR,zo0=zd0+1+rw,zo1=zd1-1-rw;
+    const ok=xo1-xo0>=40&&zo1-zo0>=60;
+    if(ok){
+      const gp=.5,seg=(Lh-4*gp)/5,zone=i=>[zd0+i*(seg+gp),zd0+i*(seg+gp)+seg];
+      const xm=(xo1+xd1-1)/2,zm=[zo0+(zo1-zo0)*.25,zo0+(zo1-zo0)*.75];
+      const pin=[xh-ph,yh-ph,-1,xh+ph,yh+ph,pH+1];
+      /* frame: plate with the doorway, a rim the door closes onto, and three hinge knuckles on stand-offs */
+      const fAdd=[[0,-p.T,0,fbW,0,pH],[xr0,0,zd0+1,xd1-1,off,zd1-1]],fSub=[[xo0,-p.T-1,zo0,xo1,off+1,zo1],pin];
+      for(const i of [0,2,4]){const [z0,z1]=zone(i);fAdd.push([xh-k/2,0,z0,xh+k/2,off+k,z1])}
+      for(const z of zm)fSub.push(...disc('xz',xm,z,md,off-pd,off+1));
+      /* door: leaf with two knuckles, cut back where the frame's knuckles turn, a window or mesh, magnets and a grip */
+      const dAdd=[[xh,off,zd0,xd1,off+dt,zd1],[xd1-10,off+dt,(zd0+zd1)/2-15,xd1,off+dt+8,(zd0+zd1)/2+15]],dSub=[pin],dLat=[];
+      for(const i of [1,3]){const [z0,z1]=zone(i);dAdd.push([xh-k/2,off,z0,xh+k/2,off+k,z1])}
+      for(const i of [0,2,4]){const [z0,z1]=zone(i);dSub.push([xh-k,off-1,z0-gp,xh+.7071*k+.5,off+k+1,z1+gp])}
+      for(const z of zm)dSub.push(...disc('xz',xm,z,md,off-1,off+pd));
+      if(p.front==='swingWindow')dSub.push([xo0+3,off-1,zo0+3,xo1-3,off+dt+1,zo1-3]);
+      else if(!forPreview)dLat.push({plane:'xz',x0:xo0+3,x1:xo1-3,z0:zo0+3,z1:zo1-3,y0:off,y1:off+dt,hole:p.hole,bar:p.bar});
+      const frameM=mesh({adds:fAdd,subs:fSub}),doorM=mesh({adds:dAdd,subs:dSub,lat:dLat});
+      sw={ok,frameM,doorM,e,pinLen:Lh,win:p.front==='swingWindow'?[xo1-xo0-6+12,zo1-zo0-6+12]:null,mesh:p.front==='swingMesh'};
+    }else sw={ok:false};
+  }
+  return {g,s,a,band,Eh,f,Lt,W,D,H,S,Hp,base,post,lid,panels,meshPanel,corners,sw};
 }
 const enc={cur:null};
 function encChanged(){
@@ -407,6 +452,8 @@ function encCalc(){
   if(Math.min(p.W,p.D)<minW||p.H<minH)notes.push(`This is smaller than the ${fmt(minW)} × ${fmt(minW)} × ${fmt(minH)} mm the size rule suggests for this animal.`);
   if(p.T<2&&['front','back','left','right'].some(k=>p[k]==='mesh'))notes.push('Printed mesh panels thinner than 2 mm are fragile. Use 3 mm if you can.');
   if(p.hole>2.5)notes.push('Holes over 2.5 mm let many feeder insects escape.');
+  document.querySelectorAll('.swingF').forEach(el=>el.hidden=!d.sw);
+  if(d.sw&&!d.sw.ok)notes.push('The enclosure is too narrow or low for a swing door. Make it wider and taller, or use a sliding door.');
   /* parts table */
   const bed=[p.bx,p.by,p.bz],mat=MATS[p.mat];
   const rows=[
@@ -415,6 +462,7 @@ function encCalc(){
     {name:'Lid with mesh',n:1,size:d.lid.size,vol:null,mesh:true}
   ];
   for(const q of d.panels)if(q.type==='mesh')rows.push({name:q.label+' panel',n:1,size:[q.w,q.h,p.T],vol:null,mesh:true});
+  if(d.sw&&d.sw.ok){rows.push({name:'Front frame',n:1,size:bbox(place(d.sw.frameM.tris,(x,y,z)=>[x,-z,y]))});rows.push({name:'Swing door',n:1,size:bbox(place(d.sw.doorM.tris,(x,y,z)=>[x,-z,y]))})}
   const fits=sz=>{const [x,y]=[Math.max(sz[0],sz[1]),Math.min(sz[0],sz[1])],[bx,by]=[Math.max(bed[0],bed[1]),Math.min(bed[0],bed[1])];return x<=bx&&y<=by&&sz[2]<=bed[2]};
   const fitsDiag=sz=>!fits(sz)&&Math.max(sz[0],sz[1])<=Math.hypot(bed[0],bed[1])-20&&Math.min(sz[0],sz[1])<=20&&sz[2]<=bed[2];
   const t=$('encParts');t.innerHTML='<tr><th>Part</th><th>Size (mm)</th><th></th></tr>';
@@ -428,10 +476,11 @@ function encCalc(){
   const tr=document.createElement('tr');
   tr.innerHTML=`<td colspan="3" style="color:var(--muted)">Print in ${mat.name}. Creality Print shows the filament amount once the parts are sliced.</td>`;t.append(tr);
   /* acrylic */
-  const cl=d.panels.filter(q=>q.type==='clear'),ct=$('cutList');$('cutWrap').hidden=!cl.length;
+  const cl=d.panels.filter(q=>q.type==='clear'),ct=$('cutList'),win=d.sw&&d.sw.ok&&d.sw.win;$('cutWrap').hidden=!cl.length&&!win;
   ct.innerHTML='<tr><th>Panel</th><th>Cut size (mm)</th></tr>';
   for(const q of cl){const r=document.createElement('tr');r.innerHTML=`<td>${q.label}, ${fmt(p.T,1)} mm thick</td><td class="n">${fmt(q.w,1)} × ${fmt(q.h,1)}</td>`;ct.append(r)}
-  if(cl.length){const r=document.createElement('tr');r.innerHTML=`<td colspan="2" style="color:var(--muted)">The front door is taller than the rest, so its top sticks out of the lid as a handle. DIY stores usually cut acrylic to size for you.</td>`;ct.append(r)}
+  if(win){const r=document.createElement('tr');r.innerHTML=`<td>Door window, 2–3 mm thick, glued over the outside of the opening</td><td class="n">${fmt(win[0],1)} × ${fmt(win[1],1)}</td>`;ct.append(r)}
+  if(cl.some(q=>q.k==='front')){const r=document.createElement('tr');r.innerHTML=`<td colspan="2" style="color:var(--muted)">The front door is taller than the rest, so its top sticks out of the lid as a handle. DIY stores usually cut acrylic to size for you.</td>`;ct.append(r)}
   const n=$('encNote');n.hidden=!notes.length;n.innerHTML='';for(const x of notes){const dv=document.createElement('div');dv.textContent=x;n.append(dv)}
   drawEnc(d);
 }
@@ -448,7 +497,13 @@ function drawEnc(d){
   const lt=d.lid.tris,lo=new Float32Array(lt.length),dz=d.S+d.H-d.s;for(let j=0;j<lt.length;j+=3){lo[j]=lt[j];lo[j+1]=lt[j+1];lo[j+2]=lt[j+2]+dz}
   items.push({tris:lo,color:meshC,alpha:.55});
   const e=d.g/2+.5;
+  if(d.sw&&d.sw.ok){
+    /* front panel coordinates: x from the left post, y outwards, z up from the substrate. Mirrored into the world, so faces are flipped back. */
+    const toW=t=>{const o=new Float32Array(t.length);for(let j=0;j<t.length;j+=9)for(const [v,w] of [[0,0],[1,2],[2,1]]){o[j+w*3]=d.sw.e+t[j+v*3];o[j+w*3+1]=-d.g/2+.3-t[j+v*3+1];o[j+w*3+2]=d.S+t[j+v*3+2]}return o};
+    items.push({tris:toW(d.sw.frameM.tris),color:frame},{tris:toW(d.sw.doorM.tris),color:d.sw.mesh?meshC:frame,alpha:d.sw.mesh?.85:1});
+  }
   for(const q of d.panels){
+    if(q.type==='swing')continue;
     const c=q.type==='mesh'?meshC:clear,al=q.type==='mesh'?.6:.3,t=.8;let tr;
     if(q.k==='front')tr=slab(e,-t,d.S,d.W-e,t,d.S+q.h);
     else if(q.k==='back')tr=slab(e,d.D-t,d.S,d.W-e,d.D+t,d.S+q.h);
@@ -474,10 +529,14 @@ $('encDl').onclick=async()=>{
   files.push({name:`corner-post-print-4.stl`,data:stl(place(d.post.tris,(x,y,z)=>[-z,y,x]))});
   files.push({name:`lid-mesh-${tag}.stl`,data:stl(place(d.lid.tris,(x,y,z)=>[x,-y,-z]))});
   for(const q of d.panels)if(q.type==='mesh')files.push({name:`panel-${q.k}-mesh.stl`,data:stl(place(d.meshPanel(q).tris))});
+  if(d.sw&&!d.sw.ok){msg.textContent='The swing door needs a wider and taller enclosure. Change the size or choose a sliding door.';return}
+  if(d.sw){files.push({name:'front-frame-swing.stl',data:stl(place(d.sw.frameM.tris,(x,y,z)=>[x,-z,y]))});files.push({name:`swing-door-${d.sw.mesh?'mesh':'window'}.stl`,data:stl(place(d.sw.doorM.tris,(x,y,z)=>[x,-z,y]))})}
   const cl=d.panels.filter(q=>q.type==='clear');
-  let txt=`Insect enclosure ${p.W} x ${p.D} x ${p.H} mm (substrate ${p.S} mm)\nPrint: 1 base, 4 corner posts, 1 lid${d.panels.some(q=>q.type==='mesh')?', mesh panels as listed':''}.\nSuggested filament: ${MATS[p.mat].name}.\n`;
+  let txt=`Insect enclosure ${p.W} x ${p.D} x ${p.H} mm (substrate ${p.S} mm)\nPrint: 1 base, 4 corner posts, 1 lid${d.sw?', the front frame and the swing door':''}${d.panels.some(q=>q.type==='mesh')?', mesh panels as listed':''}.\nSuggested filament: ${MATS[p.mat].name}.\n`;
   if(cl.length)txt+=`\nAcrylic, ${p.T} mm thick:\n`+cl.map(q=>`- ${q.label}: ${q.w.toFixed(1)} x ${q.h.toFixed(1)} mm`).join('\n')+'\n';
-  txt+='\nAssembly: dry-fit the posts in the base sockets, slide the back and side panels into the grooves, put the lid on, then drop the front door in through the slot in the lid.\n';
+  if(d.sw&&d.sw.win)txt+=`\nDoor window: ${d.sw.win[0].toFixed(1)} x ${d.sw.win[1].toFixed(1)} mm acrylic, 2-3 mm thick, glued over the outside of the door's opening.\n`;
+  if(d.sw)txt+=`\nSwing door: 4 round magnets, ${p.dMagD} x ${p.dMagH} mm (2 in the frame rim, 2 in the door). Check the poles attract before gluing.\nHinge pin: a strand of 1.75 mm filament, about ${Math.ceil(d.sw.pinLen+10)} mm long. Push it down through all five knuckles, then melt or bend the ends so it stays in.\n\nAssembly: dry-fit the posts in the base sockets, slide the front frame, back and side panels into the grooves, put the lid on, then hang the door with the pin.\n`;
+  else txt+='\nAssembly: dry-fit the posts in the base sockets, slide the back and side panels into the grooves, put the lid on, then drop the front door in through the slot in the lid.\n';
   files.push({name:'read-me.txt',data:new TextEncoder().encode(txt)});
   await save(`mantis-enclosure-${tag}.zip`,zipStore(files),msg,'Saved. Unzip it, then open the STL files in Creality Print.');
 };
@@ -525,7 +584,7 @@ function accDesign(){
   const backPlate=(x0,x1,z0,z1)=>{
     const adds=[[x0,-bt,z0,x1,0,z1]],subs=[],zc=(z0+z1)/2,w=x1-x0;
     const xs=w>=2*pk+16?[x0+w/4,x1-w/4]:[(x0+x1)/2];
-    for(const x of xs)subs.push([x-pk/2,-bt-1,zc-pk/2,x+pk/2,-bt+pd,zc+pk/2]);
+    for(const x of xs)subs.push(...disc('xz',x,zc,md,-bt-1,-bt+pd));
     return {adds,subs,n:xs.length};
   };
   const parts=[],notes=[];let magnets=0;
@@ -549,17 +608,17 @@ function accDesign(){
     const L=val('L'),dep=val('dep'),Hb=Math.max(val('Hh'),pk+12),st=4,bp=mag?Math.max(2.4,pd+1.4):2.4;
     const adds=[[0,0,0,L,Hb,bp],[0,0,bp,L,st,bp+dep],[0,st,bp+dep-2.4,L,st+3,bp+dep]],subs=[];
     for(let z=bp+4;z+1.2<=bp+dep-4;z+=4)adds.push([0,st,z,L,st+.8,z+1.2]);
-    if(mag){const yc=st+(Hb-st)/2,xs=L>=2*pk+16?[L/4,3*L/4]:[L/2];for(const x of xs)subs.push([x-pk/2,yc-pk/2,-1,x+pk/2,yc+pk/2,pd]);magnets=xs.length}
+    if(mag){const yc=st+(Hb-st)/2,xs=L>=2*pk+16?[L/4,3*L/4]:[L/2];for(const x of xs)subs.push(...disc('xy',x,yc,md,-1,pd));magnets=xs.length}
     parts.push({file:'wall-ledge.stl',role:'Main colour',m:mesh({adds,subs})});
   }else if(A.item==='twig'){
     const dia=val('dia')+.6,Hh=val('Hh'),w=Math.max(dia+6,mag?pk+6:0,14),back=mag?pd+1.6:2,dp=back+dia+3;
     const adds=[[0,0,0,w,dp,Hh]],subs=[[(w-dia)/2,back,2,(w+dia)/2,back+dia,Hh+1]];
-    if(mag){subs.push([(w-pk)/2,-1,Hh/2-pk/2,(w+pk)/2,pd,Hh/2+pk/2]);magnets=1;if(Hh<pk+6)notes.push('Make it taller so the magnet fits.')}
+    if(mag){subs.push(...disc('xz',w/2,Hh/2,md,-1,pd));magnets=1;if(Hh<pk+6)notes.push('Make it taller so the magnet fits.')}
     parts.push({file:'twig-holder.stl',role:'Main colour',m:mesh({adds,subs})});
   }else{
     const cw=val('cw'),ch=val('ch'),sp=4,ov=3,pt=mag?Math.max(2,pd+1.4):2,Lp=cw+2*sp,Hp=ch+sp-3;
     const pAdd=[[0,0,0,Lp,Hp,pt]],pSub=[];
-    if(mag){const yc=Hp/2,xs=Lp>=2*pk+16?[Lp/4,3*Lp/4]:[Lp/2];for(const x of xs)pSub.push([x-pk/2,yc-pk/2,-1,x+pk/2,yc+pk/2,pd]);magnets=xs.length;if(Hp<pk+4)notes.push('The card is too short for the magnets. Make it taller.')}
+    if(mag){const yc=Hp/2,xs=Lp>=2*pk+16?[Lp/4,3*Lp/4]:[Lp/2];for(const x of xs)pSub.push(...disc('xy',x,yc,md,-1,pd));magnets=xs.length;if(Hp<pk+4)notes.push('The card is too short for the magnets. Make it taller.')}
     const gz=.8,lz=1.2,fAdd=[[0,0,pt,sp,Hp,pt+gz],[Lp-sp,0,pt,Lp,Hp,pt+gz],[0,0,pt,Lp,sp,pt+gz],
       [0,0,pt+gz,sp+ov,Hp,pt+gz+lz],[Lp-sp-ov,0,pt+gz,Lp,Hp,pt+gz+lz],[0,0,pt+gz,Lp,sp+ov,pt+gz+lz]];
     parts.push({file:'label-plate.stl',role:'Colour 1',m:mesh({adds:pAdd,subs:pSub})});
