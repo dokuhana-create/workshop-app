@@ -204,7 +204,7 @@
     if(o.kind==='ring'){
       /* seats for ring-shaped LED heads lying on the lid, shining down through the mesh.
          Each ring rests on three small pads, so almost all of its LEDs stay uncovered. */
-      const R=o.rd/2,n=Math.max(1,Math.min(4,Math.round(o.n||1))),gap=12,pitch=2*R+2*3.2+gap,x0=-(n-1)*pitch/2,pad=2,hw=7;
+      const R=o.rd/2,n=Math.max(1,Math.min(4,Math.round(o.n||1))),gap=SEAT_GAP,pitch=2*R+2*3.2+gap,x0=-(n-1)*pitch/2,pad=2,hw=7;
       for(let i=0;i<n;i++){
         const cx=x0+i*pitch,ring=subtract(circle(cx,0,R+3.2),circle(cx,0,R+.6));
         /* wall with a gap at the back for the cable */
@@ -239,28 +239,89 @@
     const pegs=[];
     if(p.pegs==='grid'){const lim=offset(C,-gw/2-wall-14);for(let x=-a;x<=a;x+=RAIL.pitch)for(let y=-b;y<=b;y+=RAIL.pitch){const c=circle(x,y,PEG.r,24);if(Math.abs(G.area(intersect(c,lim))-G.area(c))<.01){pegs.push([x,y]);bf.push(prism(f-.01,f+PEG.h,c))}}}
     const base=build(bf);
-    /* lid, printed upside down: plate on the bed, rails pointing up */
-    const md=p.dMagD||10,mh=p.dMagH||3,R=md/2+.2,pd=mh+.2,Rh=Math.min(30,Math.min(a,b)*.35),boss=pd+1.6;
-    const lf=[prism(0,Lt,oR),prism(Lt-.01,Lt+s,subtract(oR,oG)),prism(Lt-.01,Lt+s,subtract(iG,iR)),
-      prism(0,boss,subtract(circle(0,0,Rh+12),circle(0,0,Rh))),prism(-1,boss+1,circle(0,0,Rh),'sub')];
-    for(const x of [-(Rh+6),Rh+6])lf.push(prism(-1,pd,circle(x,0,R),'sub'));
+    /* lid, printed upside down: plate on the bed (the lid's top face), rails pointing up */
+    const md=p.dMagD||10,mh=p.dMagH||3,R=md/2+.2,pd=mh+.2,boss=pd+1.6,notes=[];
+    const ia=a-gw/2-wall-1.5,ib=b-gw/2-wall-1.5,inEl=(x,y,m)=>(x*x)/((ia-m)*(ia-m))+(y*y)/((ib-m)*(ib-m))<1;
+    /* light windows along the middle, then the hatch wherever it still fits */
+    let win=lightWindows(p,0,0,b>a);
+    if(win){const ok=win.centers.filter(([x,y])=>inEl(x,y,win.Rw+3.5));if(ok.length<win.centers.length)notes.push(`Only ${ok.length} light window${ok.length===1?'':'s'} fit this lid.`);win.centers=ok;if(!ok.length)win=null}
+    let hatch=null;
+    for(let Rh=Math.min(30,Math.min(a,b)*.35);Rh>=18;Rh-=2){
+      const hy=win?-(win.Rw+4.5+Rh+13)*(b>a?0:1):0,hx2=win&&b>a?-(win.Rw+4.5+Rh+13):0;
+      if(inEl(hx2,hy,Rh+13)){hatch={Rh,hx:hx2,hy};break}
+    }
+    if(!hatch)notes.push('There is no room for the feeding hatch next to the light windows, so you open the enclosure by lifting the lid.');
+    const lf=[prism(0,Lt,oR),prism(Lt-.01,Lt+s,subtract(oR,oG)),prism(Lt-.01,Lt+s,subtract(iG,iR))];
+    if(hatch){const {Rh,hx,hy}=hatch;lf.push(prism(0,boss,subtract(circle(hx,hy,Rh+12),circle(hx,hy,Rh))),prism(-1,boss+1,circle(hx,hy,Rh),'sub'));for(const x of [hx-(Rh+6),hx+Rh+6])lf.push(prism(-1,pd,circle(x,hy,R),'sub'))}
+    const hs=[];
+    if(win)addWindows(lf,hs,win,p,0,Lt,false,preview);
     if(!preview){
-      const ia=a-gw/2-wall-1.5,ib=b-gw/2-wall-1.5,hs=[],pitch=p.hole+p.bar;
-      const inEl=(x,y)=>(x*x)/(ia*ia)+(y*y)/(ib*ib)<1;
+      const pitch=p.hole+p.bar;
       for(let x=-ia;x<ia;x+=pitch)for(let y=-ib;y<ib;y+=pitch){
         const c=[[x,y],[x+p.hole,y],[x+p.hole,y+p.hole],[x,y+p.hole]];
-        if(c.every(([u,v])=>inEl(u,v)&&Math.hypot(u,v)>Rh+13))hs.push(c);
+        if(!c.every(([u,v])=>inEl(u,v,0)))continue;
+        if(hatch&&c.some(([u,v])=>Math.hypot(u-hatch.hx,v-hatch.hy)<hatch.Rh+13))continue;
+        if(win&&c.some(([u,v])=>win.centers.some(([cx,cy])=>Math.hypot(u-cx,v-cy)<win.Rw+4.5)))continue;
+        hs.push(c);
       }
-      lf.push(prism(-1,Lt+.01,hs,'sub'));
     }
+    if(hs.length)lf.push(prism(-1,Lt+1,hs,'sub'));
     const lid=build(lf);
     /* hatch cover: sits on the lid over the feeding hole, held by two magnets, with a knob */
-    const cf=[prism(0,boss,circle(0,0,Rh+11)),prism(boss-.01,boss+8,circle(0,0,6))];
-    for(const x of [-(Rh+6),Rh+6])cf.push(prism(-1,pd,circle(x,0,R),'sub'));
-    if(!preview){const hs=[];for(let x=-Rh;x<Rh;x+=p.hole+p.bar)for(let y=-Rh;y<Rh;y+=p.hole+p.bar){if(Math.hypot(x,y)<Rh-4&&Math.hypot(x+p.hole,y+p.hole)<Rh-4&&Math.hypot(x+p.hole,y)<Rh-4&&Math.hypot(x,y+p.hole)<Rh-4&&Math.hypot(x+p.hole/2,y+p.hole/2)>8)hs.push([[x,y],[x+p.hole,y],[x+p.hole,y+p.hole],[x,y+p.hole]])}cf.push(prism(-1,boss+.01,hs,'sub'))}
-    const cover=build(cf);
+    let cover=null;
+    if(hatch){const Rh=hatch.Rh,cf=[prism(0,boss,circle(0,0,Rh+11)),prism(boss-.01,boss+8,circle(0,0,6))];
+      for(const x of [-(Rh+6),Rh+6])cf.push(prism(-1,pd,circle(x,0,R),'sub'));
+      if(!preview){const hs2=[];for(let x=-Rh;x<Rh;x+=p.hole+p.bar)for(let y=-Rh;y<Rh;y+=p.hole+p.bar){if(Math.hypot(x,y)<Rh-4&&Math.hypot(x+p.hole,y+p.hole)<Rh-4&&Math.hypot(x+p.hole,y)<Rh-4&&Math.hypot(x,y+p.hole)<Rh-4&&Math.hypot(x+p.hole/2,y+p.hole/2)>8)hs2.push([[x,y],[x+p.hole,y],[x+p.hole,y+p.hole],[x,y+p.hole]])}cf.push(prism(-1,boss+.01,hs2,'sub'))}
+      cover=build(cf);}
     const outerD=[2*(a+gw/2+wall),2*(b+gw/2+wall)];
-    return {base,lid,cover,C,a,b,gw,S,H,Lt,s,outerD,sheet:[perimeter(a,b)+15,H-.5],Rh,pegs};
+    return {base,lid,cover,C,a,b,gw,S,H,Lt,s,outerD,sheet:[perimeter(a,b)+15,H-.5],hatch,pegs,win,notes};
+  }
+  /* ---- light windows in a lid, under ring lights ----
+     'insert': a round opening with a 1 mm ledge around it for a clear disc or a piece of fine fabric mesh.
+     'fine': the same area as printed mesh with thin 0.6 mm bars. Laid out like the ring light seats. */
+  const SEAT_GAP=4;
+  function lightWindows(p,cx,cy,alongY){
+    if(!p.lw||p.lw==='none')return null;
+    /* the window covers the LED band of the ring; the ring's outer 4 mm rests on the lid around it */
+    const R=p.lwD/2,n=Math.max(1,Math.min(4,Math.round(p.lwN||1))),pitch=2*R+2*3.2+SEAT_GAP,o0=-(n-1)*pitch/2,centers=[];
+    for(let i=0;i<n;i++)centers.push(alongY?[cx,cy+o0+i*pitch]:[cx+o0+i*pitch,cy]);
+    return {centers,Rw:R-4,mode:p.lw,R};
+  }
+  function addWindows(f,hs,w,p,z0,z1,topAtZ1,preview){
+    const dr=1.0;
+    for(const [cx,cy] of w.centers){
+      if(w.mode==='insert'){
+        f.push(prism(z0-1,z1+1,circle(cx,cy,w.Rw),'sub'));
+        f.push(topAtZ1?prism(z1-dr,z1+1,circle(cx,cy,w.Rw+3),'sub'):prism(z0-1,z0+dr,circle(cx,cy,w.Rw+3),'sub'));
+      }else if(!preview){
+        const bar=.6,pitch=p.hole+bar,Rin=w.Rw+3;
+        for(let x=cx-Rin;x<cx+Rin;x+=pitch)for(let y=cy-Rin;y<cy+Rin;y+=pitch){const c=[[x,y],[x+p.hole,y],[x+p.hole,y+p.hole],[x,y+p.hole]];if(c.every(([u,v])=>Math.hypot(u-cx,v-cy)<Rin))hs.push(c)}
+      }
+    }
+  }
+  /* rectangular lid with light windows, built upright like the plain one (rails down, plate on top) */
+  function rectLid(d,p,preview){
+    const {W,D,s,g,band,Eh,Lt,a,swing}=d,c=.25,f=[prism(s,s+Lt,rect(-band,-band,W+band,D+band))];
+    for(const [ax,v] of [['x',0],['x',W],['y',0],['y',D]]){
+      if(ax==='x')f.push(prism(0,s+.01,rect(v-band,0,v-g/2,D)),prism(0,s+.01,rect(v+g/2,0,v+band,D)));
+      else f.push(prism(0,s+.01,rect(0,v-band,W,v-g/2)),prism(0,s+.01,rect(0,v+g/2,W,v+band)));
+    }
+    for(const [x,y] of [[0,0],[W,0],[W,D],[0,D]]){f.push(prism(0,s+Lt,rect(x-Eh,y-Eh,x+Eh,y+Eh)),prism(-1,s,rect(x-a-c,y-a-c,x+a+c,y+a+c),'sub'))}
+    if(!swing)f.push(prism(-1,s+Lt+1,rect(g/2,-g/2,W-g/2,g/2),'sub'));
+    const m=band+1.5,notes=[];let win=lightWindows(p,W/2,D/2,D>W);
+    if(win){const e=win.Rw+3+band+.6,ok=win.centers.filter(([x,y])=>x-e>=0&&x+e<=W&&y-e>=0&&y+e<=D);if(ok.length<win.centers.length)notes.push(`Only ${ok.length} light window${ok.length===1?'':'s'} fit this lid.`);win.centers=ok;if(!ok.length)win=null}
+    const hs=[];
+    if(win)addWindows(f,hs,win,p,s,s+Lt,true,preview);
+    if(!preview){
+      const holes=(a0,a1)=>{const pitch=p.hole+p.bar,n=Math.max(0,Math.floor((a1-a0+p.bar)/pitch)),off=(a1-a0-(n*pitch-p.bar))/2,o=[];for(let i=0;i<n;i++)o.push(a0+off+i*pitch);return o};
+      for(const x of holes(m,W-m))for(const y of holes(m,D-m)){
+        const q=[[x,y],[x+p.hole,y],[x+p.hole,y+p.hole],[x,y+p.hole]];
+        if(win&&q.some(([u,v])=>win.centers.some(([cx,cy])=>Math.hypot(u-cx,v-cy)<win.Rw+4.5)))continue;
+        hs.push(q);
+      }
+    }
+    if(hs.length)f.push(prism(s-1,s+Lt+1,hs,'sub'));
+    const m2=build(f);m2.win=win;m2.notes=notes;return m2;
   }
   /* rectangular base, with optional floor pegs */
   function rectBase(d,p){
@@ -274,5 +335,5 @@
     if(p.pegs==='grid'){const m=band+14,nx=Math.floor((W-2*m)/RAIL.pitch),ny=Math.floor((D-2*m)/RAIL.pitch),ox=(W-nx*RAIL.pitch)/2,oy=(D-ny*RAIL.pitch)/2;for(let i=0;i<=nx;i++)for(let j=0;j<=ny;j++){const x=ox+i*RAIL.pitch,y=oy+j*RAIL.pitch;pegs.push([x,y]);bf.push(prism(f-.01,f+PEG.h,circle(x,y,PEG.r,24)))}}
     const m=build(bf);m.pegs=pegs;return m;
   }
-  root.HabitatParts={RAIL,CLIP,PEG,dish,pot,twig,ledge,label,light,roundEnclosure,rectBase,perimeter};
+  root.HabitatParts={rectLid,lightWindows,RAIL,CLIP,PEG,dish,pot,twig,ledge,label,light,roundEnclosure,rectBase,perimeter};
 })(typeof window!=='undefined'?window:globalThis);
