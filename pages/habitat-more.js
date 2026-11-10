@@ -112,13 +112,96 @@
     }
     return {lines,width:Math.max(0,x-1.7*s)};
   }
+  /* ---------------- cursive script ----------------
+     Joined handwriting, slanted forward. Units: baseline 0, x-height 3, capitals 6.5, descenders -3.
+     Each glyph is a list of strokes; with j the last stroke flows on into the next letter. */
+  const SCRIPT={
+    a:{s:[[[0,0],[1,1.2],[2.3,2.7],[1.5,3],[.6,2.4],[.4,1],[1,.1],[1.9,.6],[2.4,2],[2.5,3],[2.3,1.2],[2.5,.1],[3.3,.4]]],j:1},
+    b:{s:[[[0,0],[1.2,2.5],[1.9,5],[1.8,6.4],[1.2,6],[.9,4],[.8,1.5],[.9,.1],[1.8,.3],[2.5,1.6],[2.3,2.7],[1.6,2.6],[2.4,2.2],[3.3,2.3]]],j:1},
+    c:{s:[[[0,0],[1,1.5],[2.4,2.6],[2,3],[1.1,2.8],[.5,1.6],[.8,.3],[1.7,0],[2.8,.5]]],j:1},
+    d:{s:[[[0,0],[1,1.2],[2.3,2.7],[1.5,3],[.6,2.4],[.4,1],[1,.1],[1.9,.6],[2.5,2.5],[2.9,6.4],[2.6,3],[2.5,.6],[2.8,.1],[3.5,.4]]],j:1},
+    e:{s:[[[0,0],[1.2,.9],[2.1,1.9],[1.9,2.8],[1.3,2.7],[.8,1.6],[.9,.4],[1.7,0],[2.7,.5]]],j:1},
+    f:{s:[[[0,0],[1.4,2.5],[2.4,5.2],[2.4,6.4],[1.8,6.2],[1.5,4],[1.2,0],[.9,-2.6],[.6,-3],[.6,-2],[1.3,-.5],[2.2,.4],[2.9,.4]]],j:1},
+    g:{s:[[[0,0],[1,1.2],[2.3,2.7],[1.5,3],[.6,2.4],[.4,1],[1,.1],[1.9,.6],[2.4,2.2],[2.5,3],[2.3,0],[2,-2.4],[1.3,-3],[.6,-2.3],[1.5,-1],[2.6,-.2],[3.3,.4]]],j:1},
+    h:{s:[[[0,0],[1.2,2.5],[1.9,5],[1.8,6.4],[1.2,6],[.9,4],[.7,1.5],[.6,0],[.9,1.5],[1.6,2.8],[2.3,2.7],[2.3,1.5],[2.2,.4],[2.5,0],[3.2,.4]]],j:1},
+    i:{s:[[[1.45,4.2],[1.46,4.2]],[[0,0],[.8,1.6],[1.2,2.9],[1,1.4],[1,.3],[1.3,0],[2,.4]]],j:1},
+    j:{s:[[[1.45,4.2],[1.46,4.2]],[[0,0],[.8,1.6],[1.2,2.9],[1.1,.5],[.9,-2.3],[.3,-3],[0,-2.3],[.8,-1],[1.6,-.1],[2.3,.4]]],j:1},
+    k:{s:[[[0,0],[1.2,2.5],[1.9,5],[1.8,6.4],[1.2,6],[.9,4],[.7,1.5],[.6,0],[.8,1.2],[1.6,2.7],[2.3,2.6],[2,1.8],[1,1.4],[1.8,1.1],[2.2,.2],[3,.4]]],j:1},
+    l:{s:[[[0,0],[1.2,2.5],[1.9,5],[1.8,6.4],[1.2,6],[.9,4],[.8,1.5],[1,.2],[1.5,0],[2.2,.4]]],j:1},
+    m:{s:[[[0,0],[.6,1.6],[.9,2.8],[.8,1.2],[.7,0],[.9,1.6],[1.5,2.8],[2,2.6],[2.1,1.4],[2,0],[2.2,1.6],[2.8,2.8],[3.3,2.6],[3.4,1.4],[3.3,.4],[3.6,0],[4.3,.4]]],j:1},
+    n:{s:[[[0,0],[.6,1.6],[.9,2.8],[.8,1.2],[.7,0],[.9,1.6],[1.5,2.8],[2.1,2.6],[2.2,1.4],[2.1,.4],[2.4,0],[3.1,.4]]],j:1},
+    o:{s:[[[0,0],[1,1.2],[1.8,2.8],[1.2,3],[.6,2.3],[.5,1],[1.1,.1],[1.9,.5],[2.2,1.8],[1.9,2.9],[1.4,2.6],[2.2,2.4],[3,2.5]]],j:1},
+    p:{s:[[[0,0],[.8,1.6],[1.1,2.9],[.9,0],[.7,-3],[.8,0],[1.1,1.8],[1.8,2.9],[2.5,2.4],[2.5,1],[1.8,.1],[1,.3],[1.9,.3],[2.8,.4]]],j:1},
+    q:{s:[[[0,0],[1,1.2],[2.3,2.7],[1.5,3],[.6,2.4],[.4,1],[1,.1],[1.9,.6],[2.4,2.2],[2.5,3],[2.3,0],[2.2,-3],[2.6,-1.4],[3.3,.2],[3.8,.4]]],j:1},
+    r:{s:[[[0,0],[.8,1.6],[1.1,2.9],[1.6,2.6],[2.1,2.9],[2,2.2],[1.9,.8],[2.1,0],[2.8,.4]]],j:1},
+    s:{s:[[[0,0],[1,1.5],[1.6,3],[2.1,1.6],[2.1,.6],[1.4,0],[.7,.3],[1.4,.4],[2.2,.3],[2.9,.4]]],j:1},
+    t:{s:[[[.5,3.1],[2.4,3.2]],[[0,0],[.9,1.8],[1.5,4.6],[1.2,2.5],[1.1,.6],[1.5,0],[2.3,.4]]],j:1},
+    u:{s:[[[0,0],[.6,1.6],[.9,2.9],[.7,1],[1,.1],[1.7,.4],[2.3,1.8],[2.5,2.9],[2.3,1],[2.5,.1],[3.2,.4]]],j:1},
+    v:{s:[[[0,0],[.6,1.6],[.9,2.9],[1,1.4],[1.5,.1],[2.2,1.3],[2.4,2.9],[2,2.6],[2.5,2.4],[3.2,2.6]]],j:1},
+    w:{s:[[[0,0],[.6,1.6],[.9,2.9],[.8,1],[1.2,.1],[1.8,1],[2,2.4],[2.2,.8],[2.6,.1],[3.2,1.2],[3.4,2.9],[3,2.6],[3.5,2.4],[4.2,2.6]]],j:1},
+    x:{s:[[[1.2,.2],[2.8,2.8]],[[0,0],[.9,1.8],[1.4,2.9],[2,1.4],[2.5,.2],[3.1,.4]]],j:1},
+    y:{s:[[[0,0],[.6,1.6],[.9,2.9],[.7,1],[1,.1],[1.7,.4],[2.3,1.8],[2.5,2.9],[2.3,0],[2,-2.4],[1.3,-3],[.6,-2.3],[1.5,-1],[2.6,-.2],[3.3,.4]]],j:1},
+    z:{s:[[[0,0],[.9,1.8],[1.2,2.8],[2.4,2.9],[.9,.2],[2,.1],[2.4,-1],[1.6,-2.8],[1.2,-2],[2.2,-.3],[3,.4]]],j:1},
+    A:{s:[[[1.4,2.6],[3.6,2.8]],[[0,0],[1.6,3.5],[3,6.5],[3.3,3],[3.4,.2],[3.6,0],[4.3,.4]]],j:1},
+    B:{s:[[[.6,5.4],[1,6.4],[1,3],[.8,0]],[[.4,5.8],[1.6,6.4],[2.9,6.2],[3.2,5],[2.2,3.6],[1.2,3.4],[2.8,3.1],[3.4,1.6],[2.6,.2],[1.4,0],[.4,.4]]]},
+    C:{s:[[[3.6,5.6],[3,6.4],[1.8,6.2],[.7,4.8],[.4,2.6],[.9,.7],[2,0],[3.2,.4]]],j:1},
+    D:{s:[[[1.1,6.2],[1,3],[.8,0],[0,.4],[.8,.3],[2.4,.2],[3.6,1.6],[3.8,4],[3.1,5.9],[1.8,6.4],[.3,6],[0,5.4]]]},
+    E:{s:[[[3.2,5.6],[2.6,6.4],[1.6,6.1],[1.4,5],[2.3,3.6],[1.3,3.4],[.5,2.4],[.6,.7],[1.7,0],[3.2,.4]]],j:1},
+    F:{s:[[[1.3,3.2],[3,3.3]],[[.6,6.2],[1.6,6.4],[4,6.4]],[[2.4,6.4],[2.2,3],[1.8,.6],[1.1,0],[.5,.6]]]},
+    G:{s:[[[2.2,2.7],[3.4,2.7]],[[3.5,5.6],[2.8,6.4],[1.6,6.2],[.6,4.8],[.4,2.5],[1,.6],[2.1,0],[3,.8],[3.3,2.7],[3.2,.5],[3.4,0],[4,.4]]],j:1},
+    H:{s:[[[0,6.4],[.9,6],[1,3],[.8,0]],[[.9,3.2],[3.2,3.3]],[[3.4,6.4],[3.2,3],[3.2,.5],[3.4,0],[4.1,.4]]],j:1},
+    I:{s:[[[.4,6.2],[2.6,6.4]],[[.2,.1],[2.4,.2]],[[1.6,6.4],[1.4,3],[1.3,.1]]]},
+    J:{s:[[[.6,6.2],[3.6,6.4]],[[2.6,6.4],[2.4,2],[2,0],[1,-.6],[.2,0],[.2,.8]]]},
+    K:{s:[[[1,6.4],[1,3],[.8,0]],[[3.6,6.4],[2.2,4],[1,3.2],[2,2.6],[2.8,.6],[3.2,0],[3.9,.4]]],j:1},
+    L:{s:[[[2.2,5.2],[2.8,6.4],[2.1,6.2],[1.4,4],[1,1.5],[.4,.2],[.2,.8],[1.2,.4],[2.4,0],[3.6,.4]]],j:1},
+    M:{s:[[[0,0],[.6,3.5],[1,6.4],[1.8,3],[2.4,.8],[3,3.6],[3.8,6.4],[3.8,3],[3.8,.3],[4.1,0],[4.8,.4]]],j:1},
+    N:{s:[[[0,0],[.6,3.5],[1,6.4],[2,3.4],[3,.2],[3.4,3.2],[3.8,6.4]]]},
+    O:{s:[[[2.2,6.4],[1,5.8],[.3,3.6],[.6,1],[1.8,0],[3,.8],[3.5,3.4],[3.1,5.8],[2.2,6.4],[1.6,5.8]]]},
+    P:{s:[[[1,6.2],[1,3],[.8,0]],[[.2,5.6],[1.4,6.4],[3,6.2],[3.5,5],[2.8,3.4],[1,3]]]},
+    Q:{s:[[[2.2,6.4],[1,5.8],[.3,3.6],[.6,1],[1.8,0],[3,.8],[3.5,3.4],[3.1,5.8],[2.2,6.4],[1.6,5.8]],[[2.2,1],[3.4,-.4],[4.2,0]]],j:1},
+    R:{s:[[[1,6.2],[1,3],[.8,0]],[[.2,5.6],[1.4,6.4],[3,6.2],[3.5,5],[2.8,3.4],[1,3],[2.4,2.8],[3,.8],[3.4,0],[4.1,.4]]],j:1},
+    S:{s:[[[.2,.4],[1.4,2.8],[2.8,5.4],[3.4,6.4],[3,6.4],[2.3,5.2],[2.4,3.8],[3.1,2.4],[3,.8],[2,0],[1,.2],[.6,.8],[1.4,.6],[2.8,.2],[3.6,.4]]],j:1},
+    T:{s:[[[.4,5.6],[1.2,6.4],[2.4,6.2],[4,6.4]],[[2.6,6.3],[2.3,3],[1.8,.5],[1,0],[.4,.6]]]},
+    U:{s:[[[0,5.8],[.6,6.4],[.9,5],[.7,2],[1.2,.2],[2.2,.2],[3,1.8],[3.4,6.4],[3.3,3],[3.3,.5],[3.6,0],[4.2,.4]]],j:1},
+    V:{s:[[[0,5.8],[.6,6.4],[1,4],[1.8,0],[2.8,3.5],[3.4,6.4],[4,6.2]]]},
+    W:{s:[[[0,5.8],[.6,6.4],[.9,3],[1.4,0],[2.2,3],[2.6,4.6],[3,1.5],[3.4,0],[4.4,3.5],[4.8,6.4],[5.3,6.2]]]},
+    X:{s:[[[3.6,6.4],[.4,0],[0,.4]],[[.2,6],[1,6.4],[2,3.2],[3,.2],[3.8,.4]]],j:1},
+    Y:{s:[[[0,5.8],[.6,6.4],[.9,5],[.7,3.2],[1.2,2.4],[2.2,2.6],[3,4],[3.4,6.4],[3.2,2],[2.8,-1.6],[2,-3],[1.2,-2.4],[2,-1],[3.2,0],[4,.4]]],j:1},
+    Z:{s:[[[.6,5.8],[1.4,6.4],[3.6,6.4],[.4,.2],[1.4,.6],[2.6,0],[3.8,.4]]],j:1}
+  };
+  const SDOTS={'ä':'a','ö':'o','ü':'u','Ä':'A','Ö':'O','Ü':'U'};
+  /* a smooth curve through the points (Catmull-Rom) */
+  function smooth(q,k){if(q.length<3)return q;k=k||6;const o=[q[0]];for(let i=0;i<q.length-1;i++){const p0=q[Math.max(0,i-1)],p1=q[i],p2=q[i+1],p3=q[Math.min(q.length-1,i+2)];
+    for(let t=1;t<=k;t++){const u=t/k,u2=u*u,u3=u2*u;o.push([0,1].map(a=>.5*(2*p1[a]+(-p0[a]+p2[a])*u+(2*p0[a]-5*p1[a]+4*p2[a]-p3[a])*u2+(-p0[a]+3*p1[a]-3*p2[a]+p3[a])*u3)))}}return o}
+  function scriptLines(str,h){
+    const s=h/6.5,sl=.24,out=[];let x=0,pen=null;
+    const span=st=>{let a=1e9,b=-1e9;for(const l of st)for(const [px] of l){a=Math.min(a,px);b=Math.max(b,px)}return [a,b]};
+    for(let ch of String(str||'')){
+      if(ch===' '){if(pen)out.push(pen);pen=null;x+=2.2;continue}
+      let dots=null;if(SDOTS[ch]){ch=SDOTS[ch];dots=ch===ch.toUpperCase()?[1.4,2.6].map(d=>[d,7.6]):[[.9,4],[1.9,4]]}
+      let g=SCRIPT[ch];
+      if(!g){const b=FONT[ch.toUpperCase()];if(!b){continue}
+        const [a]=span(b);g={s:b.map(l=>l.map(([px,py])=>[px-a+.3,py*(/[0-9]/.test(ch)?.75:1)])),j:0}}
+      if(SCRIPT[ch])g={s:g.s.map(l=>l.map(([px,py])=>[px*1.2,py])),j:g.j};
+      const [,gx1]=span(g.s),low=!!SCRIPT[ch]&&ch!==ch.toUpperCase();
+      g.s.forEach((st,i)=>{const pts=st.map(([px,py])=>[x+px,py]);
+        if(i<g.s.length-1){out.push(pts);return}
+        if(pen&&low)pen.push(...pts);else{if(pen)out.push(pen);pen=pts}});
+      if(!g.j){out.push(pen);pen=null}
+      if(dots)for(const [dx,dy] of dots)out.push([[x+dx,dy],[x+dx+.01,dy]]);
+      x+=gx1+.3;
+    }
+    if(pen)out.push(pen);
+    return {lines:out.map(l=>smooth(l).map(([px,py])=>[(px+py*sl)*s,py*s])),width:x*s};
+  }
   /* one or more lines of text as outlines, centred on 0,0 */
-  function text2D(lines,h,w){
-    const rows=lines.filter(t=>t&&String(t).trim()).map(t=>textLines(t,h));
+  function text2D(lines,h,w,font){
+    const cur=font==='script',rows=lines.filter(t=>t&&String(t).trim()).map(t=>cur?scriptLines(t,h):textLines(t,h));
     if(!rows.length)return {rings:[],w:0,h:0};
-    const gap=h*.6,H=rows.length*h+(rows.length-1)*gap;let all=[];
-    rows.forEach((r,i)=>{const y0=H/2-h-i*(h+gap);all=all.concat(r.lines.map(l=>l.map(([x,y])=>[x-r.width/2,y+y0])))});
-    return {rings:stroke(all,w),w:Math.max(...rows.map(r=>r.width))+w,h:H+w};
+    const gap=cur?h*.75:h*.6;let all=[];
+    rows.forEach((r,i)=>{const y0=-i*(h+gap);all=all.concat(r.lines.map(l=>l.map(([x,y])=>[x-r.width/2,y+y0])))});
+    const rings=stroke(all,w),b=bounds(rings);
+    return {rings:move(rings,-b.cx,-b.cy),w:b.x1-b.x0,h:b.y1-b.y0};
   }
   /* cut-through lettering: wherever a letter would leave a loose island (the middle of an O or A), cut a
      small bridge so the island stays joined to the plate */
@@ -157,11 +240,11 @@
   function logoSVG(o){
     o=o||{};const ink=o.ink||'#2f4a2a',paper=o.paper||'#f4efe3',accent=o.accent||ink;
     if(o.layout==='wide'){
-      const m=logoMark(60),t=text2D([o.name||"SHIFTY'S"],22,4.2),tw=t.w,W=60+18+tw+20,H=Math.max(m.h,30)+20;
+      const m=logoMark(60),t=o.font==='caps'?text2D([o.name||"SHIFTY'S"],22,4.2):text2D([o.name||"Shifty's"],30,2.8,'script'),tw=t.w,W=60+18+tw+20,H=Math.max(m.h,30)+20;
       const ox=10+30,oy=H/2,tx=10+60+18+tw/2;
       return `<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 ${W.toFixed(1)} ${H.toFixed(1)}" width="${(W*4).toFixed(0)}" height="${(H*4).toFixed(0)}">${o.bg===false?'':`<rect width="100%" height="100%" fill="${paper}"/>`}<path fill-rule="evenodd" fill="${ink}" d="${svgPath(m.mark,1,ox,oy)}"/><path fill-rule="evenodd" fill="${accent}" d="${svgPath(t.rings,1,tx,oy)}"/></svg>`;
     }
-    const R=50,m=logoMark(54),t=text2D([o.name||"SHIFTY'S"],10,2.3),badge=circle(0,0,R,180),ring=subtract(offset(badge,-2.2),offset(badge,-4.4));
+    const R=50,m=logoMark(54),t=o.font==='caps'?text2D([o.name||"SHIFTY'S"],10,2.3):text2D([o.name||"Shifty's"],13,1.5,'script'),badge=circle(0,0,R,180),ring=subtract(offset(badge,-2.2),offset(badge,-4.4));
     return `<svg xmlns="http://www.w3.org/2000/svg" viewBox="-52 -52 104 104" width="416" height="416"><path fill="${paper}" d="${svgPath(badge,1,0,0)}"/><path fill-rule="evenodd" fill="${accent}" d="${svgPath(ring,1,0,0)}"/><path fill-rule="evenodd" fill="${ink}" d="${svgPath(m.mark,1,0,-9)}"/><path fill-rule="evenodd" fill="${accent}" d="${svgPath(t.rings,1,0,29)}"/></svg>`;
   }
 
@@ -558,8 +641,10 @@
   function moult(o){
     const W=o.shape==='round'||o.shape==='hex'?o.L:o.W,fp=plinth(o.shape,o.L,W,o.seed),b=bounds(fp),ph=o.ph,f=[prism(0,ph,fp)],notes=[],parts=[];
     const depth=b.y1-b.y0,ty=b.y0+depth*.24,py=b.y0+depth*.64;
-    let T=text2D([o.t1,o.t2],o.th,Math.max(1.1,o.th*.15));
-    if(T.w>(b.x1-b.x0)*.82){const s=(b.x1-b.x0)*.82/T.w;T=text2D([o.t1,o.t2],o.th*s,Math.max(1.1,o.th*s*.15));notes.push('The text was made smaller to fit the plinth.')}
+    const fw=hh=>o.font==='caps'?Math.max(1.1,hh*.15):Math.max(1,hh*.08),fh=o.font==='caps'?o.th:o.th*1.5;
+    let T=text2D([o.t1,o.t2],fh,fw(fh),o.font==='caps'?null:'script');
+    const room=hh=>Math.min(...[ty-hh/2,ty,ty+hh/2].map(y=>{const iv=G.slice(fp,y);return iv.length?Math.max(...iv.map(([a,c])=>c-a)):0}))*.84;
+    if(T.w>room(T.h)){const s=Math.max(.2,room(T.h)/T.w*.97);T=text2D([o.t1,o.t2],fh*s,fw(fh*s),o.font==='caps'?null:'script');notes.push('The text was made smaller to fit the plinth.')}
     const letters=move(T.rings,0,ty);
     const {sil,th}=postSil(o.post,o.postH,o.seed);
     f.push(upright(sil,th,0,py,ph-.01));
@@ -587,7 +672,7 @@
     }
   }
   function nameplate(o){
-    const lines=[o.t1,o.t2],h=o.th,sw=Math.max(1.2,h*.16),T=text2D(lines,h,sw),notes=[],parts=[];
+    const lines=[o.t1,o.t2],cap=o.font==='caps',h=cap?o.th:o.th*1.5,sw=cap?Math.max(1.2,h*.16):Math.max(1,h*.08),T=text2D(lines,h,sw,cap?null:'script'),notes=[],parts=[];
     const logo=o.logo==='yes'?logoMark(Math.max(h*2.2,T.h*1.1)):null,gap=h*.6;
     if(!T.rings.length&&!logo)return {parts:[],notes:['Type a name to make a plate.'],magnets:0};
     const cw=T.w+(logo?logo.w+gap:0),ch=Math.max(T.h,logo?logo.h:0),m=h*.7;
@@ -636,7 +721,7 @@
 
   /* ---------------- Shifty's emblem ---------------- */
   function emblem(o){
-    const W=o.size,notes=[],mk=logoMark(W*.6),sw=Math.max(1.2,W*.022),T=o.text==='yes'?text2D([o.name||"SHIFTY'S"],W*.12,sw):{rings:[],h:0};
+    const W=o.size,notes=[],mk=logoMark(W*.6),sw=Math.max(1.2,W*.022),T=o.text!=='yes'?{rings:[],h:0}:o.font==='caps'?text2D([o.name||"SHIFTY'S"],W*.12,sw):text2D([o.name||"Shifty's"],W*.16,Math.max(1,W*.015),'script');
     let badge;
     if(o.shape==='shield')badge=unite(rect(-W/2,-W*.05,W/2,W*.5),[[[-W/2,-W*.05],[W/2,-W*.05],[W*.32,-W*.38],[0,-W*.55],[-W*.32,-W*.38]]]);
     else if(o.shape==='hex')badge=ngon(0,0,W/2/Math.cos(Math.PI/6),6,Math.PI/6);
@@ -649,11 +734,11 @@
     if(o.border==='yes')art=unite(art,subtract(offset(badge,-1),offset(badge,-1-Math.max(1.2,W*.025))));
     const o2=Object.assign({},o,{mount:o.mount==='none'?'glue':o.mount}),mt=backMount(o2,badge,{min:2});notes.push(...mt.notes);
     const art2=move(art,0,mt.dy),parts=[part('shiftys-emblem.stl',build(mt.f),'Colour 1'),part('shiftys-emblem-mark.stl',build([prism(mt.bt,mt.bt+1,art2)]),'Colour 2')];
-    parts.push({file:'shiftys-logo.svg',text:logoSVG({}),role:'Logo'},{file:'shiftys-logo-wide.svg',text:logoSVG({layout:'wide'}),role:'Logo'});
+    parts.push({file:'shiftys-logo.svg',text:logoSVG({font:o.font}),role:'Logo'},{file:'shiftys-logo-wide.svg',text:logoSVG({layout:'wide',font:o.font}),role:'Logo'});
     notes.push('The mark comes as its own file. In Creality Print, add it to the badge as a part and give it a second CFS colour. The zip also has the logo as SVG files for labels and your shop.');
     return {parts,notes,magnets:mt.magnets};
   }
 
-  root.HabitatMore={holes,PATTERNS,voronoi,text2D,stencil,logoMark,logoSVG,svgPath,backMount,upright,lathe,petal,
+  root.HabitatMore={SCRIPT,scriptLines,holes,PATTERNS,voronoi,text2D,stencil,logoMark,logoSVG,svgPath,backMount,upright,lathe,petal,
     feeder,flyLid,ladder,bridge,texture,TEXTURES,tile,flower,FLOWERS,mister,moss,planter,bark,stack,moult,nameplate,transport,emblem};
 })(typeof window!=='undefined'?window:globalThis);
