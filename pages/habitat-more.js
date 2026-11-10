@@ -766,7 +766,7 @@
     if(o.border==='yes')art=unite(art,subtract(offset(badge,-1),offset(badge,-1-Math.max(1.2,W*.025))));
     const o2=Object.assign({},o,{mount:o.mount==='none'?'glue':o.mount}),mt=backMount(o2,badge,{min:2});notes.push(...mt.notes);
     const art2=move(art,0,mt.dy),parts=[part('shiftys-emblem.stl',build(mt.f),'Colour 1'),part('shiftys-emblem-mark.stl',build([prism(mt.bt,mt.bt+1,art2)]),'Colour 2')];
-    parts.push({file:'shiftys-logo.svg',text:logoSVG({font:o.font}),role:'Logo'},{file:'shiftys-logo-wide.svg',text:logoSVG({layout:'wide',font:o.font}),role:'Logo'});
+    parts.push({file:'shiftys-logo.svg',text:()=>logoSVG({font:o.font}),role:'Logo'},{file:'shiftys-logo-wide.svg',text:()=>logoSVG({layout:'wide',font:o.font}),role:'Logo'});
     notes.push('The mark comes as its own file. In Creality Print, add it to the badge as a part and give it a second CFS colour. The zip also has the logo as SVG files for labels and your shop.');
     return {parts,notes,magnets:mt.magnets};
   }

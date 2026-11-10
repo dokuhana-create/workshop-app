@@ -3,10 +3,10 @@
 <script src="../shim.js"></script>
 <script src="../lib/clipper.js"></script>
 <script src="../lib/earcut.min.js"></script>
-<script src="../lib/geo.js"></script>
-<script src="habitat-parts.js"></script>
-<script src="habitat-enclosure.js"></script>
-<script src="habitat-more.js"></script>
+<script src="../lib/geo.js?v=11"></script>
+<script src="habitat-parts.js?v=11"></script>
+<script src="habitat-enclosure.js?v=11"></script>
+<script src="habitat-more.js?v=11"></script>
 <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Bricolage+Grotesque:opsz,wght@12..96,600;12..96,750&family=IBM+Plex+Mono:wght@500&family=IBM+Plex+Sans:wght@400;500;600&display=swap">
 <style>
 /* Same layout as the Resin Workshop: inputs on the left, the 3D preview and downloads beside them. */
@@ -807,7 +807,7 @@ $('accDl').onclick=async()=>{
   const groups=layout(d),files=[],enc=new TextEncoder();
   for(const g of groups){const mn=[1e9,1e9,1e9];for(const p of g){const t=p.m.tris;for(let i=0;i<t.length;i+=3)for(let a=0;a<3;a++)if(t[i+a]<mn[a])mn[a]=t[i+a]}
     for(const p of g)files.push({name:p.file,data:stl(groups.length>1||g.length===1?place0(p.m.tris,(x,y,z)=>[x-mn[0],y-mn[1],z-mn[2]]):p.m.tris)})}
-  for(const p of d.parts)if(p.text)files.push({name:p.file,data:enc.encode(p.text)});
+  for(const p of d.parts)if(p.text)files.push({name:p.file,data:enc.encode(typeof p.text==='function'?p.text():p.text)});
   const two=d.parts.some(p=>p.role==='Colour 2');
   await save(ITEMS[A.item].name.toLowerCase().replace(/'/g,'').replace(/[^a-z0-9]+/g,'-').replace(/-$/,'')+'.zip',zipStore(files),msg,two?'Saved. Unzip it, and add each second-colour file to its main file as one object in Creality Print.':'Saved. Unzip it, then open the STL files in Creality Print.');
 };
