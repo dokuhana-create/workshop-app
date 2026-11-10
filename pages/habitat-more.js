@@ -135,7 +135,7 @@
     q:{s:[[[0,0],[1,1.2],[2.3,2.7],[1.5,3],[.6,2.4],[.4,1],[1,.1],[1.9,.6],[2.4,2.2],[2.5,3],[2.3,0],[2.2,-3],[2.6,-1.4],[3.3,.2],[3.8,.4]]],j:1},
     r:{s:[[[0,0],[.8,1.6],[1.1,2.9],[1.6,2.6],[2.1,2.9],[2,2.2],[1.9,.8],[2.1,0],[2.8,.4]]],j:1},
     s:{s:[[[0,0],[1,1.5],[1.6,3],[2.1,1.6],[2.1,.6],[1.4,0],[.7,.3],[1.4,.4],[2.2,.3],[2.9,.4]]],j:1},
-    t:{s:[[[.5,3.1],[2.4,3.2]],[[0,0],[.9,1.8],[1.5,4.6],[1.2,2.5],[1.1,.6],[1.5,0],[2.3,.4]]],j:1},
+    t:{s:[[[.1,3.2],[2.7,3.4]],[[0,0],[.8,2],[1.35,4.7],[1.2,2.6],[1.05,.7],[1.5,0],[2.3,.4]]],j:1},
     u:{s:[[[0,0],[.6,1.6],[.9,2.9],[.7,1],[1,.1],[1.7,.4],[2.3,1.8],[2.5,2.9],[2.3,1],[2.5,.1],[3.2,.4]]],j:1},
     v:{s:[[[0,0],[.6,1.6],[.9,2.9],[1,1.4],[1.5,.1],[2.2,1.3],[2.4,2.9],[2,2.6],[2.5,2.4],[3.2,2.6]]],j:1},
     w:{s:[[[0,0],[.6,1.6],[.9,2.9],[.8,1],[1.2,.1],[1.8,1],[2,2.4],[2.2,.8],[2.6,.1],[3.2,1.2],[3.4,2.9],[3,2.6],[3.5,2.4],[4.2,2.6]]],j:1},
@@ -160,7 +160,8 @@
     P:{s:[[[1,6.2],[1,3],[.8,0]],[[.2,5.6],[1.4,6.4],[3,6.2],[3.5,5],[2.8,3.4],[1,3]]]},
     Q:{s:[[[2.2,6.4],[1,5.8],[.3,3.6],[.6,1],[1.8,0],[3,.8],[3.5,3.4],[3.1,5.8],[2.2,6.4],[1.6,5.8]],[[2.2,1],[3.4,-.4],[4.2,0]]],j:1},
     R:{s:[[[1,6.2],[1,3],[.8,0]],[[.2,5.6],[1.4,6.4],[3,6.2],[3.5,5],[2.8,3.4],[1,3],[2.4,2.8],[3,.8],[3.4,0],[4.1,.4]]],j:1},
-    S:{s:[[[.2,.4],[1.4,2.8],[2.8,5.4],[3.4,6.4],[3,6.4],[2.3,5.2],[2.4,3.8],[3.1,2.4],[3,.8],[2,0],[1,.2],[.6,.8],[1.4,.6],[2.8,.2],[3.6,.4]]],j:1},
+    S:{s:[[[3.5,5.5],[3,6.3],[2,6.4],[1.2,5.9],[1.1,4.9],[1.9,3.9],[2.9,2.9],[3.2,1.6],[2.7,.4],[1.6,0],[.6,.3],[.2,1]]]},
+    "'":{s:[[[.9,6.4],[.75,5.6],[.4,4.9]]]},
     T:{s:[[[.4,5.6],[1.2,6.4],[2.4,6.2],[4,6.4]],[[2.6,6.3],[2.3,3],[1.8,.5],[1,0],[.4,.6]]]},
     U:{s:[[[0,5.8],[.6,6.4],[.9,5],[.7,2],[1.2,.2],[2.2,.2],[3,1.8],[3.4,6.4],[3.3,3],[3.3,.5],[3.6,0],[4.2,.4]]],j:1},
     V:{s:[[[0,5.8],[.6,6.4],[1,4],[1.8,0],[2.8,3.5],[3.4,6.4],[4,6.2]]]},
@@ -173,34 +174,53 @@
   /* a smooth curve through the points (Catmull-Rom) */
   function smooth(q,k){if(q.length<3)return q;k=k||6;const o=[q[0]];for(let i=0;i<q.length-1;i++){const p0=q[Math.max(0,i-1)],p1=q[i],p2=q[i+1],p3=q[Math.min(q.length-1,i+2)];
     for(let t=1;t<=k;t++){const u=t/k,u2=u*u,u3=u2*u;o.push([0,1].map(a=>.5*(2*p1[a]+(-p0[a]+p2[a])*u+(2*p0[a]-5*p1[a]+4*p2[a]-p3[a])*u2+(-p0[a]+3*p1[a]-3*p2[a]+p3[a])*u3)))}}return o}
-  function scriptLines(str,h){
+  function scriptLines(str,h,seed){
     const s=h/6.5,sl=.24,out=[];let x=0,pen=null;
+    let hs=seed||0;for(const c of String(str||''))hs=(hs*31+c.charCodeAt(0))%100003;const r=rnd(hs+7);
     const span=st=>{let a=1e9,b=-1e9;for(const l of st)for(const [px] of l){a=Math.min(a,px);b=Math.max(b,px)}return [a,b]};
+    let drift=0;
     for(let ch of String(str||'')){
-      if(ch===' '){if(pen)out.push(pen);pen=null;x+=2.2;continue}
+      if(ch===' '){if(pen)out.push(pen);pen=null;x+=2.2+r()*.4;continue}
       let dots=null;if(SDOTS[ch]){ch=SDOTS[ch];dots=ch===ch.toUpperCase()?[1.4,2.6].map(d=>[d,7.6]):[[.9,4],[1.9,4]]}
       let g=SCRIPT[ch];
       if(!g){const b=FONT[ch.toUpperCase()];if(!b){continue}
         const [a]=span(b);g={s:b.map(l=>l.map(([px,py])=>[px-a+.3,py*(/[0-9]/.test(ch)?.75:1)])),j:0}}
-      if(SCRIPT[ch])g={s:g.s.map(l=>l.map(([px,py])=>[px*1.2,py])),j:g.j};
+      /* a hand never writes the same letter twice: size, height and shape wander a little */
+      drift=drift*.6+(r()-.5)*.35;const sc=1+(r()-.5)*.09,sx=1.2*(1+(r()-.5)*.08);
+      g={s:g.s.map(l=>l.map(([px,py],i)=>[px*(SCRIPT[ch]?sx:1)*sc+(i&&i<l.length-1?(r()-.5)*.12:0),py*sc+drift+(i&&i<l.length-1?(r()-.5)*.12:0)])),j:g.j};
       const [,gx1]=span(g.s),low=!!SCRIPT[ch]&&ch!==ch.toUpperCase();
       g.s.forEach((st,i)=>{const pts=st.map(([px,py])=>[x+px,py]);
         if(i<g.s.length-1){out.push(pts);return}
         if(pen&&low)pen.push(...pts);else{if(pen)out.push(pen);pen=pts}});
       if(!g.j){out.push(pen);pen=null}
-      if(dots)for(const [dx,dy] of dots)out.push([[x+dx,dy],[x+dx+.01,dy]]);
-      x+=gx1+.3;
+      if(dots)for(const [dx,dy] of dots)out.push([[x+dx+(r()-.5)*.3,dy+drift+(r()-.5)*.3],[x+dx+.01,dy+drift]]);
+      x+=gx1+.25+r()*.15;
     }
     if(pen)out.push(pen);
-    return {lines:out.map(l=>smooth(l).map(([px,py])=>[(px+py*sl)*s,py*s])),width:x*s};
+    return {lines:out.map(l=>smooth(l,8).map(([px,py])=>[(px+py*sl)*s,py*s])),width:x*s};
+  }
+  /* ink of a pen: full width going down, thin going up, tapering a little at the ends of a stroke */
+  function inkStroke(lines,w,minW){
+    const parts=[],lo=Math.max(minW||0,w*.5);
+    for(const q of lines){
+      const L=q.length-1;
+      if(L<1||(L<3&&Math.hypot(q[L][0]-q[0][0],q[L][1]-q[0][1])<.05)){parts.push(circle(q[0][0],q[0][1],Math.max(lo,w*.62)/2,16)[0]);continue}
+      let ws=q.map((p,i)=>{const a=q[Math.max(0,i-1)],b=q[Math.min(L,i+1)],dx=b[0]-a[0],dy=b[1]-a[1],d=Math.hypot(dx,dy)||1,down=Math.max(0,-dy/d);
+        const t=Math.min(i,L-i),taper=Math.min(1,.55+t*.09);const flat=1-Math.abs(dy/d);return Math.max(lo,w*(.5+.5*down+.15*flat)*taper)});
+      for(let k=0;k<3;k++)ws=ws.map((v,i)=>(ws[Math.max(0,i-1)]+2*v+ws[Math.min(L,i+1)])/4);
+      ws=ws.map(v=>Math.max(lo,v));
+      for(let i=0;i<=L;i++){parts.push(circle(q[i][0],q[i][1],ws[i]/2,12)[0]);if(i<L){const [x0,y0]=q[i],[x1,y1]=q[i+1],d=Math.hypot(x1-x0,y1-y0);if(d<1e-6)continue;const nx=-(y1-y0)/d,ny=(x1-x0)/d;
+        parts.push([[x0+nx*ws[i]/2,y0+ny*ws[i]/2],[x0-nx*ws[i]/2,y0-ny*ws[i]/2],[x1-nx*ws[i+1]/2,y1-ny*ws[i+1]/2],[x1+nx*ws[i+1]/2,y1+ny*ws[i+1]/2]])}}
+    }
+    return clean(unite(parts.map(r=>sarea(r)<0?r.slice().reverse():r)),.02);
   }
   /* one or more lines of text as outlines, centred on 0,0 */
-  function text2D(lines,h,w,font){
-    const cur=font==='script',rows=lines.filter(t=>t&&String(t).trim()).map(t=>cur?scriptLines(t,h):textLines(t,h));
+  function text2D(lines,h,w,font,minW){
+    const cur=font==='script',rows=lines.filter(t=>t&&String(t).trim()).map((t,i)=>cur?scriptLines(t,h,i):textLines(t,h));
     if(!rows.length)return {rings:[],w:0,h:0};
     const gap=cur?h*.75:h*.6;let all=[];
     rows.forEach((r,i)=>{const y0=-i*(h+gap);all=all.concat(r.lines.map(l=>l.map(([x,y])=>[x-r.width/2,y+y0])))});
-    const rings=stroke(all,w),b=bounds(rings);
+    const rings=cur?inkStroke(all,w,minW==null?.8:minW):stroke(all,w),b=bounds(rings);
     return {rings:move(rings,-b.cx,-b.cy),w:b.x1-b.x0,h:b.y1-b.y0};
   }
   /* cut-through lettering: wherever a letter would leave a loose island (the middle of an O or A), cut a
@@ -227,7 +247,12 @@
     const lidL=[[[-19,8.6],[-3.5,6.9],[-3.5,16],[-19,16]]],lidR=[[[3.5,6.9],[19,8.6],[19,16],[3.5,16]]];
     const visL=subtract(offset(eL,-1.4),lidL),visR=subtract(offset(eR,-1.4),lidR),vis=unite(visL,visR);
     const pupils=unite(circle(-7,5.4,2.5,32),circle(13.9,5.4,2.5,32));
-    const ant=stroke([HP.bez([-2.2,2.5],[-5,16],[-10,20],[-15,26]),[...HP.bez([2.2,2.5],[5,17],[9,21],[11,27]),[13.5,26.4],[14.2,24.6]]],1.8);
+    /* both antennae have the same length: the hooked one is shorter in its straight part by what the hook takes */
+    const aL=HP.bez([-2.2,2.5],[-5,16],[-10,20],[-15,26],120),len=q=>q.reduce((t,p,i)=>i?t+Math.hypot(p[0]-q[i-1][0],p[1]-q[i-1][1]):0,0);
+    const hk=[2,1.5],aR0=aL.map(([x,y])=>[-x,y]),target=len(aL)-hk[0]-hk[1],aR=[aR0[0]];
+    for(let i=1,t=0;i<aR0.length;i++){const d=Math.hypot(aR0[i][0]-aR0[i-1][0],aR0[i][1]-aR0[i-1][1]);if(t+d>=target){const f=(target-t)/d;aR.push([aR0[i-1][0]+(aR0[i][0]-aR0[i-1][0])*f,aR0[i-1][1]+(aR0[i][1]-aR0[i-1][1])*f]);break}t+=d;aR.push(aR0[i])}
+    const e=aR[aR.length-1],e0=aR[aR.length-3],an=Math.atan2(e[1]-e0[1],e[0]-e0[0]),h1=[e[0]+hk[0]*Math.cos(an-1.5),e[1]+hk[0]*Math.sin(an-1.5)],h2=[h1[0]+hk[1]*Math.cos(an-2.5),h1[1]+hk[1]*Math.sin(an-2.5)];
+    const ant=stroke([aL,[...aR,h1,h2]],1.8);
     const smirk=stroke([HP.bez([-2.6,-6.9],[-.6,-7.7],[2,-7.3],[3.9,-4.7])],1.15);
     let mark=unite(face,ant);
     mark=unite(subtract(subtract(mark,vis),smirk),pupils);
@@ -240,12 +265,12 @@
   function logoSVG(o){
     o=o||{};const ink=o.ink||'#2f4a2a',paper=o.paper||'#f4efe3',accent=o.accent||ink;
     if(o.layout==='wide'){
-      const m=logoMark(60),t=o.font==='caps'?text2D([o.name||"SHIFTY'S"],22,4.2):text2D([o.name||"Shifty's"],30,2.8,'script'),tw=t.w,W=60+18+tw+20,H=Math.max(m.h,30)+20;
+      const m=logoMark(60),t=o.font==='caps'?text2D([o.name||"SHIFTY'S"],22,4.2):text2D([o.name||"Shifty's"],30,4,'script',0),tw=t.w,W=60+18+tw+20,H=Math.max(m.h,30)+20;
       const ox=10+30,oy=H/2,tx=10+60+18+tw/2;
       return `<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 ${W.toFixed(1)} ${H.toFixed(1)}" width="${(W*4).toFixed(0)}" height="${(H*4).toFixed(0)}">${o.bg===false?'':`<rect width="100%" height="100%" fill="${paper}"/>`}<path fill-rule="evenodd" fill="${ink}" d="${svgPath(m.mark,1,ox,oy)}"/><path fill-rule="evenodd" fill="${accent}" d="${svgPath(t.rings,1,tx,oy)}"/></svg>`;
     }
-    const R=50,m=logoMark(54),t=o.font==='caps'?text2D([o.name||"SHIFTY'S"],10,2.3):text2D([o.name||"Shifty's"],13,1.5,'script'),badge=circle(0,0,R,180),ring=subtract(offset(badge,-2.2),offset(badge,-4.4));
-    return `<svg xmlns="http://www.w3.org/2000/svg" viewBox="-52 -52 104 104" width="416" height="416"><path fill="${paper}" d="${svgPath(badge,1,0,0)}"/><path fill-rule="evenodd" fill="${accent}" d="${svgPath(ring,1,0,0)}"/><path fill-rule="evenodd" fill="${ink}" d="${svgPath(m.mark,1,0,-9)}"/><path fill-rule="evenodd" fill="${accent}" d="${svgPath(t.rings,1,0,29)}"/></svg>`;
+    const R=50,m=logoMark(48),t=o.font==='caps'?text2D([o.name||"SHIFTY'S"],10,2.3):text2D([o.name||"Shifty's"],13,1.9,'script',0),badge=circle(0,0,R,180),ring=subtract(offset(badge,-2.2),offset(badge,-4.4));
+    return `<svg xmlns="http://www.w3.org/2000/svg" viewBox="-52 -52 104 104" width="416" height="416"><path fill="${paper}" d="${svgPath(badge,1,0,0)}"/><path fill-rule="evenodd" fill="${accent}" d="${svgPath(ring,1,0,0)}"/><path fill-rule="evenodd" fill="${ink}" d="${svgPath(m.mark,1,0,-7)}"/><path fill-rule="evenodd" fill="${accent}" d="${svgPath(t.rings,1,0,30)}"/></svg>`;
   }
 
   /* ---------------- mounting a flat piece printed on its back ----------------
@@ -641,7 +666,7 @@
   function moult(o){
     const W=o.shape==='round'||o.shape==='hex'?o.L:o.W,fp=plinth(o.shape,o.L,W,o.seed),b=bounds(fp),ph=o.ph,f=[prism(0,ph,fp)],notes=[],parts=[];
     const depth=b.y1-b.y0,ty=b.y0+depth*.24,py=b.y0+depth*.64;
-    const fw=hh=>o.font==='caps'?Math.max(1.1,hh*.15):Math.max(1,hh*.08),fh=o.font==='caps'?o.th:o.th*1.5;
+    const fw=hh=>o.font==='caps'?Math.max(1.1,hh*.15):Math.max(1.2,hh*.11),fh=o.font==='caps'?o.th:o.th*1.5;
     let T=text2D([o.t1,o.t2],fh,fw(fh),o.font==='caps'?null:'script');
     const room=hh=>Math.min(...[ty-hh/2,ty,ty+hh/2].map(y=>{const iv=G.slice(fp,y);return iv.length?Math.max(...iv.map(([a,c])=>c-a)):0}))*.84;
     if(T.w>room(T.h)){const s=Math.max(.2,room(T.h)/T.w*.97);T=text2D([o.t1,o.t2],fh*s,fw(fh*s),o.font==='caps'?null:'script');notes.push('The text was made smaller to fit the plinth.')}
@@ -672,7 +697,7 @@
     }
   }
   function nameplate(o){
-    const lines=[o.t1,o.t2],cap=o.font==='caps',h=cap?o.th:o.th*1.5,sw=cap?Math.max(1.2,h*.16):Math.max(1,h*.08),T=text2D(lines,h,sw,cap?null:'script'),notes=[],parts=[];
+    const lines=[o.t1,o.t2],cap=o.font==='caps',h=cap?o.th:o.th*1.5,sw=cap?Math.max(1.2,h*.16):Math.max(1.3,h*.11),T=text2D(lines,h,sw,cap?null:'script'),notes=[],parts=[];
     const logo=o.logo==='yes'?logoMark(Math.max(h*2.2,T.h*1.1)):null,gap=h*.6;
     if(!T.rings.length&&!logo)return {parts:[],notes:['Type a name to make a plate.'],magnets:0};
     const cw=T.w+(logo?logo.w+gap:0),ch=Math.max(T.h,logo?logo.h:0),m=h*.7;
@@ -721,7 +746,7 @@
 
   /* ---------------- Shifty's emblem ---------------- */
   function emblem(o){
-    const W=o.size,notes=[],mk=logoMark(W*.6),sw=Math.max(1.2,W*.022),T=o.text!=='yes'?{rings:[],h:0}:o.font==='caps'?text2D([o.name||"SHIFTY'S"],W*.12,sw):text2D([o.name||"Shifty's"],W*.16,Math.max(1,W*.015),'script');
+    const W=o.size,notes=[],mk=logoMark(W*.6),sw=Math.max(1.2,W*.022),T=o.text!=='yes'?{rings:[],h:0}:o.font==='caps'?text2D([o.name||"SHIFTY'S"],W*.12,sw):text2D([o.name||"Shifty's"],W*.16,Math.max(1.3,W*.022),'script');
     let badge;
     if(o.shape==='shield')badge=unite(rect(-W/2,-W*.05,W/2,W*.5),[[[-W/2,-W*.05],[W/2,-W*.05],[W*.32,-W*.38],[0,-W*.55],[-W*.32,-W*.38]]]);
     else if(o.shape==='hex')badge=ngon(0,0,W/2/Math.cos(Math.PI/6),6,Math.PI/6);
