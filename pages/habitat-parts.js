@@ -201,6 +201,21 @@
       if(span>enc.bed-5)notes.push('The bridge is longer than your bed. Turn it diagonally, or use a cradle instead.');
       return {parts:[{file:'light-bridge-clamp.stl',role:'Main colour',m:build(f)}],notes,magnets:0};
     }
+    if(o.kind==='ring'){
+      /* seats for ring-shaped LED heads lying on the lid, shining down through the mesh.
+         Each ring rests on three small pads, so almost all of its LEDs stay uncovered. */
+      const R=o.rd/2,n=Math.max(1,Math.min(4,Math.round(o.n||1))),gap=12,pitch=2*R+2*3.2+gap,x0=-(n-1)*pitch/2,pad=2,hw=7;
+      for(let i=0;i<n;i++){
+        const cx=x0+i*pitch,ring=subtract(circle(cx,0,R+3.2),circle(cx,0,R+.6));
+        /* wall with a gap at the back for the cable */
+        f.push(prism(0,pad+7,subtract(ring,rect(cx-8,R-5,cx+8,R+10))));
+        for(let k=0;k<3;k++){const a=-Math.PI/2+k*Math.PI*2/3,c=Math.cos(a),s2=Math.sin(a);
+          f.push(prism(0,pad,G.stroke([[[cx+c*(R-7),s2*(R-7)],[cx+c*(R+2),s2*(R+2)]]],hw)))}
+        if(i<n-1)f.push(prism(0,4,rect(cx+R+2.5,-4,cx+pitch-R-2.5,4)));
+      }
+      notes.push('Measure your ring lights when they arrive and set the diameter. The seats leave 0.6 mm of play.');
+      return {parts:[{file:`light-ring-seats-${n}.stl`,role:'Main colour',m:build(f)}],notes,magnets:0};
+    }
     const fl=2,wall=2.4,hgt=10;
     let inner;
     if(o.kind==='puck')inner=circle(0,0,o.pd/2+.4);

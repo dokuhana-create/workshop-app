@@ -620,10 +620,10 @@ const ITEMS={
     hint:'A perch shelf with irregular natural edges and ridges for grip: a bracket fungus with growth rings, a leaf with veins, or a pebble. It prints lying on its back, so it needs no supports.'},
   label:{name:'Label holder',fields:[['cw','Card width',70],['ch','Card height',30]],mounts:['magnet','clip','glue'],
     hint:'A frame you slide a paper card into, with the species, name and moult dates. It comes as two files, a plate and a frame, so you can print the frame in a second colour with the CFS.'},
-  light:{name:'Light holder',kinds:{clamp:{name:'Clamp lamp bridge',fields:[['tab','Tab thickness',4],['tabH','Tab height',30]]},puck:{name:'Round light cradle',fields:[['pd','Light diameter',60]]},bar:{name:'LED bar cradle',fields:[['bl','Bar length',120],['bw','Bar width',15]]}},mounts:[],
-    hint:`A bridge across the lid with a tab for a clip-on gooseneck lamp, or a cradle that holds a round or bar light just above the mesh. A cheap fit is the ${LIGHT_LINK} (about €14, USB, 3.5 W, 7100 K daylight): its screw clamp grips the tab. Daylight around 6500 K suits live plants too. Keep lights on top of the mesh, never inside, and check the enclosure doesn't overheat.`}
+  light:{name:'Light holder',kinds:{ring:{name:'Ring light seats',fields:[['rd','Ring diameter',90],['n','Number of rings',2]]},clamp:{name:'Clamp lamp bridge',fields:[['tab','Tab thickness',4],['tabH','Tab height',30]]},puck:{name:'Round light cradle',fields:[['pd','Light diameter',60]]},bar:{name:'LED bar cradle',fields:[['bl','Bar length',120],['bw','Bar width',15]]}},mounts:[],
+    hint:`Ring light seats hold the round LED heads of under-cabinet plant lights (the AliExpress kind with 1–4 rings, a timer and a USB controller) flat on the lid, shining down through the mesh. Each ring rests on three small pads, and a gap in the wall lets the cable out. You can also make a bridge with a tab for a clip-on gooseneck lamp such as the ${LIGHT_LINK}, or a cradle for a round or bar light. Keep lights on top of the mesh, never inside, and check the enclosure doesn't overheat.`}
 };
-const A=Object.assign({item:'dish',magD:10,magH:3,mount:{},v:{},drain:true,shape:{},seed:{},kind:'clamp'},state.acc||{});
+const A=Object.assign({item:'dish',magD:10,magH:3,mount:{},v:{},drain:true,shape:{},seed:{},kind:'ring'},state.acc||{});
 for(const k of ['mount','v','shape','seed'])A[k]=A[k]||{};
 for(const k in ITEMS){const b=document.createElement('button');b.type='button';b.textContent=ITEMS[k].name;b.dataset.k=k;b.onclick=()=>{A.item=k;accSetup()};$('items').append(b)}
 $('magD').value=A.magD;$('magH').value=A.magH;
@@ -634,7 +634,7 @@ function accSetup(){
   document.querySelectorAll('#items button').forEach(b=>b.setAttribute('aria-pressed',b.dataset.k===A.item));
   A.v[A.item]=A.v[A.item]||{};
   if(it.kinds){
-    const s=document.createElement('select');opt(s,Object.entries(it.kinds).map(([k,v])=>[k,v.name]));s.value=A.kind in it.kinds?A.kind:'clamp';s.onchange=()=>{A.kind=s.value;accSetup()};
+    const s=document.createElement('select');opt(s,Object.entries(it.kinds).map(([k,v])=>[k,v.name]));s.value=A.kind in it.kinds?A.kind:'ring';s.onchange=()=>{A.kind=s.value;accSetup()};
     field(box,'Type',s).style.gridColumn='1/-1';
   }
   if(it.shapes){
@@ -643,7 +643,7 @@ function accSetup(){
     if(RANDOM.includes(s.value)){const b=document.createElement('button');b.type='button';b.className='btn';b.textContent='Shuffle shape';b.style.alignSelf='end';b.onclick=()=>{A.seed[A.item]=(A.seed[A.item]||1)+1;accCalc()};box.append(b)}
   }
   const shape=it.shapes?(it.shapes.includes(A.shape[A.item])?A.shape[A.item]:it.shapes[0]):null;
-  const fields=it.kinds?it.kinds[A.kind in it.kinds?A.kind:'clamp'].fields:it.fields;
+  const fields=it.kinds?it.kinds[A.kind in it.kinds?A.kind:'ring'].fields:it.fields;
   for(const [k,l,dv] of fields){
     if(k==='W'&&shape==='round')continue;
     const i=document.createElement('input');i.type='number';i.min=k==='taper'?0:1;i.step=k==='wall'?.2:1;i.value=A.v[A.item][k]??dv;
@@ -672,7 +672,7 @@ function encInfo(){
 }
 function accDesign(){
   const it=ITEMS[A.item],mount=it.mounts.length?$('mount').value:'none';
-  const o={mount,md:Math.max(4,+$('magD').value||10),mh:Math.max(1,+$('magH').value||3),seed:A.seed[A.item]||1,drain:A.drain,kind:A.kind in (it.kinds||{})?A.kind:'clamp'};
+  const o={mount,md:Math.max(4,+$('magD').value||10),mh:Math.max(1,+$('magH').value||3),seed:A.seed[A.item]||1,drain:A.drain,kind:A.kind in (it.kinds||{})?A.kind:'ring'};
   const fields=it.kinds?it.kinds[o.kind].fields:it.fields;
   for(const [k,,dv] of fields){const v=A.v[A.item][k];o[k]=v>0||(k==='taper'&&v===0)?v:dv}
   if(it.shapes){o.shape=it.shapes.includes(A.shape[A.item])?A.shape[A.item]:it.shapes[0];if(o.shape==='round')o.W=o.L}
@@ -703,6 +703,8 @@ function accCalc(){
   if(d.mount==='clip'&&(e.shape!=='rect'||e.rails!=='yes'))notes.push('Clip rails are on printed mesh panels of a rectangular enclosure. Turn them on under Enclosure, Panels.');
   if(d.parts.length>1)notes.push('In Creality Print, add both files as one object (Add part), then give each a different CFS slot.');
   if(A.item==='dish')notes.push('Wash the dish with hot water when you refill it, since layer lines collect residue.');
+  if(A.item==='light'){const e2=Object.assign({},DEF,state.enc||{}),open=Math.round(100*(e2.hole/(e2.hole+e2.bar))**2);notes.push(`Your lid mesh lets about ${open} % of the light through. A thinner mesh bar (Enclosure, Panels) lets more through, while the holes stay small enough to keep feeders in.`)}
+  if(A.item==='light'&&A.kind==='ring'){const w=bbox(d.parts[0].m.tris)[0];if(w>encInfo().span)notes.push(`These seats are ${fmt(w)} mm long, wider than your lid (${fmt(encInfo().span)} mm). Use fewer rings, or print a second set for the other half of the lid.`)}
   if(A.item==='light'&&d.mount==='none'&&A.kind==='clamp')notes.push(`Made for your enclosure's lid, ${fmt(encInfo().span)} mm across. The bridge sits on the lid edge, and the end hooks keep it from sliding.`);
   $('accDl').textContent=d.parts.length>1?'Download STL files':'Download STL';
   const n=$('accNote');n.hidden=!notes.length;n.innerHTML='';for(const x of notes){const dv=document.createElement('div');dv.textContent=x;n.append(dv)}
