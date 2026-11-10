@@ -381,5 +381,7 @@
     if(p.pegs==='grid'){const m=band+14,nx=Math.floor((W-2*m)/RAIL.pitch),ny=Math.floor((D-2*m)/RAIL.pitch),ox=(W-nx*RAIL.pitch)/2,oy=(D-ny*RAIL.pitch)/2;for(let i=0;i<=nx;i++)for(let j=0;j<=ny;j++){const x=ox+i*RAIL.pitch,y=oy+j*RAIL.pitch;pegs.push([x,y]);bf.push(prism(f-.01,f+PEG.h,circle(x,y,PEG.r,24)))}}
     const m=build(bf);m.pegs=pegs;return m;
   }
-  root.HabitatParts={rectLid,lightWindows,RAIL,CLIP,PEG,dish,pot,twig,ledge,label,light,roundEnclosure,rectBase,perimeter};
+  /* a wall mount behind an upright body (back at y=0): returns the number of magnets */
+  function mountWall(f,o,b,h,out){addMount(f,o,b,h,out);return o.mount==='magnet'?magnetBack(f,{w:Math.min(b.x1-b.x0,60),h,md:o.md,mh:o.mh}):0}
+  root.HabitatParts={rectLid,lightWindows,RAIL,CLIP,PEG,dish,pot,twig,ledge,label,light,roundEnclosure,rectBase,perimeter,body2D,fit,bounds,bez,curl,mountWall,LEDGE_PATTERNS};
 })(typeof window!=='undefined'?window:globalThis);

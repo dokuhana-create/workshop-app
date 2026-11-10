@@ -6,6 +6,7 @@
 <script src="../lib/geo.js"></script>
 <script src="habitat-parts.js"></script>
 <script src="habitat-enclosure.js"></script>
+<script src="habitat-more.js"></script>
 <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Bricolage+Grotesque:opsz,wght@12..96,600;12..96,750&family=IBM+Plex+Mono:wght@500&family=IBM+Plex+Sans:wght@400;500;600&display=swap">
 <style>
 /* Same layout as the Resin Workshop: inputs on the left, the 3D preview and downloads beside them. */
@@ -192,7 +193,7 @@ h3{font:600 15px var(--body);margin:0 0 6px}
     <div class="inputs">
       <section aria-labelledby="h-item">
         <h2 id="h-item">Item</h2>
-        <div class="seg" id="items" role="group" aria-label="Accessory"></div>
+        <div class="fields"><label class="f" style="grid-column:1/-1">Item<select id="items"></select></label></div>
         <div class="fields" id="accFields"></div>
         <p class="hint" id="accHint"></p>
       </section>
@@ -584,83 +585,178 @@ for(const k in encIds)$(encIds[k]).addEventListener('input',()=>{if(k!=='species
 /* ---------- accessories ---------- */
 const SHAPES={round:'Round',oval:'Oval',pebble:'Pebble',hex:'Hexagon',square:'Rounded square',cylinder:'Cylinder',rock:'Rock',cone:'Cone',fungus:'Bracket fungus',lobed:'Lobed fungus',tiered:'Tiered fungus, three shelves',leaf:'Leaf',moon:'Half moon',classic:'Rounded rectangle',sharp:'Square corners'};
 const RANDOM=['pebble','rock','fungus','lobed','tiered'];
-const MOUNT={free:'Stands on its own',peg:'Floor peg',magnet:'Magnets',clip:'Clip rail',glue:'Glue or tape'};
+const MOUNT={free:'Stands on its own',peg:'Floor peg',magnet:'Magnets',clip:'Clip rail',glue:'Glue or tape',tie:'Tied to the lid mesh',hook:'Hook over a branch',stem:'Stem for a twig holder',panel:'In a tile panel'};
 const LIGHT_LINK='<a href="https://insektenliebe.com/en/?p=158875" target="_blank" rel="noopener">Repto Compact LED</a>';
 const ITEMS={
-  dish:{name:'Pearl dish',fields:[['L','Length',50],['W','Width',40],['depth','Depth',12],['wall','Wall',2.4]],shapes:['round','oval','pebble','hex'],mounts:['free','peg','magnet','clip'],
+  dish:{group:'food',name:'Pearl dish',fields:[['L','Length',50],['W','Width',40],['depth','Depth',12],['wall','Wall',2.4]],shapes:['round','oval','pebble','hex'],mounts:['free','peg','magnet','clip'],
     hint:'A shallow dish for water gel pearls such as Aqua Pearls Calcium. Its stepped inner edge lets feeder insects and small nymphs climb in and out. Replace the pearls every few days, since they go mouldy in a warm, humid enclosure.'},
-  pot:{name:'Plant pot',fields:[['L','Length',60],['W','Width',50],['H','Height',60],['wall','Wall',2],['taper','Wider at the top (%)',12]],shapes:['round','oval','hex','square','pebble'],mounts:['free','peg','magnet','clip'],drain:true,
+  pot:{group:'plants',name:'Plant pot',fields:[['L','Length',60],['W','Width',50],['H','Height',60],['wall','Wall',2],['taper','Wider at the top (%)',12]],shapes:['round','oval','hex','square','pebble'],mounts:['free','peg','magnet','clip'],drain:true,
     hint:'A pot with small feet and drainage holes. Turn the holes off if it shouldn\'t drip onto the substrate. For live plants, print in PETG so the pot stays watertight.'},
-  twig:{name:'Twig holder',fields:[['dia','Twig thickness',6],['H','Height',30]],shapes:['cylinder','rock','cone','hex'],mounts:['free','peg','magnet','clip'],
+  twig:{group:'climb',name:'Twig holder',fields:[['dia','Twig thickness',6],['H','Height',30]],shapes:['cylinder','rock','cone','hex'],mounts:['free','peg','magnet','clip'],
     hint:'Holds a branch upright. Standing or pegged versions have a wide base for the floor, and wall versions sit against a panel. Measure the thickest part of the twig end. The socket adds a little play.'},
-  ledge:{name:'Wall ledge',fields:[['L','Length',70],['dep','Depth',45],['Hh','Back height',35],['underH','Underside depth',25],['lw','Pattern line width',2.2]],shapes:['fungus','lobed','tiered','leaf','pebble','moon','classic','sharp'],mounts:['magnet','clip','glue'],
+  ledge:{group:'climb',name:'Wall ledge',fields:[['L','Length',70],['dep','Depth',45],['Hh','Back height',35],['underH','Underside depth',25],['lw','Pattern line width',2.2]],shapes:['fungus','lobed','tiered','leaf','pebble','moon','classic','sharp'],mounts:['magnet','clip','glue'],
     selects:[['pattern','Surface',[['solid','Solid, with grip ridges'],['rings','See-through growth rings'],['web','See-through spider web'],['vine','Filigree vine'],['scroll','Filigree scrolls'],['nouveau','Filigree whiplash']]],['under','Underside',[['flat','Flat shelf (T)'],['D','Rounded, filled in (D)'],['wedge','Sloped wedge'],['ribs','Ribs']]]],
     hint:'A perch shelf with irregular natural edges: bracket fungus, lobed or tiered fungus, leaf, pebble or half moon, or a rounded or square-cornered shelf. The surface can be solid with grip ridges, or see-through filigree after the Resin Workshop pendants. The underside can stay flat or be filled in for a sturdier D shape. It prints lying on its back, with no supports.'},
-  label:{name:'Label holder',fields:[['cw','Card width',70],['ch','Card height',30]],mounts:['magnet','clip','glue'],
+  label:{group:'decor',name:'Label holder',fields:[['cw','Card width',70],['ch','Card height',30]],mounts:['magnet','clip','glue'],
     hint:'A frame you slide a paper card into, with the species, name and moult dates. It comes as two files, a plate and a frame, so you can print the frame in a second colour with the CFS.'},
-  light:{name:'Light holder',kinds:{ring:{name:'Ring light seats',fields:[['rd','Ring diameter',90],['n','Number of rings',2]]},clamp:{name:'Clamp lamp bridge',fields:[['tab','Tab thickness',4],['tabH','Tab height',30]]},puck:{name:'Round light cradle',fields:[['pd','Light diameter',60]]},bar:{name:'LED bar cradle',fields:[['bl','Bar length',120],['bw','Bar width',15]]}},mounts:[],
+  light:{group:'addon',name:'Light holder',kinds:{ring:{name:'Ring light seats',fields:[['rd','Ring diameter',90],['n','Number of rings',2]]},clamp:{name:'Clamp lamp bridge',fields:[['tab','Tab thickness',4],['tabH','Tab height',30]]},puck:{name:'Round light cradle',fields:[['pd','Light diameter',60]]},bar:{name:'LED bar cradle',fields:[['bl','Bar length',120],['bw','Bar width',15]]}},mounts:[],
     hint:`Ring light seats hold the round LED heads of under-cabinet plant lights (the AliExpress kind with 1–4 rings, a timer and a USB controller) flat on the lid, shining down through the mesh. Each ring rests on three small pads, and a gap in the wall lets the cable out. You can also make a bridge with a tab for a clip-on gooseneck lamp such as the ${LIGHT_LINK}, or a cradle for a round or bar light. Keep lights on top of the mesh, never inside, and check the enclosure doesn't overheat.`}
+};
+const GROUPS={food:'Food and water',climb:'Climbing and perching',plants:'Plants and humidity',decor:'Walls, names and display',addon:'Enclosure add-ons',sets:'Matching sets'};
+const PAT=HabitatMore.PATTERNS,TXT=HabitatMore.TEXTURES,FLW=HabitatMore.FLOWERS;
+const vis=(k,v)=>s=>[].concat(v).includes(s[k]);
+Object.assign(ITEMS,{
+  feeder:{group:'food',more:'feeder',name:'Feeder cup',fields:[['L','Length',50],['W','Width',40],['H','Height',30],['wall','Wall',2],['lip','Escape lip',3]],
+    selects:[['shape','Shape',[['round','Round'],['oval','Oval'],['hex','Hexagon'],['pebble','Pebble'],['flower','Flower'],['scallop','Scalloped']]]],shuffle:true,mounts:['free','peg','magnet','clip'],
+    hint:'A deep, smooth-sided cup for live feeders such as fruit flies, bean beetles or small crickets. The rim curls inwards at 45°, so crawling feeders can\'t climb back out, while the mantis can still reach in.'},
+  flyLid:{group:'food',more:'flyLid',name:'Fruit fly cup lid',fields:[['dia','Cup rim diameter',95],['skirt','Skirt depth',8],['cover','Window size (%)',70],['hs','Hole size',3],['hb','Bar width',1.6],['corkD','Plug diameter',12,{show:vis('cork','yes')}]],
+    selects:[['mode','Window',[['fabric','Fabric or coffee filter under a lattice'],['vent','Printed vent holes only']]],['pattern','Lattice',PAT],['cork','Feeding port',[['no','None'],['yes','Foam plug port']]]],mounts:[],
+    hint:'A snap-on lid for the cups you breed fruit flies in. The window holds a circle of coffee filter or fine fabric under a decorative lattice, so the culture breathes but the flies stay in. The optional port takes a foam plug, so you can tap flies out without opening the lid.'},
+  ladder:{group:'climb',more:'ladder',name:'Moulting ladder',fields:[['len','Length',120],['wid','Width',24],['dia','Branch thickness',8,{show:s=>s._mount==='hook'}]],
+    selects:[['style','Style',[['rope','Rope ladder'],['net','Net'],['chain','Chain of rings'],['vine','Leafy vine'],['bark','Bark strip'],['zigzag','Zigzag'],['bamboo','Bamboo']]]],shuffle:true,mounts:['tie','hook','magnet','clip'],
+    hint:'Mantises moult hanging upside down, and need about twice their body length of free space below them and something rough to grip. A ladder hanging from the lid gives them that. It prints flat.'},
+  bridge:{group:'climb',more:'bridge',name:'Twig bridge',fields:[['span','Span between holders',120],['rise','Rise',40],['dia','Twig holder size',6],['w','Thickness',6],['pinL','Pin length',15]],
+    selects:[['style','Shape',[['arch','Round arch'],['arc','Low arc'],['gothic','Pointed arch'],['straight','Straight beam'],['zigzag','Zigzag'],['wave','Wave'],['vine','Leafy vine'],['branch','Branch with side twigs']]],['texture','Surface',[['bark','Bark ridges'],['smooth','Smooth']]]],shuffle:true,mounts:[],
+    hint:'An arch or branch that spans between two twig holders. Its square pins push into the holders, so it adds a perch across the middle of the enclosure.'},
+  flower:{group:'climb',more:'flower',name:'Flower perch',fields:[['R','Petal length',25],['n','Petal count (0 = natural)',0,{show:vis('kind',['daisy','cosmos','dahlia','anemone','star'])}],['lh','Layer height',1.2],['dia','Twig holder size',6,{show:s=>s._mount==='stem'}],['stemL','Stem length',60,{show:s=>s._mount==='stem'}]],
+    selects:[['kind','Flower',FLW],['centre','Centre',[['auto','To match the flower'],['dome','Dome'],['stamens','Stamens'],['seedpod','Seed pod'],['spiral','Spiral'],['column','Orchid column'],['pistil','Long pistil'],['none','None']]],['veins','Petal veins',[['yes','Yes'],['no','No']]]],shuffle:true,mounts:['magnet','clip','glue','peg','stem'],
+    hint:'A flower to perch on. Orchid mantises sit on flowers in the wild, waiting for pollinators, and look their best on one. Petals are stacked in layers from back to front, so it prints face up with no supports, and two-colour prints work well: swap filament at a layer with the CFS.'},
+  bark:{group:'climb',more:'bark',name:'Cork bark holder',fields:[['bw','Bark width',80],['bh','Bark height',100],['bk','Bark thickness',15]],
+    selects:[['style','Style',[['classic','Two hooks'],['minimal','One hook'],['cradle','Side cradle'],['organic','Organic plate']]],['open','Back plate',[['yes','See-through cells'],['no','Solid']]]],shuffle:true,mounts:['magnet','clip','glue'],
+    hint:'Holds a piece of cork bark flat against a wall, as a climbing and hiding surface. A shelf takes its weight, and hooks or side clamps keep it from tipping forward.'},
+  planter:{group:'plants',more:'planter',name:'Hanging planter',fields:[['L','Width',70],['D','Depth',35],['H','Height',50],['wall','Wall',2],['taper','Narrower at the bottom (%)',20,{show:s=>s.shape!=='cone'}]],
+    selects:[['shape','Shape',[['halfround','Half round'],['halfhex','Half hexagon'],['facet','Faceted'],['scallop','Scalloped'],['pebble','Pebble'],['square','Rounded box'],['cone','Cone']]]],shuffle:true,mounts:['magnet','clip','glue'],drain:true,
+    hint:'A pocket planter with a flat back, for the wall or the mesh. Good for air plants, pothos or fittonia cuttings.'},
+  moss:{group:'plants',more:'moss',name:'Moss tray',fields:[['L','Length',80],['W','Width',60],['H','Height',20],['wall','Wall',2]],
+    selects:[['shape','Shape',[['round','Round'],['oval','Oval'],['kidney','Kidney'],['corner','Corner quarter'],['crescent','Crescent'],['pebble','Pebble'],['hex','Hexagon']]],['insert','Raised grid',[['yes','Yes'],['no','No']]],['pattern','Grid holes',PAT]],shuffle:true,mounts:['free','peg'],
+    hint:'A shallow tray for damp sphagnum moss, as a humid corner. With the raised grid, water collects underneath and the moss stays damp without going sour.'},
+  mister:{group:'plants',more:'mister',name:'Mister port',fields:[['noz','Nozzle tip diameter',8],['D','Plate size',40,{show:vis('kind','plate')}],['hatchD','Hatch diameter',60,{show:vis('kind','hatch')}]],
+    selects:[['kind','Type',[['plate','Plate on the mesh'],['hatch','Cover for the feeding hatch']]],['shape','Plate shape',[['round','Round'],['hex','Hexagon'],['flower','Flower'],['leaf','Leaf'],['pebble','Pebble']]],['vent','Vent holes (hatch cover)',[['yes','Yes'],['no','No']]]],mounts:[],
+    hint:'A funnel for the nozzle of a spray bottle, so you can mist without opening the enclosure. It comes with a cap that closes it between mistings.'},
+  tile:{group:'decor',more:'tile',name:'Backdrop tile',fields:[['w','Width',80,{show:s=>s._mount!=='panel'}],['h','Height',80,{show:s=>s._mount!=='panel'}],['depth','Texture depth',2]],
+    selects:[['texture','Texture',TXT],['corners','Corners',[['square','Square'],['rounded','Rounded']]]],shuffle:true,mounts:['magnet','clip','glue','panel'],
+    hint:'Textured tiles for the back or side walls, which give the mantis grip and make the enclosure look natural. Set them edge to edge for a whole wall. With "In a tile panel" the tile fits the swappable tile panels of your enclosure.'},
+  plate:{group:'decor',more:'nameplate',name:'Name plate',fields:[['t1','Name','Shifty',{text:true}],['t2','Second line','',{text:true}],['th','Letter height',10]],
+    selects:[['mode','Letters',[['stencil','Stencil, cut through'],['raised','Raised'],['engraved','Engraved']]],['shape','Plate shape',[['rounded','Rounded rectangle'],['oval','Oval'],['banner','Banner'],['leaf','Leaf'],['hex','Hexagon'],['arch','Arch'],['cloud','Cloud'],['tag','Luggage tag'],['scroll','Scroll']]],['logo','Shifty\'s mark',[['no','No'],['yes','Yes']]],['border','Border',[['yes','Yes'],['no','No']]],['colour','Colours',[['two','Two colours (raised letters)'],['one','One colour']]]],shuffle:true,mounts:['magnet','clip','glue'],
+    hint:'A name plate in stencil capitals. Cut-through letters show the light or the acrylic behind them; small bridges hold the centres of letters like O and A. Letters: A–Z, 0–9, umlauts and \' - . , / : + ! & #.'},
+  moult:{group:'decor',more:'moult',name:'Moult display',fields:[['t1','Name','Shifty',{text:true}],['t2','Second line','L5 3.11.26',{text:true}],['th','Letter height',6],['L','Plinth length',70],['W','Plinth depth',50],['ph','Plinth height',6],['postH','Post height',60]],
+    selects:[['shape','Plinth',[['round','Round'],['oval','Oval'],['hex','Hexagon'],['square','Square'],['pebble','Pebble'],['leaf','Leaf'],['log','Log slice']]],['post','Post',[['branch','Twig'],['stake','Plain stake'],['ring','Ring'],['leaf','Leaf'],['fork','Fork']]],['cover','Groove for a clear cover',[['no','No'],['yes','Yes (round and oval)']]],['colour','Colours',[['two','Two colours'],['one','One colour']]]],shuffle:true,mounts:[],
+    hint:'A little stand for a shed skin, with the mantis\'s name and the moult on the plinth (L5 is the fifth instar). Keep one for each moult as a growth record, or add a clear cover against dust.'},
+  emblem:{group:'decor',more:'emblem',name:'Shifty\'s emblem',fields:[['size','Size',60],['name','Name on the badge','SHIFTY\'S',{text:true}]],
+    selects:[['shape','Badge',[['round','Round'],['shield','Shield'],['hex','Hexagon'],['oval','Oval'],['leaf','Leaf'],['square','Square']]],['text','Name',[['yes','Yes'],['no','Mark only']]],['border','Border',[['yes','Yes'],['no','No']]]],mounts:['magnet','clip','glue'],
+    hint:'Your maker\'s mark: a mantis face with a sideways glance, for the front of every enclosure you sell. It prints in two colours, and the download also has the logo as SVG files for labels, stickers and your shop.'},
+  stack:{group:'addon',more:'stack',name:'Stacking feet and links',fields:[['gap','Air gap',10,{show:vis('kind','riser')}],['fh','Foot height',15,{show:vis('kind','foot')}]],
+    selects:[['kind','Part',[['foot','Feet for the base'],['riser','Risers to stack enclosures'],['link2','Link for two side by side'],['link4','Link for four corners']]],['style','Foot style',[['bun','Bun'],['ball','Ball'],['turned','Turned'],['cone','Tapered'],['hex','Hexagon'],['block','Block']]],['outer','Edge',[['bead','Rounded, with a bead'],['square','Plain']]]],mounts:[],
+    hint:'Parts that fit the corner blocks of your enclosure. Feet lift the base off the shelf, risers stack one enclosure on another with an air gap, and link caps hold enclosures standing side by side together. They are sized from the Enclosure tab, so set that up first.'},
+  transport:{group:'addon',more:'transport',name:'Transport box',fields:[['L','Length',90],['W','Width',70],['H','Height',80]],
+    selects:[['shape','Shape',[['round','Round'],['square','Square'],['hex','Hexagon'],['octagon','Octagon'],['oval','Oval'],['pebble','Pebble']]],['vents','Air holes',[['both','Lid and sides'],['lid','Lid only'],['sides','Sides only']]],['pattern','Lid pattern',PAT],['handle','Handle',[['tabs','Lift tabs'],['loop','Carry handle']]]],shuffle:true,mounts:[],
+    hint:'A small box with a vented push-in lid, for taking a mantis to the vet, a show or a new owner. Useful when you sell them too. Size it to at least three times the body length tall.'},
+  set:{group:'sets',name:'Matching set',fields:[['t1','Name','Shifty',{text:true}]],selects:[['theme','Theme',[['orchid','Orchid garden'],['forest','Forest floor'],['honey','Honeycomb'],['sakura','Cherry blossom'],['nouveau','Art nouveau'],['stone','River stone']]]],mounts:['magnet','clip'],
+    hint:'A group of pieces in one style, to fit out an enclosure in one go or to sell as a bundle. Each piece downloads as its own STL file; change any of them in its own item if you want a different size.'}
+});
+const SETS={
+  orchid:['Pink flowers, leaves and vines, for an orchid mantis.',[['flower',{kind:'orchid'}],['flower',{kind:'sakura',R:18}],['ledge',{shape:'leaf',pattern:'vine',under:'D'}],['feeder',{shape:'flower'}],['dish',{shape:'oval'}],['ladder',{style:'vine',mount:'tie'}],['planter',{shape:'scallop'}],['plate',{shape:'leaf',mode:'raised'}]]],
+  forest:['Bark, fungus and pebbles, for a dead-leaf mantis like Deroplatys.',[['ledge',{shape:'fungus',pattern:'solid',under:'D'}],['ledge',{shape:'tiered',pattern:'rings',under:'wedge'}],['bark',{style:'organic'}],['dish',{shape:'pebble'}],['feeder',{shape:'pebble'}],['twig',{shape:'rock',mount:'free'}],['bridge',{style:'branch'}],['tile',{texture:'bark'}],['plate',{shape:'cloud',mode:'engraved'}]]],
+  honey:['Hexagons everywhere.',[['dish',{shape:'hex'}],['feeder',{shape:'hex'}],['pot',{shape:'hex'}],['twig',{shape:'hex',mount:'free'}],['tile',{texture:'hex'}],['mister',{shape:'hex'}],['plate',{shape:'hex',mode:'stencil'}],['moult',{shape:'hex',post:'stake'}]]],
+  sakura:['Cherry blossom and soft curves.',[['flower',{kind:'sakura'}],['flower',{kind:'plumeria',R:20}],['ledge',{shape:'moon',pattern:'scroll',under:'flat'}],['feeder',{shape:'scallop'}],['mister',{shape:'flower'}],['tile',{texture:'waves'}],['plate',{shape:'arch',mode:'raised'}]]],
+  nouveau:['Whiplash curves and filigree.',[['ledge',{shape:'classic',pattern:'nouveau',under:'ribs'}],['ladder',{style:'vine',mount:'tie'}],['bridge',{style:'vine'}],['tile',{texture:'roots'}],['flower',{kind:'lily'}],['plate',{shape:'scroll',mode:'stencil'}],['moult',{shape:'oval',post:'leaf'}]]],
+  stone:['Smooth river stones.',[['dish',{shape:'pebble'}],['pot',{shape:'pebble'}],['ledge',{shape:'pebble',pattern:'solid',under:'D'}],['moss',{shape:'pebble'}],['tile',{texture:'pebbles'}],['plate',{shape:'rounded',mode:'engraved'}],['moult',{shape:'pebble',post:'branch'}]]]
 };
 const A=Object.assign({item:'dish',magD:10,magH:3,mount:{},v:{},drain:true,shape:{},seed:{},kind:'ring'},state.acc||{});
 for(const k of ['mount','v','shape','seed'])A[k]=A[k]||{};
-for(const k in ITEMS){const b=document.createElement('button');b.type='button';b.textContent=ITEMS[k].name;b.dataset.k=k;b.onclick=()=>{A.item=k;accSetup()};$('items').append(b)}
+for(const g in GROUPS){const og=document.createElement('optgroup');og.label=GROUPS[g];for(const k in ITEMS)if(ITEMS[k].group===g){const o=document.createElement('option');o.value=k;o.textContent=ITEMS[k].name;og.append(o)}$('items').append(og)}
+$('items').onchange=()=>{A.item=$('items').value;accSetup()};
 $('magD').value=A.magD;$('magH').value=A.magH;
 let accT;const accSoon=()=>{clearTimeout(accT);accT=setTimeout(accCalc,180)};
 function field(box,label,el){const lab=document.createElement('label');lab.className='f';lab.textContent=label;lab.append(el);box.append(lab);return lab}
+function selVals(it){const o={};for(const [k,,opts] of it.selects||[])o[k]=A.sel[A.item][k]||opts[0][0];o._mount=it.mounts.includes(A.mount[A.item])?A.mount[A.item]:it.mounts[0];return o}
 function accSetup(){
-  const it=ITEMS[A.item],box=$('accFields');box.innerHTML='';
-  document.querySelectorAll('#items button').forEach(b=>b.setAttribute('aria-pressed',b.dataset.k===A.item));
+  const it=ITEMS[A.item]||(A.item='dish',ITEMS.dish),box=$('accFields');box.innerHTML='';
+  $('items').value=A.item;
   A.v[A.item]=A.v[A.item]||{};
   if(it.kinds){
     const s=document.createElement('select');opt(s,Object.entries(it.kinds).map(([k,v])=>[k,v.name]));s.value=A.kind in it.kinds?A.kind:'ring';s.onchange=()=>{A.kind=s.value;accSetup()};
     field(box,'Type',s).style.gridColumn='1/-1';
   }
+  A.sel=A.sel||{};A.sel[A.item]=A.sel[A.item]||{};
   if(it.shapes){
     const s=document.createElement('select');opt(s,it.shapes.map(k=>[k,SHAPES[k]]));s.value=it.shapes.includes(A.shape[A.item])?A.shape[A.item]:it.shapes[0];
     s.onchange=()=>{A.shape[A.item]=s.value;accSetup()};field(box,'Shape',s);
-    if(RANDOM.includes(s.value)||(A.item==='ledge'&&((A.sel||{}).ledge||{}).pattern&&A.sel.ledge.pattern!=='solid')){const b=document.createElement('button');b.type='button';b.className='btn';b.textContent='Shuffle shape';b.style.alignSelf='end';b.onclick=()=>{A.seed[A.item]=(A.seed[A.item]||1)+1;accCalc()};box.append(b)}
   }
-  A.sel=A.sel||{};A.sel[A.item]=A.sel[A.item]||{};
   for(const [k,l,opts] of it.selects||[]){const s=document.createElement('select');opt(s,opts);s.value=A.sel[A.item][k]||opts[0][0];s.onchange=()=>{A.sel[A.item][k]=s.value;accSetup()};field(box,l,s)}
-  const shape=it.shapes?(it.shapes.includes(A.shape[A.item])?A.shape[A.item]:it.shapes[0]):null;
+  const sv=selVals(it);
+  if(it.shuffle||(it.shapes&&RANDOM.includes(A.shape[A.item]||it.shapes[0]))||(A.item==='ledge'&&(A.sel.ledge.pattern||'solid')!=='solid')){const b=document.createElement('button');b.type='button';b.className='btn';b.textContent='Shuffle';b.style.alignSelf='end';b.onclick=()=>{A.seed[A.item]=(A.seed[A.item]||1)+1;accCalc()};box.append(b)}
+  const shape=it.shapes?(it.shapes.includes(A.shape[A.item])?A.shape[A.item]:it.shapes[0]):sv.shape;
   const fields=it.kinds?it.kinds[A.kind in it.kinds?A.kind:'ring'].fields:it.fields;
-  for(const [k,l,dv] of fields){
+  for(const [k,l,dv,x] of fields){
     if(k==='W'&&shape==='round')continue;
     if(k==='underH'&&(A.sel[A.item].under||'flat')==='flat')continue;
     if(k==='lw'&&(A.sel[A.item].pattern||'solid')==='solid')continue;
-    const i=document.createElement('input');i.type='number';i.min=k==='taper'?0:1;i.step=k==='wall'?.2:1;i.value=A.v[A.item][k]??dv;
+    if(x&&x.show&&!x.show(sv))continue;
+    const i=document.createElement('input');
+    if(x&&x.text){i.type='text';i.maxLength=24;i.value=A.v[A.item][k]??dv;i.oninput=()=>{A.v[A.item][k]=i.value;accSoon()};field(box,l,i);continue}
+    i.type='number';i.min=k==='taper'||k==='n'?0:1;i.step=k==='wall'||k==='lh'?.2:1;i.value=A.v[A.item][k]??dv;
     i.oninput=()=>{A.v[A.item][k]=+i.value;accSoon()};if(k==='lw')i.step=.1;
-    field(box,k==='taper'?l:(k==='L'&&shape==='round'?'Diameter':l)+(k==='taper'?'':' (mm)'),i);
+    const pct=/%|count/.test(l);
+    field(box,pct?l:(k==='L'&&shape==='round'?'Diameter':l)+' (mm)',i);
   }
   if(it.drain){const s=document.createElement('select');opt(s,[['yes','Yes'],['no','No']]);s.value=A.drain?'yes':'no';s.onchange=()=>{A.drain=s.value==='yes';accCalc()};field(box,'Drainage holes',s)}
   const m=$('mount');m.innerHTML='';$('h-mount').parentElement.hidden=!it.mounts.length;
-  if(it.mounts.length){opt(m,it.mounts.map(k=>[k,MOUNT[k]]));m.value=it.mounts.includes(A.mount[A.item])?A.mount[A.item]:it.mounts[0]}
+  if(it.mounts.length){opt(m,it.mounts.map(k=>[k,MOUNT[k]]));m.value=sv._mount}
   $('accHint').innerHTML=it.hint;
   accCalc();
 }
-$('mount').onchange=()=>{A.mount[A.item]=$('mount').value;accCalc()};
+$('mount').onchange=()=>{A.mount[A.item]=$('mount').value;accSetup()};
 for(const id of ['magD','magH'])$(id).addEventListener('input',()=>{A[id]=+$(id).value;accSoon()});
 const MOUNT_HINT={
   free:'It stands on the substrate or floor.',
   peg:'A socket underneath pushes onto one of the floor pegs, so it stays put. Turn on floor pegs for the enclosure base.',
   magnet:'Round magnets hold the piece against a panel, with a second magnet on the outside, so nothing needs drilling. Disc magnets of 10 × 3 mm hold small pieces through 3 mm acrylic. Check the poles attract before gluing.',
   clip:'The back plate drops into a clip rail on a printed mesh panel and clicks in place, like IKEA Skådis. Lift it straight up to take it off. Turn on clip rails for the enclosure.',
-  glue:'Stick it on with glue or strong double-sided tape.'
+  glue:'Stick it on with glue or strong double-sided tape.',
+  tie:'Two holes at the top take fishing line or a twist tie, to hang it from the lid mesh.',
+  hook:'A hook at the top hangs over a branch or a twig bridge.',
+  stem:'A separate stem pushes into a twig holder, and the flower sits on top of it.',
+  panel:'Sized to drop into the openings of your swappable tile panels, in place of a mesh or acrylic tile.'
 };
 function encInfo(){
-  const e=Object.assign({},DEF,state.enc||{}),bed=Math.max(e.bx||350,e.by||350);
-  if(e.shape==='rect'||e.shape==='poly'){const band=(e.T+.6)/2+2.4;return {span:e.W+2*band,bed}}
-  return {span:e.W+(e.roundWall==='mesh'?3:e.ts+.6)+4.8,bed};
+  const e=Object.assign({},DEF,state.enc||{}),bed=Math.max(e.bx||350,e.by||350),g=e.T+.6,band=g/2+2.4,o={bed,band,hatchR:e.hatch!=='none'?Math.min(30,e.hatchD/2):0};
+  if(e.shape==='rect'){const d=rectDims(e);Object.assign(o,{span:e.W+2*band,Eh:d.Eh,corner:e.corners==='rounded'?'rounded':'square',alpha:Math.PI/2});
+    const pn=[['front',e.W-d.g-1],['back',e.W-d.g-1],['left',e.D-d.g-1],['right',e.D-d.g-1]].find(([k])=>e[k]==='tiles');
+    if(pn)o.tileSize=()=>{const E=d.s+1,iw=pn[1]-2*E,ih=e.H-.5-2*E,nx=Math.max(1,Math.round(iw/95)),ny=Math.max(1,Math.round(ih/95)),bw=HE.TILE.bar,r=HE.TILE.rebate;return [(iw-(nx+1)*bw)/nx+2*r-.6,(ih-(ny+1)*bw)/ny+2*r-.6]};
+    return o}
+  if(e.shape==='poly'){const n=Math.max(5,Math.min(8,Math.round(e.sides||6)));Object.assign(o,{span:e.W+2*band,Eh:g/2+6.5+.25+2.4,corner:'circle',alpha:Math.PI-2*Math.PI/n});return o}
+  o.span=e.W+(e.roundWall==='mesh'?3:e.ts+.6)+4.8;return o;
+}
+function itemDesign(key,over,mount,seed){
+  const it=ITEMS[key],o={mount,md:Math.max(4,+$('magD').value||10),mh:Math.max(1,+$('magH').value||3),seed,drain:A.drain,kind:A.kind in (it.kinds||{})?A.kind:'ring'};
+  const fields=it.kinds?it.kinds[o.kind].fields:it.fields,v=over?{}:(A.v[key]||{});
+  for(const [k,,dv,x] of fields){const q=v[k];o[k]=x&&x.text?(q??dv):(q>0||((k==='taper'||k==='n')&&q===0)?q:dv)}
+  if(it.shapes){o.shape=it.shapes.includes(A.shape[key])&&!over?A.shape[key]:it.shapes[0];if(o.shape==='round')o.W=o.L}
+  for(const [k,,opts] of it.selects||[])o[k]=(!over&&((A.sel||{})[key]||{})[k])||opts[0][0];
+  if(over)Object.assign(o,over);
+  if(o.shape==='round'&&o.L)o.W=o.L;
+  if(key==='ledge'&&o.shape==='sharp')o.shape='square';
+  return it.more?HabitatMore[it.more](o,encInfo()):HabitatParts[key](o,encInfo());
 }
 function accDesign(){
-  const it=ITEMS[A.item],mount=it.mounts.length?$('mount').value:'none';
-  const o={mount,md:Math.max(4,+$('magD').value||10),mh:Math.max(1,+$('magH').value||3),seed:A.seed[A.item]||1,drain:A.drain,kind:A.kind in (it.kinds||{})?A.kind:'ring'};
-  const fields=it.kinds?it.kinds[o.kind].fields:it.fields;
-  for(const [k,,dv] of fields){const v=A.v[A.item][k];o[k]=v>0||(k==='taper'&&v===0)?v:dv}
-  if(it.shapes){o.shape=it.shapes.includes(A.shape[A.item])?A.shape[A.item]:it.shapes[0];if(o.shape==='round')o.W=o.L}
-  if(A.item==='ledge'&&o.shape==='sharp')o.shape='square';
-  for(const [k,,opts] of it.selects||[])o[k]=((A.sel||{})[A.item]||{})[k]||opts[0][0];
-  const r=HabitatParts[A.item](o,encInfo());r.mount=mount;return r;
+  const it=ITEMS[A.item],mount=it.mounts.length?$('mount').value:'none',seed=A.seed[A.item]||1;
+  if(A.item==='set'){
+    const th=SETS[(A.sel.set||{}).theme||'orchid'],name=((A.v.set||{}).t1)??'Shifty',parts=[],notes=[th[0]];let magnets=0;
+    th[1].forEach(([key,ov],i)=>{const its=ITEMS[key],m=ov.mount||(its.mounts.includes(mount)?mount:its.mounts.includes('free')?'free':its.mounts[0]||'none');
+      const o=Object.assign({},ov,key==='plate'||key==='moult'?{t1:name,t2:key==='moult'?'L1':''}:{});
+      try{const r=itemDesign(key,o,m,seed+i);magnets+=r.magnets||0;r.parts.forEach((p,j)=>parts.push(Object.assign({},p,{file:`${String(i+1).padStart(2,'0')}-${p.file}`,cluster:p.role==='Colour 2'?undefined:`${i}-${j}`})))}catch(e){notes.push(`${its.name} could not be made with these settings.`)}});
+    return {parts,notes,magnets,mount,separate:true};
+  }
+  const r=itemDesign(A.item,null,mount,seed);r.mount=mount;return r;
+}
+/* parts that print as separate objects are laid side by side; a part in a second colour stays on its main part */
+function layout(d){
+  const solid=d.parts.filter(p=>p.m),groups=[];
+  for(const p of solid){if(p.role==='Colour 2'&&groups.length)groups[groups.length-1].push(p);else groups.push([p])}
+  if(groups.length===1)return groups;
+  const sepr=d.separate||solid.some(p=>p.role==='Second file');
+  return sepr?groups:[solid];
 }
 let accCur=null;
 function accCalc(){
@@ -670,13 +766,20 @@ function accCalc(){
   let d;try{d=accDesign()}catch(e){$('accNote').hidden=false;$('accNote').textContent='These sizes don\'t make a valid shape. Try larger values.';return}
   accCur=d;
   const col=v=>cssColor(getComputedStyle(document.documentElement).getPropertyValue(v).trim()),c1=col('--acc'),c2=col('--acc2');
-  render($('accCv'),d.parts.map((p,i)=>({tris:p.m.tris,color:i?c2:c1})));
+  const groups=layout(d),items=[],per=Math.ceil(Math.sqrt(groups.length));let gx=0,gy=0,rowH=0;
+  groups.forEach((g,gi)=>{const mn=[1e9,1e9,1e9],mx=[-1e9,-1e9,-1e9];for(const p of g){const t=p.m.tris;for(let i=0;i<t.length;i+=3)for(let a=0;a<3;a++){if(t[i+a]<mn[a])mn[a]=t[i+a];if(t[i+a]>mx[a])mx[a]=t[i+a]}}
+    if(gi&&gi%per===0){gx=0;gy+=rowH+12;rowH=0}
+    for(const p of g){const two=p.role==='Colour 2'||(groups.length===1&&g.length>1&&g.indexOf(p)>0);p.shift=[gx-mn[0],gy-mn[1],-mn[2]];items.push({tris:groups.length>1?place0(p.m.tris,(x,y,z)=>[x+p.shift[0],y+p.shift[1],z+p.shift[2]]):p.m.tris,color:two?c2:c1})}
+    gx+=mx[0]-mn[0]+12;rowH=Math.max(rowH,mx[1]-mn[1])});
+  if(items.length)render($('accCv'),items);else{const cx=$('accCv').getContext('2d');cx.clearRect(0,0,$('accCv').width,$('accCv').height)}
   const lg=$('accLegend');lg.innerHTML='';
-  if(d.parts.length>1)d.parts.forEach((p,i)=>{const s=document.createElement('span');s.innerHTML=`<i class="dot" style="background:var(${i?'--acc2':'--acc'})"></i>${p.role}: ${p.file}`;lg.append(s)});
+  if(groups.length===1&&groups[0].length>1)groups[0].forEach((p,i)=>{const s=document.createElement('span');s.innerHTML=`<i class="dot" style="background:var(${i?'--acc2':'--acc'})"></i>${p.role}: ${p.file}`;lg.append(s)});
+  else if(d.parts.some(p=>p.role==='Colour 2')){const s=document.createElement('span');s.innerHTML='<i class="dot" style="background:var(--acc2)"></i>Second colour';lg.append(s)}
   const t=$('accParts'),bed=[+$('bx').value||350,+$('by').value||350,+$('bz').value||350],mat=MATS[$('mat').value]||MATS.petg;
   t.innerHTML='<tr><th>File</th><th>Size (mm)</th><th>Solid</th></tr>';
   const notes=[...d.notes];
   for(const p of d.parts){
+    if(!p.m){const tr=document.createElement('tr');tr.innerHTML=`<td>${p.file}</td><td class="n" colspan="2">${p.role} file</td>`;t.append(tr);continue}
     const sz=bbox(p.m.tris);
     const tr=document.createElement('tr');tr.innerHTML=`<td>${p.file}</td><td class="n">${sz.map(v=>fmt(v)).join(' × ')}</td><td class="n">${fmt(p.m.vol/1000*mat.rho,1)} g</td>`;t.append(tr);
     if(sz[2]>bed[2]||Math.max(sz[0],sz[1])>Math.max(bed[0],bed[1])||Math.min(sz[0],sz[1])>Math.min(bed[0],bed[1]))notes.push(`${p.file} is bigger than your print bed.`);
@@ -685,7 +788,8 @@ function accCalc(){
   const e=Object.assign({},DEF,state.enc||{});
   if(d.mount==='peg'&&e.pegs!=='grid')notes.push('Your enclosure has no floor pegs yet. Turn them on under Enclosure, Size.');
   if(d.mount==='clip'&&(e.shape!=='rect'||e.rails!=='yes'))notes.push('Clip rails are on printed mesh panels of a rectangular enclosure. Turn them on under Enclosure, Panels.');
-  if(d.parts.length>1)notes.push('In Creality Print, add both files as one object (Add part), then give each a different CFS slot.');
+  if(d.parts.some(p=>p.role==='Colour 2'))notes.push('In Creality Print, add the second-colour file to its main file as one object (Add part), then give each a different CFS slot.');
+  if(!d.parts.length&&!notes.length)notes.push('Nothing to make with these settings.');
   if(A.item==='dish')notes.push('Wash the dish with hot water when you refill it, since layer lines collect residue.');
   if(A.item==='light'){const e2=Object.assign({},DEF,state.enc||{}),open=Math.round(100*(e2.hole/(e2.hole+e2.bar))**2);
     if(e2.lw==='insert')notes.push(`Your lid has light windows for ${e2.lwN} ring${e2.lwN>1?'s':''} of ${e2.lwD} mm. Use the same number and diameter here so the seats sit over them.`);
@@ -693,15 +797,19 @@ function accCalc(){
     else notes.push(`Your lid mesh lets about ${open} % of the light through. Turn on light windows under Enclosure, Lid and lights, to let much more through.`)}
   if(A.item==='light'&&A.kind==='ring'){const w=bbox(d.parts[0].m.tris)[0];if(w>encInfo().span)notes.push(`These seats are ${fmt(w)} mm long, wider than your lid (${fmt(encInfo().span)} mm). Use fewer rings, or print a second set for the other half of the lid.`)}
   if(A.item==='light'&&d.mount==='none'&&A.kind==='clamp')notes.push(`Made for your enclosure's lid, ${fmt(encInfo().span)} mm across. The bridge sits on the lid edge, and the end hooks keep it from sliding.`);
-  $('accDl').textContent=d.parts.length>1?'Download STL files':'Download STL';
+  $('accDl').textContent=d.parts.length>1?'Download files':'Download STL';$('accDl').disabled=!d.parts.length;
   const n=$('accNote');n.hidden=!notes.length;n.innerHTML='';for(const x of notes){const dv=document.createElement('div');dv.textContent=x;n.append(dv)}
 }
 $('accDl').onclick=async()=>{
-  const d=accDesign(),msg=$('accMsg');
+  const d=accDesign(),msg=$('accMsg');if(!d.parts.length)return;
   if(d.parts.length===1){const p=d.parts[0];await save(p.file,new Blob([stl(place(p.m.tris))]),msg,'Saved. Open it in Creality Print.');return}
-  /* multi-colour parts keep their shared origin so they line up as one object */
-  const files=d.parts.map(p=>({name:p.file,data:stl(p.m.tris)}));
-  await save(ITEMS[A.item].name.toLowerCase().replace(/ /g,'-')+'.zip',zipStore(files),msg,'Saved. Unzip it, then add both files to one object in Creality Print.');
+  /* parts in a second colour keep their main part's origin, so they line up as one object; everything else sits on the bed */
+  const groups=layout(d),files=[],enc=new TextEncoder();
+  for(const g of groups){const mn=[1e9,1e9,1e9];for(const p of g){const t=p.m.tris;for(let i=0;i<t.length;i+=3)for(let a=0;a<3;a++)if(t[i+a]<mn[a])mn[a]=t[i+a]}
+    for(const p of g)files.push({name:p.file,data:stl(groups.length>1||g.length===1?place0(p.m.tris,(x,y,z)=>[x-mn[0],y-mn[1],z-mn[2]]):p.m.tris)})}
+  for(const p of d.parts)if(p.text)files.push({name:p.file,data:enc.encode(p.text)});
+  const two=d.parts.some(p=>p.role==='Colour 2');
+  await save(ITEMS[A.item].name.toLowerCase().replace(/'/g,'').replace(/[^a-z0-9]+/g,'-').replace(/-$/,'')+'.zip',zipStore(files),msg,two?'Saved. Unzip it, and add each second-colour file to its main file as one object in Creality Print.':'Saved. Unzip it, then open the STL files in Creality Print.');
 };
 
 /* ---------- tabs ---------- */
