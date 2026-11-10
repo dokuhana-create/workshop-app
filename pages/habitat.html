@@ -1,0 +1,607 @@
+<!doctype html><html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
+<title>Habitat</title>
+<script src="../shim.js"></script>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Bricolage+Grotesque:opsz,wght@12..96,600;12..96,750&family=IBM+Plex+Mono:wght@500&family=IBM+Plex+Sans:wght@400;500;600&display=swap">
+<style>
+/* Same layout as the Resin Workshop: inputs on the left, the 3D preview and downloads beside them. */
+:root{
+  --bg:#edf0ea; --panel:#fafbf8; --fg:#1c231b; --muted:#5a6658; --line:#cdd6c9;
+  --accent:#41703a; --on-accent:#fff; --orchid:#b8578f; --warn:#8a4b00; --warn-bg:#fbeed8;
+  --frame:#6f9566; --mesh:#3f5f3a; --clear:rgba(120,170,215,.28); --acc:#d08ab4; --acc2:#5d7f9e;
+  --display:"Bricolage Grotesque",ui-sans-serif,system-ui,sans-serif;
+  --body:"IBM Plex Sans",ui-sans-serif,system-ui,sans-serif;
+  --mono:"IBM Plex Mono",ui-monospace,Menlo,monospace;
+}
+@media (prefers-color-scheme:dark){:root:not([data-theme="light"]){
+  --bg:#131813; --panel:#1b221a; --fg:#e6ede4; --muted:#9fae9c; --line:#304030;
+  --accent:#8cc97f; --on-accent:#10200d; --orchid:#e79cc6; --warn:#f3c37e; --warn-bg:#3a2a12; color-scheme:dark}}
+:root[data-theme="dark"]{
+  --bg:#131813; --panel:#1b221a; --fg:#e6ede4; --muted:#9fae9c; --line:#304030;
+  --accent:#8cc97f; --on-accent:#10200d; --orchid:#e79cc6; --warn:#f3c37e; --warn-bg:#3a2a12; color-scheme:dark}
+*{box-sizing:border-box}
+[hidden]{display:none!important}
+html,body{margin:0}
+body{background:var(--bg);color:var(--fg);font:400 16px/1.5 var(--body)}
+.wrap{max-width:1080px;margin:0 auto;padding-block:32px 56px;padding-left:max(16px,env(safe-area-inset-left,0px));padding-right:max(16px,env(safe-area-inset-right,0px));display:grid;gap:24px}
+header h1{font:750 clamp(34px,6vw,52px)/1.05 var(--display);margin:0;letter-spacing:-.01em}
+header p{margin:8px 0 0;color:var(--muted);max-width:62ch}
+.tabs{display:flex;flex-wrap:wrap;gap:6px;margin-top:16px}
+.tabs button{font:600 15px var(--body);color:var(--fg);background:transparent;border:0;border-bottom:3px solid transparent;padding:6px 4px;margin-right:14px;cursor:pointer}
+.tabs button[aria-selected="true"]{border-bottom-color:var(--accent);color:var(--accent)}
+.grid{display:grid;grid-template-columns:minmax(0,1fr) minmax(0,420px);gap:24px;align-items:start}
+.inputs{display:grid;gap:32px;min-width:0}
+section h2{font:600 22px/1.2 var(--display);margin:0 0 12px}
+.seg{display:flex;flex-wrap:wrap;gap:6px;margin-bottom:16px}
+.seg button{font:500 14px var(--body);color:var(--fg);background:transparent;border:1px solid var(--line);border-radius:6px;padding:8px 12px;cursor:pointer}
+.seg button[aria-pressed="true"]{background:var(--accent);border-color:var(--accent);color:var(--on-accent)}
+.fields{display:grid;grid-template-columns:repeat(auto-fit,minmax(130px,1fr));gap:12px}
+label.f{display:grid;gap:4px;font-size:14px;font-weight:500;min-width:0;align-content:start}
+label.f small{font-weight:400;color:var(--muted)}
+input,select{font:500 16px var(--mono);color:var(--fg);background:var(--panel);border:1px solid var(--line);border-radius:6px;padding:9px 10px;width:100%;min-width:0}
+select{font-family:var(--body)}
+:focus-visible{outline:2px solid var(--accent);outline-offset:2px}
+.hint{font-size:14px;color:var(--muted);margin:12px 0 0;max-width:62ch}
+.rec{font-size:15px;margin-top:12px;padding:12px 14px;border:1px solid var(--line);border-left:4px solid var(--orchid);border-radius:6px;background:var(--panel);display:grid;gap:8px}
+.row{display:flex;flex-wrap:wrap;gap:8px;align-items:center}
+.btn{font:600 14px var(--body);border-radius:6px;padding:9px 13px;border:1px solid var(--accent);background:transparent;color:var(--accent);cursor:pointer}
+.btn.solid{background:var(--accent);color:var(--on-accent);width:100%;padding:11px 13px}
+.result{position:sticky;top:calc(16px + env(safe-area-inset-top,0px));background:var(--panel);border:1px solid var(--line);border-radius:8px;padding:20px;display:grid;gap:16px;min-width:0}
+canvas{width:100%;height:auto;display:block;aspect-ratio:4/3}
+.cap{font-size:13px;color:var(--muted);margin:-8px 0 0}
+.legend{display:flex;flex-wrap:wrap;gap:6px 14px;font-size:13px;color:var(--muted)}
+.legend span{display:flex;gap:6px;align-items:center}
+.dot{width:10px;height:10px;border-radius:2px;flex:none;display:inline-block}
+table{width:100%;border-collapse:collapse;font-size:14px}
+th{text-align:left;font-weight:600;color:var(--muted);font-size:13px;padding:0 6px 4px 0}
+td{padding:5px 6px 5px 0;border-top:1px solid var(--line);vertical-align:top}
+td.n{font:500 13px var(--mono);white-space:nowrap}
+h3{font:600 15px var(--body);margin:0 0 6px}
+.note{font-size:14px;background:var(--warn-bg);color:var(--warn);border-radius:6px;padding:10px 12px;display:grid;gap:6px}
+.saved{font-size:14px;color:var(--muted);min-height:1.2em}
+.tips{margin:0;padding-left:18px;font-size:15px;display:grid;gap:6px;max-width:62ch}
+.src{font-size:13px;color:var(--muted);margin:10px 0 0}
+.src a{color:var(--accent)}
+@media (max-width:820px){.grid{grid-template-columns:minmax(0,1fr)}.result{position:static;order:-1}}
+@media (pointer:coarse){button{min-height:40px}}
+</style></head><body>
+<div class="wrap">
+  <header>
+    <h1>Habitat</h1>
+    <p>Printable enclosures and accessories for mantises and other insects. Set the sizes, check the preview, and download STL files for your slicer.</p>
+    <div class="tabs" role="tablist" aria-label="Habitat sections">
+      <button type="button" role="tab" id="tabEnc" aria-controls="viewEnc" aria-selected="true">Enclosure</button>
+      <button type="button" role="tab" id="tabAcc" aria-controls="viewAcc" aria-selected="false">Accessories</button>
+    </div>
+  </header>
+
+  <!-- ===== Enclosure ===== -->
+  <div class="grid" id="viewEnc" role="tabpanel" aria-labelledby="tabEnc">
+    <div class="inputs">
+      <section aria-labelledby="h-animal">
+        <h2 id="h-animal">Animal</h2>
+        <div class="fields">
+          <label class="f" style="grid-column:1/-1">Species and stage<select id="species"></select></label>
+          <label class="f">Body length (mm)<input id="body" type="number" min="5" max="200" step="1"></label>
+        </div>
+        <div class="rec" id="rec"></div>
+      </section>
+
+      <section aria-labelledby="h-size">
+        <h2 id="h-size">Size</h2>
+        <div class="fields">
+          <label class="f">Width (mm)<input id="W" type="number" min="60" step="5"></label>
+          <label class="f">Depth (mm)<input id="D" type="number" min="60" step="5"></label>
+          <label class="f">Height above substrate (mm)<input id="H" type="number" min="60" step="5"></label>
+          <label class="f">Substrate depth (mm)<input id="S" type="number" min="10" max="120" step="5"></label>
+        </div>
+        <p class="hint">Width and depth are measured between the panel centres. The base holds the substrate, so the panels start above it and the front panel can slide up without spilling soil.</p>
+      </section>
+
+      <section aria-labelledby="h-panels">
+        <h2 id="h-panels">Panels</h2>
+        <div class="fields">
+          <label class="f">Front (sliding door)<select id="pFront"></select></label>
+          <label class="f">Back<select id="pBack"></select></label>
+          <label class="f">Left<select id="pLeft"></select></label>
+          <label class="f">Right<select id="pRight"></select></label>
+          <label class="f">Panel thickness (mm)<input id="T" type="number" min="1.5" max="6" step="0.5"></label>
+          <label class="f">Mesh hole (mm)<input id="hole" type="number" min="1" max="5" step="0.1"></label>
+          <label class="f">Mesh bar (mm)<input id="bar" type="number" min="0.8" max="4" step="0.1"></label>
+        </div>
+        <p class="hint">The lid is always a printed mesh, so the mantis has a grippy ceiling to hang from when it moults. Clear panels are acrylic sheet cut to the sizes on the right. Mesh sides add cross-ventilation, which orchid mantises need in warm, humid air.</p>
+      </section>
+
+      <section aria-labelledby="h-printer">
+        <h2 id="h-printer">Printer and filament</h2>
+        <div class="fields">
+          <label class="f">Bed width (mm)<input id="bx" type="number" min="100" step="5"></label>
+          <label class="f">Bed depth (mm)<input id="by" type="number" min="100" step="5"></label>
+          <label class="f">Bed height (mm)<input id="bz" type="number" min="100" step="5"></label>
+          <label class="f">Filament<select id="mat"></select></label>
+        </div>
+        <p class="hint">Set to a Creality K2 Plus (350 × 350 × 350 mm). Change it if you print on another machine.</p>
+      </section>
+
+      <section aria-labelledby="h-enc-tips">
+        <h2 id="h-enc-tips">Before you print</h2>
+        <ul class="tips">
+          <li>Print the base and lid flat, the posts lying down, and mesh panels flat. Each file is already turned that way.</li>
+          <li>Glue the posts into the base only after a dry fit, so you can still slide the panels in.</li>
+          <li>If you feed fruit flies to small nymphs, they can get through printed mesh. Glue fine fabric mesh under the lid and mesh panels for that stage.</li>
+          <li>Wash printed parts and let them air out for a day before the mantis moves in.</li>
+        </ul>
+        <p class="src">Size rule and climate from the <a href="https://dubiaroaches.com/blogs/invert-care/orchid-mantis-care-sheet" target="_blank" rel="noopener">Dubia.com orchid mantis care sheet</a> and the <a href="https://www.reptilecentre.com/pages/info-orchid-mantis-care-sheet" target="_blank" rel="noopener">Reptile Centre care sheet</a>.</p>
+      </section>
+    </div>
+
+    <aside class="result" aria-label="Enclosure result">
+      <canvas id="encCv" width="800" height="600" role="img" aria-label="3D preview of the assembled enclosure"></canvas>
+      <div class="legend">
+        <span><i class="dot" style="background:var(--frame)"></i>Printed frame</span>
+        <span><i class="dot" style="background:var(--mesh)"></i>Printed mesh</span>
+        <span><i class="dot" style="background:rgb(120,170,215)"></i>Clear acrylic</span>
+      </div>
+      <div><h3>Printed parts</h3><table id="encParts"></table></div>
+      <div id="cutWrap"><h3>Acrylic to cut</h3><table id="cutList"></table></div>
+      <div class="note" id="encNote" hidden></div>
+      <button class="btn solid" id="encDl" type="button">Download STL files</button>
+      <span class="saved" id="encMsg" role="status"></span>
+    </aside>
+  </div>
+
+  <!-- ===== Accessories ===== -->
+  <div class="grid" id="viewAcc" role="tabpanel" aria-labelledby="tabAcc" hidden>
+    <div class="inputs">
+      <section aria-labelledby="h-item">
+        <h2 id="h-item">Item</h2>
+        <div class="seg" id="items" role="group" aria-label="Accessory"></div>
+        <div class="fields" id="accFields"></div>
+        <p class="hint" id="accHint"></p>
+      </section>
+      <section aria-labelledby="h-mount">
+        <h2 id="h-mount">Mounting</h2>
+        <div class="fields">
+          <label class="f" id="mountWrap">Mount<select id="mount"></select></label>
+          <label class="f">Magnet diameter (mm)<input id="magD" type="number" min="4" max="20" step="1"></label>
+          <label class="f">Magnet height (mm)<input id="magH" type="number" min="1" max="6" step="0.5"></label>
+        </div>
+        <p class="hint">Magnet mounting holds the piece against a panel with a second magnet on the outside, so nothing needs drilling. Disc magnets of 10 × 3 mm hold small pieces through 3 mm acrylic. Glue each magnet into its pocket, and check the poles face the right way before the glue sets.</p>
+      </section>
+    </div>
+    <aside class="result" aria-label="Accessory result">
+      <canvas id="accCv" width="800" height="600" role="img" aria-label="3D preview of the accessory as it lies on the print bed"></canvas>
+      <p class="cap">Shown as it sits on the print bed.</p>
+      <div class="legend" id="accLegend"></div>
+      <table id="accParts"></table>
+      <div class="note" id="accNote" hidden></div>
+      <button class="btn solid" id="accDl" type="button">Download STL</button>
+      <span class="saved" id="accMsg" role="status"></span>
+    </aside>
+  </div>
+</div>
+
+<script>
+const $=id=>document.getElementById(id);
+const fmt=(n,d=0)=>Number(n).toLocaleString('en',{minimumFractionDigits:d,maximumFractionDigits:d});
+const STORE='workshop:db:habitat';
+const load=()=>{try{return JSON.parse(localStorage.getItem(STORE))||{}}catch{return {}}};
+let state=load();
+const persist=()=>{try{localStorage.setItem(STORE,JSON.stringify(state))}catch{}};
+
+/* ---------- geometry ----------
+   Every part is a set of boxes to add, boxes to remove, and mesh regions (rows of square holes).
+   All box edges form one shared grid, and only faces between solid and empty cells are written,
+   so each STL is closed and watertight without any boolean library. Units are millimetres, Z up. */
+function mesh(spec){
+  const adds=spec.adds||[],subs=spec.subs||[],lats=spec.lat||[];
+  const q=v=>Math.round(v*1000)/1000;
+  const X=new Set(),Y=new Set(),Z=new Set();
+  for(const b of adds.concat(subs)){X.add(q(b[0]));X.add(q(b[3]));Y.add(q(b[1]));Y.add(q(b[4]));Z.add(q(b[2]));Z.add(q(b[5]))}
+  const holes=(a0,a1,hole,bar)=>{
+    const pitch=hole+bar,n=Math.max(0,Math.floor((a1-a0+bar)/pitch)),off=(a1-a0-(n*pitch-bar))/2,out=[];
+    for(let i=0;i<n;i++){const s=a0+off+i*pitch;out.push([q(s),q(s+hole)])}
+    return out;
+  };
+  const L=lats.map(l=>({...l,hx:holes(l.x0,l.x1,l.hole,l.bar),hy:holes(l.y0,l.y1,l.hole,l.bar)}));
+  for(const l of L){for(const [a,b] of l.hx){X.add(a);X.add(b)}for(const [a,b] of l.hy){Y.add(a);Y.add(b)}Z.add(q(l.z0));Z.add(q(l.z1))}
+  const xs=[...X].sort((a,b)=>a-b),ys=[...Y].sort((a,b)=>a-b),zs=[...Z].sort((a,b)=>a-b);
+  const nx=xs.length-1,ny=ys.length-1,nz=zs.length-1;
+  if(nx<1||ny<1||nz<1)return {tris:new Float32Array(0),vol:0,size:[0,0,0]};
+  const cx=new Float64Array(nx),cy=new Float64Array(ny),cz=new Float64Array(nz);
+  for(let i=0;i<nx;i++)cx[i]=(xs[i]+xs[i+1])/2;for(let j=0;j<ny;j++)cy[j]=(ys[j]+ys[j+1])/2;for(let k=0;k<nz;k++)cz[k]=(zs[k]+zs[k+1])/2;
+  const inA=(c,a0,a1)=>c>a0&&c<a1;
+  /* per-axis membership tables keep the cell test fast even with thousands of holes */
+  const inHoles=(arr,iv)=>{const m=new Uint8Array(arr.length);let p=0;for(let i=0;i<arr.length;i++){while(p<iv.length&&iv[p][1]<arr[i])p++;if(p<iv.length&&arr[i]>iv[p][0]&&arr[i]<iv[p][1])m[i]=1}return m};
+  for(const l of L){l.mx=inHoles(cx,l.hx);l.my=inHoles(cy,l.hy)}
+  const K=new Uint8Array(nx*ny*nz);let vol=0;
+  for(let k=0;k<nz;k++)for(let j=0;j<ny;j++)for(let i=0;i<nx;i++){
+    const x=cx[i],y=cy[j],z=cz[k];let on=false;
+    for(const b of adds)if(inA(x,b[0],b[3])&&inA(y,b[1],b[4])&&inA(z,b[2],b[5])){on=true;break}
+    if(!on)continue;
+    for(const b of subs)if(inA(x,b[0],b[3])&&inA(y,b[1],b[4])&&inA(z,b[2],b[5])){on=false;break}
+    if(!on)continue;
+    for(const l of L)if(l.mx[i]&&l.my[j]&&inA(z,l.z0,l.z1)){on=false;break}
+    if(!on)continue;
+    K[(k*ny+j)*nx+i]=1;vol+=(xs[i+1]-xs[i])*(ys[j+1]-ys[j])*(zs[k+1]-zs[k]);
+  }
+  const out=[];
+  const quad=(a,b,c,d)=>{out.push(...a,...b,...c,...a,...c,...d)};
+  const at=(i,j,k)=>i>=0&&j>=0&&k>=0&&i<nx&&j<ny&&k<nz&&K[(k*ny+j)*nx+i]===1;
+  for(let k=0;k<nz;k++)for(let j=0;j<ny;j++)for(let i=0;i<nx;i++){
+    if(!K[(k*ny+j)*nx+i])continue;
+    const x0=xs[i],x1=xs[i+1],y0=ys[j],y1=ys[j+1],z0=zs[k],z1=zs[k+1];
+    if(!at(i+1,j,k))quad([x1,y0,z0],[x1,y1,z0],[x1,y1,z1],[x1,y0,z1]);
+    if(!at(i-1,j,k))quad([x0,y0,z0],[x0,y0,z1],[x0,y1,z1],[x0,y1,z0]);
+    if(!at(i,j+1,k))quad([x0,y1,z0],[x0,y1,z1],[x1,y1,z1],[x1,y1,z0]);
+    if(!at(i,j-1,k))quad([x0,y0,z0],[x1,y0,z0],[x1,y0,z1],[x0,y0,z1]);
+    if(!at(i,j,k+1))quad([x0,y0,z1],[x1,y0,z1],[x1,y1,z1],[x0,y1,z1]);
+    if(!at(i,j,k-1))quad([x0,y0,z0],[x0,y1,z0],[x1,y1,z0],[x1,y0,z0]);
+  }
+  return {tris:new Float32Array(out),vol,size:[xs[nx]-xs[0],ys[ny]-ys[0],zs[nz]-zs[0]]};
+}
+/* Moves a mesh so it sits on the bed at the origin, after an optional rotation given as a function. */
+function place(tris,fn){
+  const o=new Float32Array(tris.length);let mn=[1e9,1e9,1e9];
+  for(let i=0;i<tris.length;i+=3){const p=fn?fn(tris[i],tris[i+1],tris[i+2]):[tris[i],tris[i+1],tris[i+2]];o[i]=p[0];o[i+1]=p[1];o[i+2]=p[2];for(let a=0;a<3;a++)if(p[a]<mn[a])mn[a]=p[a]}
+  for(let i=0;i<o.length;i+=3){o[i]-=mn[0];o[i+1]-=mn[1];o[i+2]-=mn[2]}
+  return o;
+}
+const bbox=t=>{const mn=[1e9,1e9,1e9],mx=[-1e9,-1e9,-1e9];for(let i=0;i<t.length;i+=3)for(let a=0;a<3;a++){if(t[i+a]<mn[a])mn[a]=t[i+a];if(t[i+a]>mx[a])mx[a]=t[i+a]}return mx.map((v,a)=>v-mn[a])};
+function stl(tris){
+  const n=tris.length/9,buf=new ArrayBuffer(84+50*n),dv=new DataView(buf);
+  dv.setUint32(80,n,true);
+  for(let t=0;t<n;t++){
+    const b=t*9,o=84+t*50;
+    const ux=tris[b+3]-tris[b],uy=tris[b+4]-tris[b+1],uz=tris[b+5]-tris[b+2],vx=tris[b+6]-tris[b],vy=tris[b+7]-tris[b+1],vz=tris[b+8]-tris[b+2];
+    let nx=uy*vz-uz*vy,ny=uz*vx-ux*vz,nz=ux*vy-uy*vx;const l=Math.hypot(nx,ny,nz)||1;
+    dv.setFloat32(o,nx/l,true);dv.setFloat32(o+4,ny/l,true);dv.setFloat32(o+8,nz/l,true);
+    for(let i=0;i<9;i++)dv.setFloat32(o+12+i*4,tris[b+i],true);
+  }
+  return new Uint8Array(buf);
+}
+function crc32(u8){let c=~0;for(let i=0;i<u8.length;i++){c^=u8[i];for(let k=0;k<8;k++)c=(c>>>1)^(0xEDB88320&-(c&1))}return (~c)>>>0}
+function zipStore(files){
+  const enc=new TextEncoder(),chunks=[],central=[];let off=0;
+  for(const f of files){
+    const name=enc.encode(f.name),crc=crc32(f.data),h=new DataView(new ArrayBuffer(30));
+    h.setUint32(0,0x04034b50,true);h.setUint16(4,20,true);h.setUint16(6,0x0800,true);
+    h.setUint32(14,crc,true);h.setUint32(18,f.data.length,true);h.setUint32(22,f.data.length,true);h.setUint16(26,name.length,true);
+    chunks.push(new Uint8Array(h.buffer),name,f.data);
+    const c=new DataView(new ArrayBuffer(46));
+    c.setUint32(0,0x02014b50,true);c.setUint16(4,20,true);c.setUint16(6,20,true);c.setUint16(8,0x0800,true);
+    c.setUint32(16,crc,true);c.setUint32(20,f.data.length,true);c.setUint32(24,f.data.length,true);c.setUint16(28,name.length,true);c.setUint32(42,off,true);
+    central.push(new Uint8Array(c.buffer),name);off+=30+name.length+f.data.length;
+  }
+  const size=central.reduce((a,b)=>a+b.length,0),e=new DataView(new ArrayBuffer(22));
+  e.setUint32(0,0x06054b50,true);e.setUint16(8,files.length,true);e.setUint16(10,files.length,true);e.setUint32(12,size,true);e.setUint32(16,off,true);
+  return new Blob([...chunks,...central,new Uint8Array(e.buffer)],{type:'application/zip'});
+}
+
+/* ---------- preview: a small painter's-algorithm renderer, viewed from front left above ---------- */
+function cssColor(v){const d=document.createElement('i');d.style.color=v;document.body.append(d);const c=getComputedStyle(d).color;d.remove();const m=c.match(/[\d.]+/g).map(Number);return {r:m[0],g:m[1],b:m[2],a:m[3]??1}}
+function render(cv,items){
+  /* items: {tris, color:{r,g,b}, alpha} in shared world coordinates. A small depth-buffered rasteriser,
+     so overlapping parts always draw in the right order; see-through parts blend on top of solid ones. */
+  const dpr=Math.min(2,window.devicePixelRatio||1),Wd=cv.clientWidth||400,Hd=Wd*.75,PW=Math.round(Wd*dpr*1.5),PH=Math.round(Hd*dpr*1.5);
+  cv.width=PW;cv.height=PH;const ctx=cv.getContext('2d');ctx.clearRect(0,0,PW,PH);
+  const C=Math.cos(Math.PI/6),Lx=-.25,Ly=-.55,Lz=.8,Ll=Math.hypot(Lx,Ly,Lz);
+  let mnx=1e9,mny=1e9,mxx=-1e9,mxy=-1e9;
+  for(const it of items){const t=it.tris;for(let i=0;i<t.length;i+=3){const x=(t[i]+t[i+1])*C,y=(t[i]-t[i+1])*.5-t[i+2];if(x<mnx)mnx=x;if(x>mxx)mxx=x;if(y<mny)mny=y;if(y>mxy)mxy=y}}
+  if(mnx>mxx)return;
+  const pad=14*dpr*1.5,sc=Math.min((PW-2*pad)/(mxx-mnx||1),(PH-2*pad)/(mxy-mny||1)),ox=(PW-(mxx-mnx)*sc)/2-mnx*sc,oy=(PH-(mxy-mny)*sc)/2-mny*sc;
+  const img=ctx.createImageData(PW,PH),px=img.data,zb=new Float32Array(PW*PH).fill(-1e9);
+  const draw=(it,blend)=>{
+    const t=it.tris,a=it.alpha??1;
+    for(let b=0;b<t.length;b+=9){
+      const ux=t[b+3]-t[b],uy=t[b+4]-t[b+1],uz=t[b+5]-t[b+2],vx=t[b+6]-t[b],vy=t[b+7]-t[b+1],vz=t[b+8]-t[b+2];
+      const nx=uy*vz-uz*vy,ny=uz*vx-ux*vz,nz=ux*vy-uy*vx,l=Math.hypot(nx,ny,nz);if(!l||nx-ny+nz<=0)continue;
+      const sh=.55+.45*Math.abs(nx*Lx+ny*Ly+nz*Lz)/(l*Ll),R=it.color.r*sh,G=it.color.g*sh,B=it.color.b*sh;
+      const X=[],Y=[],Z=[];
+      for(let v=0;v<3;v++){const x=t[b+v*3],y=t[b+v*3+1],z=t[b+v*3+2];X.push((x+y)*C*sc+ox);Y.push(((x-y)*.5-z)*sc+oy);Z.push(x-y+z)}
+      const x0=Math.max(0,Math.floor(Math.min(...X))),x1=Math.min(PW-1,Math.ceil(Math.max(...X))),y0=Math.max(0,Math.floor(Math.min(...Y))),y1=Math.min(PH-1,Math.ceil(Math.max(...Y)));
+      const den=(Y[1]-Y[2])*(X[0]-X[2])+(X[2]-X[1])*(Y[0]-Y[2]);if(Math.abs(den)<1e-9)continue;
+      for(let py=y0;py<=y1;py++)for(let qx=x0;qx<=x1;qx++){
+        const cx=qx+.5,cy=py+.5,w0=((Y[1]-Y[2])*(cx-X[2])+(X[2]-X[1])*(cy-Y[2]))/den,w1=((Y[2]-Y[0])*(cx-X[2])+(X[0]-X[2])*(cy-Y[2]))/den,w2=1-w0-w1;
+        if(w0<-1e-6||w1<-1e-6||w2<-1e-6)continue;
+        const z=w0*Z[0]+w1*Z[1]+w2*Z[2],k=py*PW+qx;if(z<zb[k]-1e-3)continue;
+        const o=k*4;
+        if(blend){px[o]=px[o]*(1-a)+R*a;px[o+1]=px[o+1]*(1-a)+G*a;px[o+2]=px[o+2]*(1-a)+B*a;px[o+3]=Math.max(px[o+3],255*a)}
+        else{zb[k]=z;px[o]=R;px[o+1]=G;px[o+2]=B;px[o+3]=255}
+      }
+    }
+  };
+  for(const it of items)if((it.alpha??1)>=1)draw(it,false);
+  for(const it of items)if((it.alpha??1)<1)draw(it,true);
+  ctx.putImageData(img,0,0);
+}
+/* A flat panel drawn as two triangles on both sides, for the clear and mesh panels in the assembly. */
+function slab(x0,y0,z0,x1,y1,z1){return mesh({adds:[[x0,y0,z0,x1,y1,z1]]}).tris}
+
+/* ---------- species ---------- */
+const SPECIES=[
+  {id:'orchidF',name:'Orchid mantis, adult female',len:65,box:[200,200,300]},
+  {id:'orchidM',name:'Orchid mantis, adult male',len:30,box:[120,120,180]},
+  {id:'orchidN',name:'Orchid mantis, nymph',len:15,box:[100,100,150]},
+  {id:'custom',name:'Another mantis or insect',len:50,box:null}
+];
+const MATS={petg:{name:'PETG',rho:1.27},asa:{name:'ASA',rho:1.07},pla:{name:'PLA',rho:1.24}};
+const PANEL={clear:'Clear acrylic',mesh:'Printed mesh'};
+const DEF={species:'orchidF',body:65,W:200,D:200,H:300,S:40,T:3,hole:1.6,bar:1.2,front:'clear',back:'clear',left:'mesh',right:'mesh',bx:350,by:350,bz:350,mat:'petg'};
+const E=Object.assign({},DEF,state.enc||{});
+
+function opt(sel,pairs){for(const [v,l] of pairs){const o=document.createElement('option');o.value=v;o.textContent=l;sel.append(o)}}
+opt($('species'),SPECIES.map(s=>[s.id,s.name]));
+for(const id of ['pFront','pBack','pLeft','pRight'])opt($(id),Object.entries(PANEL));
+opt($('mat'),Object.entries(MATS).map(([k,m])=>[k,m.name]));
+const encIds={species:'species',body:'body',W:'W',D:'D',H:'H',S:'S',T:'T',hole:'hole',bar:'bar',front:'pFront',back:'pBack',left:'pLeft',right:'pRight',bx:'bx',by:'by',bz:'bz',mat:'mat'};
+for(const k in encIds)$(encIds[k]).value=E[k];
+
+function recommend(){
+  const sp=SPECIES.find(s=>s.id===$('species').value),L=+$('body').value||sp.len;
+  const minW=Math.ceil(2*L/5)*5,minH=Math.ceil(3*L/5)*5;
+  const box=sp.box||[Math.max(minW,100),Math.max(minW,100),Math.max(minH,150)];
+  const r=$('rec');r.innerHTML='';
+  const p=document.createElement('div');
+  p.textContent=`For a ${fmt(L)} mm body, the usual rule is at least ${fmt(minW)} mm wide and deep, and ${fmt(minH)} mm tall, so it has room to hang and moult.`+(sp.id==='orchidF'?' Adult females are usually kept in about 200 × 200 × 300 mm.':sp.id==='orchidN'?' Small nymphs are often kept in a ventilated deli cup until they grow.':'');
+  const b=document.createElement('button');b.type='button';b.className='btn';b.textContent=`Use ${box.join(' × ')} mm`;
+  b.onclick=()=>{$('W').value=box[0];$('D').value=box[1];$('H').value=box[2];encChanged()};
+  const care=document.createElement('div');care.style.cssText='font-size:14px;color:var(--muted)';
+  care.textContent='Orchid mantises do best at about 25–29 °C with 60–80 % humidity. Mist lightly twice a day and let it dry out in between, since stagnant, damp air causes problems.';
+  r.append(p,b,care);
+  return {minW,minH};
+}
+$('species').onchange=()=>{const sp=SPECIES.find(s=>s.id===$('species').value);$('body').value=sp.len;encChanged()};
+
+/* ---------- enclosure design ---------- */
+function readEnc(){const o={};for(const k in encIds){const el=$(encIds[k]);o[k]=el.tagName==='SELECT'?el.value:+el.value}return o}
+function encDesign(p,forPreview){
+  const gap=.3,g=p.T+2*gap,s=6,r=2.4,f=2.4,Lt=2.4,c=.25,a=g/2+s,Eh=a+c+r,band=g/2+r,{W,D,H,S}=p;
+  const lat=(x0,y0,x1,y1,z0,z1)=>forPreview?[]:[{x0,y0,x1,y1,z0,z1,hole:p.hole,bar:p.bar}];
+  const lines=[['x',0],['x',W],['y',0],['y',D]],corners=[[0,0],[W,0],[W,D],[0,D]];
+  /* base: floor, substrate walls on each panel line, a groove on top, and a socket at each corner for a post */
+  const bAdd=[[-band,-band,0,W+band,D+band,f]],bSub=[];
+  for(const [ax,v] of lines){
+    if(ax==='x'){bAdd.push([v-band,0,0,v+band,D,S],[v-band,0,S,v-g/2,D,S+s],[v+g/2,0,S,v+band,D,S+s])}
+    else{bAdd.push([0,v-band,0,W,v+band,S],[0,v-band,S,W,v-g/2,S+s],[0,v+g/2,S,W,v+band,S+s])}
+  }
+  for(const [x,y] of corners){bAdd.push([x-Eh,y-Eh,0,x+Eh,y+Eh,S+s]);bSub.push([x-a-c,y-a-c,S,x+a+c,y+a+c,S+s+1])}
+  const base=mesh({adds:bAdd,subs:bSub});
+  /* post: square with a full-height slot for each of the two panels that meet at the corner */
+  const Hp=H-.5;
+  const post=mesh({adds:[[-a,-a,0,a,a,Hp]],subs:[[g/2,-g/2,-1,a+1,g/2,Hp+1],[-g/2,g/2,-1,g/2,a+1,Hp+1]]});
+  /* lid, built upright: rails hang down into the panel tops; the front has a through slot for the door */
+  const lAdd=[[-band,-band,s,W+band,D+band,s+Lt]],lSub=[[g/2,-g/2,-1,W-g/2,g/2,s+Lt+1]];
+  for(const [ax,v] of lines){
+    if(ax==='x')lAdd.push([v-band,0,0,v-g/2,D,s],[v+g/2,0,0,v+band,D,s]);
+    else lAdd.push([0,v-band,0,W,v-g/2,s],[0,v+g/2,0,W,v+band,s]);
+  }
+  for(const [x,y] of corners){lAdd.push([x-Eh,y-Eh,0,x+Eh,y+Eh,s+Lt]);lSub.push([x-a-c,y-a-c,-1,x+a+c,y+a+c,s])}
+  const m=band+1.5;
+  const lid=mesh({adds:lAdd,subs:lSub,lat:lat(m,m,W-m,D-m,s,s+Lt)});
+  /* panels */
+  const fbW=W-g-1,lrW=D-g-1,pH=H-.5,doorH=H+Lt+20;
+  const panels=[
+    {k:'front',label:'Front door',w:fbW,h:doorH},
+    {k:'back',label:'Back',w:fbW,h:pH},
+    {k:'left',label:'Left',w:lrW,h:pH},
+    {k:'right',label:'Right',w:lrW,h:pH}
+  ].map(q=>({...q,type:p[q.k]}));
+  const meshPanel=q=>{const bd=s+2,top=q.k==='front'?Lt+20+bd:bd;return mesh({adds:[[0,0,0,q.w,q.h,p.T]],lat:lat(bd,bd,q.w-bd,q.h-top,0,p.T)})};
+  return {g,s,a,band,Eh,f,Lt,W,D,H,S,Hp,base,post,lid,panels,meshPanel,corners};
+}
+const enc={cur:null};
+function encChanged(){
+  const p=readEnc();state.enc=p;persist();recommend();encCalc();
+}
+function encCalc(){
+  const p=readEnc(),notes=[];
+  if(!(p.W>=60&&p.D>=60&&p.H>=60&&p.S>=10&&p.T>=1.5&&p.hole>=1&&p.bar>=.8)){$('encNote').hidden=false;$('encNote').textContent='Enter all sizes to see the design. Width, depth and height start at 60 mm.';$('encDl').disabled=true;return}
+  $('encDl').disabled=false;
+  const d=encDesign(p,true);enc.cur={p};
+  const {minW,minH}=recommend();
+  if(Math.min(p.W,p.D)<minW||p.H<minH)notes.push(`This is smaller than the ${fmt(minW)} × ${fmt(minW)} × ${fmt(minH)} mm the size rule suggests for this animal.`);
+  if(p.T<2&&['front','back','left','right'].some(k=>p[k]==='mesh'))notes.push('Printed mesh panels thinner than 2 mm are fragile. Use 3 mm if you can.');
+  if(p.hole>2.5)notes.push('Holes over 2.5 mm let many feeder insects escape.');
+  /* parts table */
+  const bed=[p.bx,p.by,p.bz],mat=MATS[p.mat];
+  const rows=[
+    {name:'Base',n:1,size:d.base.size,vol:d.base.vol,mesh:false},
+    {name:'Corner post',n:4,size:[d.Hp,2*d.a,2*d.a],vol:d.post.vol,mesh:false},
+    {name:'Lid with mesh',n:1,size:d.lid.size,vol:null,mesh:true}
+  ];
+  for(const q of d.panels)if(q.type==='mesh')rows.push({name:q.label+' panel',n:1,size:[q.w,q.h,p.T],vol:null,mesh:true});
+  const fits=sz=>{const [x,y]=[Math.max(sz[0],sz[1]),Math.min(sz[0],sz[1])],[bx,by]=[Math.max(bed[0],bed[1]),Math.min(bed[0],bed[1])];return x<=bx&&y<=by&&sz[2]<=bed[2]};
+  const fitsDiag=sz=>!fits(sz)&&Math.max(sz[0],sz[1])<=Math.hypot(bed[0],bed[1])-20&&Math.min(sz[0],sz[1])<=20&&sz[2]<=bed[2];
+  const t=$('encParts');t.innerHTML='<tr><th>Part</th><th>Size (mm)</th><th></th></tr>';
+  for(const r of rows){
+    const tr=document.createElement('tr'),ok=fits(r.size),diag=fitsDiag(r.size);
+    tr.innerHTML=`<td>${r.n>1?r.n+' × ':''}${r.name}</td><td class="n">${r.size.map(v=>fmt(v)).join(' × ')}</td><td class="n">${ok?'':diag?'diagonal':'too big'}</td>`;
+    t.append(tr);
+    if(!ok&&!diag)notes.push(`The ${r.name.toLowerCase()} is bigger than your print bed. Make the enclosure smaller.`);
+    if(diag)notes.push(`Turn the ${r.name.toLowerCase()} diagonally on the bed to fit it.`);
+  }
+  const tr=document.createElement('tr');
+  tr.innerHTML=`<td colspan="3" style="color:var(--muted)">Print in ${mat.name}. Creality Print shows the filament amount once the parts are sliced.</td>`;t.append(tr);
+  /* acrylic */
+  const cl=d.panels.filter(q=>q.type==='clear'),ct=$('cutList');$('cutWrap').hidden=!cl.length;
+  ct.innerHTML='<tr><th>Panel</th><th>Cut size (mm)</th></tr>';
+  for(const q of cl){const r=document.createElement('tr');r.innerHTML=`<td>${q.label}, ${fmt(p.T,1)} mm thick</td><td class="n">${fmt(q.w,1)} × ${fmt(q.h,1)}</td>`;ct.append(r)}
+  if(cl.length){const r=document.createElement('tr');r.innerHTML=`<td colspan="2" style="color:var(--muted)">The front door is taller than the rest, so its top sticks out of the lid as a handle. DIY stores usually cut acrylic to size for you.</td>`;ct.append(r)}
+  const n=$('encNote');n.hidden=!notes.length;n.innerHTML='';for(const x of notes){const dv=document.createElement('div');dv.textContent=x;n.append(dv)}
+  drawEnc(d);
+}
+function drawEnc(d){
+  const col=v=>cssColor(getComputedStyle(document.documentElement).getPropertyValue(v).trim());
+  const frame=col('--frame'),meshC=col('--mesh'),clear={r:120,g:170,b:215};
+  const items=[{tris:d.base.tris,color:frame}];
+  const rot=[0,1,2,3];
+  d.corners.forEach(([x,y],i)=>{
+    const ang=rot[i]*Math.PI/2,co=Math.round(Math.cos(ang)),si=Math.round(Math.sin(ang)),t=d.post.tris,o=new Float32Array(t.length);
+    for(let j=0;j<t.length;j+=3){o[j]=x+co*t[j]-si*t[j+1];o[j+1]=y+si*t[j]+co*t[j+1];o[j+2]=t[j+2]+d.S}
+    items.push({tris:o,color:frame});
+  });
+  const lt=d.lid.tris,lo=new Float32Array(lt.length),dz=d.S+d.H-d.s;for(let j=0;j<lt.length;j+=3){lo[j]=lt[j];lo[j+1]=lt[j+1];lo[j+2]=lt[j+2]+dz}
+  items.push({tris:lo,color:meshC,alpha:.55});
+  const e=d.g/2+.5;
+  for(const q of d.panels){
+    const c=q.type==='mesh'?meshC:clear,al=q.type==='mesh'?.6:.3,t=.8;let tr;
+    if(q.k==='front')tr=slab(e,-t,d.S,d.W-e,t,d.S+q.h);
+    else if(q.k==='back')tr=slab(e,d.D-t,d.S,d.W-e,d.D+t,d.S+q.h);
+    else if(q.k==='left')tr=slab(-t,e,d.S,t,d.D-e,d.S+q.h);
+    else tr=slab(d.W-t,e,d.S,d.W+t,d.D-e,d.S+q.h);
+    items.push({tris:tr,color:c,alpha:al});
+  }
+  render($('encCv'),items);
+}
+async function save(filename,blob,msg,done){
+  msg.textContent='';
+  try{
+    const dl=window.claude?await window.claude.use('downloads'):null;
+    if(!dl){msg.textContent='Downloads aren’t available in this view.';return}
+    await dl.save({filename,data:blob});msg.textContent=done;
+  }catch(e){msg.textContent=e&&e.code==='declined'?'Download cancelled.':e&&e.code==='tap_again'?'Tap the button again to save.':'That did not save. Try again.'}
+}
+$('encDl').onclick=async()=>{
+  const p=readEnc(),msg=$('encMsg');msg.textContent='Building the files…';
+  await new Promise(r=>setTimeout(r,30));
+  const d=encDesign(p,false),files=[],tag=`${p.W}x${p.D}x${p.H}`;
+  files.push({name:`base-${tag}.stl`,data:stl(place(d.base.tris))});
+  files.push({name:`corner-post-print-4.stl`,data:stl(place(d.post.tris,(x,y,z)=>[-z,y,x]))});
+  files.push({name:`lid-mesh-${tag}.stl`,data:stl(place(d.lid.tris,(x,y,z)=>[x,-y,-z]))});
+  for(const q of d.panels)if(q.type==='mesh')files.push({name:`panel-${q.k}-mesh.stl`,data:stl(place(d.meshPanel(q).tris))});
+  const cl=d.panels.filter(q=>q.type==='clear');
+  let txt=`Insect enclosure ${p.W} x ${p.D} x ${p.H} mm (substrate ${p.S} mm)\nPrint: 1 base, 4 corner posts, 1 lid${d.panels.some(q=>q.type==='mesh')?', mesh panels as listed':''}.\nSuggested filament: ${MATS[p.mat].name}.\n`;
+  if(cl.length)txt+=`\nAcrylic, ${p.T} mm thick:\n`+cl.map(q=>`- ${q.label}: ${q.w.toFixed(1)} x ${q.h.toFixed(1)} mm`).join('\n')+'\n';
+  txt+='\nAssembly: dry-fit the posts in the base sockets, slide the back and side panels into the grooves, put the lid on, then drop the front door in through the slot in the lid.\n';
+  files.push({name:'read-me.txt',data:new TextEncoder().encode(txt)});
+  await save(`mantis-enclosure-${tag}.zip`,zipStore(files),msg,'Saved. Unzip it, then open the STL files in Creality Print.');
+};
+for(const k in encIds)$(encIds[k]).addEventListener('input',()=>{if(k!=='species')encChanged()});
+
+/* ---------- accessories ---------- */
+const ITEMS={
+  dish:{name:'Pearl dish',fields:[['L','Length',50],['Wd','Width',50],['depth','Depth',12],['wall','Wall',2.4]],mounts:['free','magnet'],
+    hint:'A shallow dish for water gel pearls such as Aqua Pearls Calcium. Its stepped inner edge lets feeder insects and small nymphs climb in and out. Replace the pearls every few days, since they go mouldy in a warm, humid enclosure.'},
+  pot:{name:'Plant pot',fields:[['L','Length',60],['Wd','Width',50],['Hh','Height',60],['wall','Wall',2]],mounts:['free','magnet'],drain:true,
+    hint:'A square pot with small feet and drainage holes. Turn the holes off if it stands straight on the substrate and shouldn\'t drip. For live plants, print in PETG so the pot stays watertight.'},
+  ledge:{name:'Wall ledge',fields:[['L','Length',70],['dep','Depth',45],['Hh','Back height',35]],mounts:['magnet','glue'],
+    hint:'A perch shelf with fine ridges for grip and a small lip at the front. It prints lying on its back, so it needs no supports.'},
+  twig:{name:'Twig holder',fields:[['dia','Twig thickness',6],['Hh','Height',30]],mounts:['magnet','glue'],
+    hint:'A socket that holds a branch upright against a panel. Measure the thickest part of the twig end and it adds a little play.'},
+  label:{name:'Label holder',fields:[['cw','Card width',70],['ch','Card height',30]],mounts:['magnet','glue'],twoColour:true,
+    hint:'A frame you slide a paper card into, with the species, name and moult dates. It comes as two files, a plate and a frame, so you can print the frame in a second colour with the CFS.'}
+};
+const MOUNT={free:'Stands on its own',magnet:'Magnets',glue:'Glue or tape'};
+const A=Object.assign({item:'dish',magD:10,magH:3,mount:{},v:{},drain:true},state.acc||{});
+for(const k in ITEMS){const b=document.createElement('button');b.type='button';b.textContent=ITEMS[k].name;b.dataset.k=k;b.onclick=()=>{A.item=k;accSetup()};$('items').append(b)}
+$('magD').value=A.magD;$('magH').value=A.magH;
+function accSetup(){
+  const it=ITEMS[A.item],box=$('accFields');box.innerHTML='';
+  document.querySelectorAll('#items button').forEach(b=>b.setAttribute('aria-pressed',b.dataset.k===A.item));
+  A.v[A.item]=A.v[A.item]||{};
+  for(const [k,l,dv] of it.fields){
+    const lab=document.createElement('label');lab.className='f';lab.textContent=l+' (mm)';
+    const i=document.createElement('input');i.type='number';i.min=1;i.step=k==='wall'?.2:1;i.value=A.v[A.item][k]??dv;i.dataset.k=k;
+    i.oninput=()=>{A.v[A.item][k]=+i.value;accCalc()};lab.append(i);box.append(lab);
+  }
+  if(it.drain){const lab=document.createElement('label');lab.className='f';lab.textContent='Drainage holes';const s=document.createElement('select');opt(s,[['yes','Yes'],['no','No']]);s.value=A.drain?'yes':'no';s.onchange=()=>{A.drain=s.value==='yes';accCalc()};lab.append(s);box.append(lab)}
+  const m=$('mount');m.innerHTML='';opt(m,it.mounts.map(k=>[k,MOUNT[k]]));m.value=A.mount[A.item]&&it.mounts.includes(A.mount[A.item])?A.mount[A.item]:it.mounts[0];
+  $('accHint').textContent=it.hint;
+  accCalc();
+}
+$('mount').onchange=()=>{A.mount[A.item]=$('mount').value;accCalc()};
+for(const id of ['magD','magH'])$(id).addEventListener('input',()=>{A[id]=+$(id).value;accCalc()});
+function val(k){const it=ITEMS[A.item],f=it.fields.find(x=>x[0]===k);const v=A.v[A.item][k];return v>0?v:f[2]}
+/* Each builder returns parts in print orientation, with a filament role per part. */
+function accDesign(){
+  const mount=$('mount').value,md=Math.max(4,+$('magD').value||10),mh=Math.max(1,+$('magH').value||3),mag=mount==='magnet';
+  const pk=md+.4,pd=mh+.2,bt=pd+1.4;
+  /* magnet pockets in a back plate that stands at y=-bt..0, opening towards -y */
+  const backPlate=(x0,x1,z0,z1)=>{
+    const adds=[[x0,-bt,z0,x1,0,z1]],subs=[],zc=(z0+z1)/2,w=x1-x0;
+    const xs=w>=2*pk+16?[x0+w/4,x1-w/4]:[(x0+x1)/2];
+    for(const x of xs)subs.push([x-pk/2,-bt-1,zc-pk/2,x+pk/2,-bt+pd,zc+pk/2]);
+    return {adds,subs,n:xs.length};
+  };
+  const parts=[],notes=[];let magnets=0;
+  if(A.item==='dish'){
+    const L=val('L'),Wd=val('Wd'),dep=val('depth'),w=val('wall'),fl=2,top=fl+dep,sw=3,sh=3,n=Math.max(1,Math.ceil(dep/sh));
+    const adds=[[0,0,0,L,Wd,top]],subs=[];
+    for(let k=0;k<n;k++){const ins=w+k*sw;if(L-2*ins<6||Wd-2*ins<6)break;subs.push([ins,ins,Math.max(fl,top-(k+1)*sh),L-ins,Wd-ins,top+1])}
+    if(mag){const plH=Math.max(top,pk+6);const bp=backPlate(0,L,0,plH);adds.push(...bp.adds);subs.push(...bp.subs);magnets=bp.n}
+    parts.push({file:'pearl-dish.stl',role:'Main colour',m:mesh({adds,subs})});
+  }else if(A.item==='pot'){
+    const L=val('L'),Wd=val('Wd'),Hh=val('Hh'),w=val('wall'),ft=3,fl=2,fs=Math.min(8,L/4,Wd/4);
+    const adds=[[0,0,ft,L,Wd,Hh]],subs=[[w,w,ft+fl,L-w,Wd-w,Hh+1]];
+    for(const [x,y] of [[0,0],[L-fs,0],[0,Wd-fs],[L-fs,Wd-fs]])adds.push([x,y,0,x+fs,y+fs,ft]);
+    if(A.drain){const hs=3,step=10,x0=fs+3,x1=L-fs-3,y0=w+3,y1=Wd-w-3;let cnt=0;
+      for(let x=x0;x+hs<=x1;x+=step)for(let y=y0;y+hs<=y1;y+=step){subs.push([x,y,ft-1,x+hs,y+hs,ft+fl+.01]);cnt++}
+      if(!cnt)notes.push('The pot is too small for drainage holes.')}
+    if(mag){const bp=backPlate(0,L,ft,Hh);adds.push(...bp.adds);subs.push(...bp.subs);magnets=bp.n}
+    parts.push({file:'plant-pot.stl',role:'Main colour',m:mesh({adds,subs})});
+  }else if(A.item==='ledge'){
+    /* lying on its back: back plate on the bed, shelf standing up from its lower edge */
+    const L=val('L'),dep=val('dep'),Hb=Math.max(val('Hh'),pk+12),st=4,bp=mag?Math.max(2.4,pd+1.4):2.4;
+    const adds=[[0,0,0,L,Hb,bp],[0,0,bp,L,st,bp+dep],[0,st,bp+dep-2.4,L,st+3,bp+dep]],subs=[];
+    for(let z=bp+4;z+1.2<=bp+dep-4;z+=4)adds.push([0,st,z,L,st+.8,z+1.2]);
+    if(mag){const yc=st+(Hb-st)/2,xs=L>=2*pk+16?[L/4,3*L/4]:[L/2];for(const x of xs)subs.push([x-pk/2,yc-pk/2,-1,x+pk/2,yc+pk/2,pd]);magnets=xs.length}
+    parts.push({file:'wall-ledge.stl',role:'Main colour',m:mesh({adds,subs})});
+  }else if(A.item==='twig'){
+    const dia=val('dia')+.6,Hh=val('Hh'),w=Math.max(dia+6,mag?pk+6:0,14),back=mag?pd+1.6:2,dp=back+dia+3;
+    const adds=[[0,0,0,w,dp,Hh]],subs=[[(w-dia)/2,back,2,(w+dia)/2,back+dia,Hh+1]];
+    if(mag){subs.push([(w-pk)/2,-1,Hh/2-pk/2,(w+pk)/2,pd,Hh/2+pk/2]);magnets=1;if(Hh<pk+6)notes.push('Make it taller so the magnet fits.')}
+    parts.push({file:'twig-holder.stl',role:'Main colour',m:mesh({adds,subs})});
+  }else{
+    const cw=val('cw'),ch=val('ch'),sp=4,ov=3,pt=mag?Math.max(2,pd+1.4):2,Lp=cw+2*sp,Hp=ch+sp-3;
+    const pAdd=[[0,0,0,Lp,Hp,pt]],pSub=[];
+    if(mag){const yc=Hp/2,xs=Lp>=2*pk+16?[Lp/4,3*Lp/4]:[Lp/2];for(const x of xs)pSub.push([x-pk/2,yc-pk/2,-1,x+pk/2,yc+pk/2,pd]);magnets=xs.length;if(Hp<pk+4)notes.push('The card is too short for the magnets. Make it taller.')}
+    const gz=.8,lz=1.2,fAdd=[[0,0,pt,sp,Hp,pt+gz],[Lp-sp,0,pt,Lp,Hp,pt+gz],[0,0,pt,Lp,sp,pt+gz],
+      [0,0,pt+gz,sp+ov,Hp,pt+gz+lz],[Lp-sp-ov,0,pt+gz,Lp,Hp,pt+gz+lz],[0,0,pt+gz,Lp,sp+ov,pt+gz+lz]];
+    parts.push({file:'label-plate.stl',role:'Colour 1',m:mesh({adds:pAdd,subs:pSub})});
+    parts.push({file:'label-frame.stl',role:'Colour 2',m:mesh({adds:fAdd}),same:true});
+  }
+  return {parts,notes,magnets,mount};
+}
+let accCur=null;
+function accCalc(){
+  state.acc=A;persist();
+  const d=accDesign();accCur=d;
+  const col=v=>cssColor(getComputedStyle(document.documentElement).getPropertyValue(v).trim()),c1=col('--acc'),c2=col('--acc2');
+  render($('accCv'),d.parts.map((p,i)=>({tris:p.m.tris,color:i?c2:c1})));
+  const lg=$('accLegend');lg.innerHTML='';
+  if(d.parts.length>1)d.parts.forEach((p,i)=>{const s=document.createElement('span');s.innerHTML=`<i class="dot" style="background:var(${i?'--acc2':'--acc'})"></i>${p.role}: ${p.file}`;lg.append(s)});
+  const t=$('accParts'),bed=[+$('bx').value||350,+$('by').value||350,+$('bz').value||350],mat=MATS[$('mat').value]||MATS.petg;
+  t.innerHTML='<tr><th>File</th><th>Size (mm)</th><th>Solid</th></tr>';
+  const notes=[...d.notes];let vol=0;
+  for(const p of d.parts){
+    const sz=bbox(p.m.tris);vol+=p.m.vol;
+    const tr=document.createElement('tr');tr.innerHTML=`<td>${p.file}</td><td class="n">${sz.map(v=>fmt(v)).join(' × ')}</td><td class="n">${fmt(p.m.vol/1000*mat.rho,1)} g</td>`;t.append(tr);
+    if(sz[2]>bed[2]||Math.max(sz[0],sz[1])>Math.max(bed[0],bed[1])||Math.min(sz[0],sz[1])>Math.min(bed[0],bed[1]))notes.push(`${p.file} is bigger than your print bed.`);
+  }
+  if(d.magnets)notes.push(`Needs ${d.magnets} magnet${d.magnets>1?'s':''} in the piece and the same number outside the panel.`);
+  if(d.parts.length>1)notes.push('In Creality Print, add both files as one object (Add part), then give each a different CFS slot.');
+  if(A.item==='dish')notes.push('Wash the dish with hot water when you refill it, since layer lines collect residue.');
+  $('accDl').textContent=d.parts.length>1?'Download STL files':'Download STL';
+  const n=$('accNote');n.hidden=!notes.length;n.innerHTML='';for(const x of notes){const dv=document.createElement('div');dv.textContent=x;n.append(dv)}
+}
+$('accDl').onclick=async()=>{
+  const d=accDesign(),msg=$('accMsg');
+  if(d.parts.length===1){const p=d.parts[0];await save(p.file,new Blob([stl(place(p.m.tris))]),msg,'Saved. Open it in Creality Print.');return}
+  /* multi-colour parts keep their shared origin so they line up as one object */
+  const files=d.parts.map(p=>({name:p.file,data:stl(p.m.tris)}));
+  await save(ITEMS[A.item].name.toLowerCase().replace(/ /g,'-')+'.zip',zipStore(files),msg,'Saved. Unzip it, then add both files to one object in Creality Print.');
+};
+
+/* ---------- tabs ---------- */
+function view(k){
+  const enc=k!=='acc';$('viewEnc').hidden=!enc;$('viewAcc').hidden=enc;
+  $('tabEnc').setAttribute('aria-selected',enc);$('tabAcc').setAttribute('aria-selected',!enc);
+  state.tab=k;persist();
+  if(enc)encCalc();else accSetup();
+}
+$('tabEnc').onclick=()=>view('enc');$('tabAcc').onclick=()=>view('acc');
+let rz;addEventListener('resize',()=>{clearTimeout(rz);rz=setTimeout(()=>state.tab==='acc'?accCalc():encCalc(),150)});
+matchMedia('(prefers-color-scheme:dark)').addEventListener?.('change',()=>state.tab==='acc'?accCalc():encCalc());
+recommend();view(state.tab==='acc'?'acc':'enc');
+</script>
+</body></html>
