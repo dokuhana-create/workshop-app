@@ -436,7 +436,7 @@
       case 'waves':{const ls=[];for(let y=0;y<h+6;y+=6.5){const q=[],ph=r()*1;for(let x=-2;x<=w+2;x+=1.5)q.push([x,y+Math.sin(x/8+y/10+ph)*2]);ls.push(q)}return shrink(stroke(ls,3.6),.5)}
       case 'scales':{const ls=[];let row=0;for(let y=h+6;y>-6;y-=5,row++)for(let x=row%2?3.5:0;x<w+7;x+=7)ls.push(E_(x,y,3.5,4.5,200,340));return shrink(stroke(ls,1.3),.4,Math.min(n,2))}
       case 'leaves':{const lv=[];for(let k=0;k<w*h/45;k++){const x=r()*w,y=r()*h,len=9+r()*9;lv.push({ring:leafAt(x,y,len,len*.45,r()*TAU),lev:Math.floor(r()*n)})}
-        const layers=[];for(let i=0;i<n;i++){const q=unite(lv.filter(l=>l.lev>=i).flatMap(l=>l.ring));if(!q.length)break;layers.push(intersect(i?intersect(q,offset(layers[i-1],.45)):q,box))}return layers}
+        const layers=[];for(let i=0;i<n;i++){const q=unite(lv.filter(l=>l.lev>=i).flatMap(l=>l.ring));if(!q.length)break;const r=intersect(i?intersect(q,offset(layers[i-1],-.06)):q,box);if(!r.length)break;layers.push(r)}return layers}
       case 'roots':{const segs=[];const grow=(x,y,a,wd,d)=>{if(wd<.9||y>h+4||d>14)return;const len=6+r()*8,x2=x+Math.cos(a)*len,y2=y+Math.sin(a)*len;segs.push({q:[[x,y],[x2,y2]],wd});grow(x2,y2,a+(r()-.5)*.6,wd*.88,d+1);if(r()<.35)grow(x2,y2,a+(r()<.5?-.7:.7),wd*.65,d+1)};
         for(let x=4;x<w;x+=10+r()*10)grow(x,-2,Math.PI/2+(r()-.5)*.5,3.2+r()*1.6,0);
         const layers=[];for(let i=0;i<n;i++){const q=segs.filter(s=>s.wd-i*.6>.6);if(!q.length)break;layers.push(intersect(unite(q.flatMap(s=>stroke([s.q],s.wd-i*.6))),box))}return layers}
@@ -500,7 +500,8 @@
     let z0=0,dy=0,magnets=0;
     if(wall){const m=backMount(o,offset(tiers[0],1.2),{min:1.6,xs:[0],my:0});f.push(...m.f);z0=m.bt;dy=m.dy;magnets=m.magnets;notes.push(...m.notes)}
     const mv=r=>move(r,0,dy),layers=tiers.map((_,i)=>unite(tiers.slice(i).flat()));
-    layers.forEach((L,i)=>f.push(prism(z0+i*lh,z0+(i+1)*lh,mv(i?offset(L,-.2):L))));
+    /* each layer sits strictly inside the one below, so no two layers share an edge that could leave a sliver */
+    let prevL=null;layers.forEach((L,i)=>{const q=i?intersect(offset(L,-.2),offset(prevL,-.06)):L;prevL=q;if(q.length)f.push(prism(z0+i*lh,z0+(i+1)*lh,mv(q)))});
     let zTop=z0+layers.length*lh;
     if(o.veins==='yes')tiersSpec.forEach((t,k)=>{const vis=offset(subtract(tiers[k],unite(tiers.slice(k+1).flat())),-.9);if(!vis.length)return;
       const ls=t.map(p=>rot([[[p.len*.28,p.dy||0],[p.len*.86,p.dy||0]]],p.a)[0]);f.push(prism(z0+(k+1)*lh,z0+(k+1)*lh+.5,mv(intersect(stroke(ls,.7),vis))))});
@@ -675,8 +676,10 @@
     const depth=b.y1-b.y0,ty=b.y0+depth*.24,py=b.y0+depth*.64;
     const fw=hh=>o.font==='caps'?Math.max(1.1,hh*.15):Math.max(1.2,hh*.11),fh=o.font==='caps'?o.th:o.th*1.5;
     let T=text2D([o.t1,o.t2],fh,fw(fh),o.font==='caps'?null:'script');
-    const room=hh=>Math.min(...[ty-hh/2,ty,ty+hh/2].map(y=>{const iv=G.slice(fp,y);return iv.length?Math.max(...iv.map(([a,c])=>c-a)):0}))*.84;
-    if(T.w>room(T.h)){const s=Math.max(.2,room(T.h)/T.w*.97);T=text2D([o.t1,o.t2],fh*s,fw(fh*s),o.font==='caps'?null:'script');notes.push('The text was made smaller to fit the plinth.')}
+    /* the text sits in the front part of the plinth; shrink it until it fits both across and front to back */
+    const room=hh=>Math.min(...[ty-hh/2,ty,ty+hh/2].map(y=>{const iv=G.slice(fp,y);return iv.length?Math.max(...iv.map(([a,c])=>c-a)):0}))*.86;
+    let k=1;while(k>.15&&(T.h*k>depth*.44||T.w*k>room(T.h*k)))k*=.94;
+    if(k<1){T=text2D([o.t1,o.t2],fh*k,fw(fh*k),o.font==='caps'?null:'script');if(k<.7)notes.push('The text was made smaller to fit the plinth. Make the plinth bigger for larger writing.')}
     const letters=move(T.rings,0,ty);
     const {sil,th}=postSil(o.post,o.postH,o.seed);
     f.push(upright(sil,th,0,py,ph-.01));

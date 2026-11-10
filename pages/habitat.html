@@ -3,10 +3,11 @@
 <script src="../shim.js"></script>
 <script src="../lib/clipper.js"></script>
 <script src="../lib/earcut.min.js"></script>
-<script src="../lib/geo.js?v=11"></script>
-<script src="habitat-parts.js?v=11"></script>
-<script src="habitat-enclosure.js?v=11"></script>
-<script src="habitat-more.js?v=11"></script>
+<script src="../lib/geo.js?v=12"></script>
+<script src="habitat-parts.js?v=12"></script>
+<script src="habitat-enclosure.js?v=12"></script>
+<script src="habitat-more.js?v=12"></script>
+<script src="habitat-sets.js?v=12"></script>
 <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Bricolage+Grotesque:opsz,wght@12..96,600;12..96,750&family=IBM+Plex+Mono:wght@500&family=IBM+Plex+Sans:wght@400;500;600&display=swap">
 <style>
 /* Same layout as the Resin Workshop: inputs on the left, the 3D preview and downloads beside them. */
@@ -69,6 +70,10 @@ h3{font:600 15px var(--body);margin:0 0 6px}
 .src a{color:var(--accent)}
 @media (max-width:820px){.grid{grid-template-columns:minmax(0,1fr)}.result{position:static;order:-1}}
 @media (pointer:coarse){button{min-height:40px}}
+.pieces{border:1px solid var(--line);border-radius:8px;padding:10px 12px;display:grid;grid-template-columns:repeat(auto-fill,minmax(220px,1fr));gap:6px 12px;margin:4px 0 0}
+.pieces legend{font-weight:600;padding:0 4px}
+.pieces label{display:flex;flex-direction:row;justify-content:flex-start;text-align:left;gap:8px;align-items:center;font-size:14px;margin:0}
+.pieces input[type=checkbox]{width:auto;flex:none;margin:0;accent-color:var(--accent)}
 </style></head><body>
 <div class="wrap">
   <header>
@@ -651,17 +656,11 @@ Object.assign(ITEMS,{
   transport:{group:'addon',more:'transport',name:'Transport box',fields:[['L','Length',90],['W','Width',70],['H','Height',80]],
     selects:[['shape','Shape',[['round','Round'],['square','Square'],['hex','Hexagon'],['octagon','Octagon'],['oval','Oval'],['pebble','Pebble']]],['vents','Air holes',[['both','Lid and sides'],['lid','Lid only'],['sides','Sides only']]],['pattern','Lid pattern',PAT],['handle','Handle',[['tabs','Lift tabs'],['loop','Carry handle']]]],shuffle:true,mounts:[],
     hint:'A small box with a vented push-in lid, for taking a mantis to the vet, a show or a new owner. Useful when you sell them too. Size it to at least three times the body length tall.'},
-  set:{group:'sets',name:'Matching set',fields:[['t1','Name','Shifty',{text:true}]],selects:[['theme','Theme',[['orchid','Orchid garden'],['forest','Forest floor'],['honey','Honeycomb'],['sakura','Cherry blossom'],['nouveau','Art nouveau'],['stone','River stone']]]],mounts:['magnet','clip'],
-    hint:'A group of pieces in one style, to fit out an enclosure in one go or to sell as a bundle. Each piece downloads as its own STL file; change any of them in its own item if you want a different size.'}
+  set:{group:'sets',name:'Matching set',fields:[['t1','Name','Shifty',{text:true}]],
+    selects:[['theme','Theme',Object.entries(HABITAT_SETS).map(([k,v])=>[k,v.name,v.group])],['pack','Pack',[['2','Full set'],['1','Essentials'],['3','Deluxe']]],['size','Size',[['m','Standard'],['s','Small, for nymphs'],['l','Large, for big species']]],['font','Writing',[['script','Cursive'],['caps','Capitals']]]],shuffle:true,mounts:['magnet','clip','glue'],
+    hint:'A group of pieces in one style, to fit out an enclosure in one go or to sell as a bundle. Essentials has 3–4 pieces, Full set about 8, Deluxe everything. Untick any piece you don\'t want. Each piece downloads as its own STL file; make any of them again in its own item if you want to change it.'}
 });
-const SETS={
-  orchid:['Pink flowers, leaves and vines, for an orchid mantis.',[['flower',{kind:'orchid'}],['flower',{kind:'sakura',R:18}],['ledge',{shape:'leaf',pattern:'vine',under:'D'}],['feeder',{shape:'flower'}],['dish',{shape:'oval'}],['ladder',{style:'vine',mount:'tie'}],['planter',{shape:'scallop'}],['plate',{shape:'leaf',mode:'raised'}]]],
-  forest:['Bark, fungus and pebbles, for a dead-leaf mantis like Deroplatys.',[['ledge',{shape:'fungus',pattern:'solid',under:'D'}],['ledge',{shape:'tiered',pattern:'rings',under:'wedge'}],['bark',{style:'organic'}],['dish',{shape:'pebble'}],['feeder',{shape:'pebble'}],['twig',{shape:'rock',mount:'free'}],['bridge',{style:'branch'}],['tile',{texture:'bark'}],['plate',{shape:'cloud',mode:'engraved'}]]],
-  honey:['Hexagons everywhere.',[['dish',{shape:'hex'}],['feeder',{shape:'hex'}],['pot',{shape:'hex'}],['twig',{shape:'hex',mount:'free'}],['tile',{texture:'hex'}],['mister',{shape:'hex'}],['plate',{shape:'hex',mode:'stencil'}],['moult',{shape:'hex',post:'stake'}]]],
-  sakura:['Cherry blossom and soft curves.',[['flower',{kind:'sakura'}],['flower',{kind:'plumeria',R:20}],['ledge',{shape:'moon',pattern:'scroll',under:'flat'}],['feeder',{shape:'scallop'}],['mister',{shape:'flower'}],['tile',{texture:'waves'}],['plate',{shape:'arch',mode:'raised'}]]],
-  nouveau:['Whiplash curves and filigree.',[['ledge',{shape:'classic',pattern:'nouveau',under:'ribs'}],['ladder',{style:'vine',mount:'tie'}],['bridge',{style:'vine'}],['tile',{texture:'roots'}],['flower',{kind:'lily'}],['plate',{shape:'scroll',mode:'stencil'}],['moult',{shape:'oval',post:'leaf'}]]],
-  stone:['Smooth river stones.',[['dish',{shape:'pebble'}],['pot',{shape:'pebble'}],['ledge',{shape:'pebble',pattern:'solid',under:'D'}],['moss',{shape:'pebble'}],['tile',{texture:'pebbles'}],['plate',{shape:'rounded',mode:'engraved'}],['moult',{shape:'pebble',post:'branch'}]]]
-};
+const SETS=HABITAT_SETS,SCALE=['L','W','H','depth','R','len','wid','span','rise','bw','bh','w','h','D','size','Hh','dep','postH','cw','ch'];
 const A=Object.assign({item:'dish',magD:10,magH:3,mount:{},v:{},drain:true,shape:{},seed:{},kind:'ring'},state.acc||{});
 for(const k of ['mount','v','shape','seed'])A[k]=A[k]||{};
 for(const g in GROUPS){const og=document.createElement('optgroup');og.label=GROUPS[g];for(const k in ITEMS)if(ITEMS[k].group===g){const o=document.createElement('option');o.value=k;o.textContent=ITEMS[k].name;og.append(o)}$('items').append(og)}
@@ -683,7 +682,7 @@ function accSetup(){
     const s=document.createElement('select');opt(s,it.shapes.map(k=>[k,SHAPES[k]]));s.value=it.shapes.includes(A.shape[A.item])?A.shape[A.item]:it.shapes[0];
     s.onchange=()=>{A.shape[A.item]=s.value;accSetup()};field(box,'Shape',s);
   }
-  for(const [k,l,opts] of it.selects||[]){const s=document.createElement('select');opt(s,opts);s.value=A.sel[A.item][k]||opts[0][0];s.onchange=()=>{A.sel[A.item][k]=s.value;accSetup()};field(box,l,s)}
+  for(const [k,l,opts] of it.selects||[]){const s=document.createElement('select');if(opts.some(o=>o[2])){const gs={};for(const [v,t,g] of opts){if(!gs[g]){gs[g]=document.createElement('optgroup');gs[g].label=g;s.append(gs[g])}const o=document.createElement('option');o.value=v;o.textContent=t;gs[g].append(o)}}else opt(s,opts);s.value=A.sel[A.item][k]||opts[0][0];s.onchange=()=>{A.sel[A.item][k]=s.value;accSetup()};field(box,l,s)}
   const sv=selVals(it);
   if(it.shuffle||(it.shapes&&RANDOM.includes(A.shape[A.item]||it.shapes[0]))||(A.item==='ledge'&&(A.sel.ledge.pattern||'solid')!=='solid')){const b=document.createElement('button');b.type='button';b.className='btn';b.textContent='Shuffle';b.style.alignSelf='end';b.onclick=()=>{A.seed[A.item]=(A.seed[A.item]||1)+1;accCalc()};box.append(b)}
   const shape=it.shapes?(it.shapes.includes(A.shape[A.item])?A.shape[A.item]:it.shapes[0]):sv.shape;
@@ -704,6 +703,12 @@ function accSetup(){
   const m=$('mount');m.innerHTML='';$('h-mount').parentElement.hidden=!it.mounts.length;
   if(it.mounts.length){opt(m,it.mounts.map(k=>[k,MOUNT[k]]));m.value=sv._mount}
   $('accHint').innerHTML=it.hint;
+  if(A.item==='set'){const th=SETS[sv.theme]||SETS.orchid,off=new Set((A.sel.set.off||{})[sv.theme]||[]),fs=document.createElement('fieldset');fs.className='pieces';fs.style.gridColumn='1/-1';
+    fs.innerHTML='<legend>Pieces in this pack</legend>';
+    th.pieces.forEach(([key,ov,tier],i)=>{if(tier>+sv.pack)return;const l=document.createElement('label'),c=document.createElement('input');c.type='checkbox';c.checked=!off.has(i);
+      c.onchange=()=>{A.sel.set.off=A.sel.set.off||{};const o=new Set(A.sel.set.off[sv.theme]||[]);c.checked?o.delete(i):o.add(i);A.sel.set.off[sv.theme]=[...o];accCalc()};
+      l.append(c,' '+pieceName(key,ov));fs.append(l)});
+    box.append(fs);$('accHint').innerHTML=`${th.note} Suggested colours: ${th.colours}.<br><br>`+it.hint}
   accCalc();
 }
 $('mount').onchange=()=>{A.mount[A.item]=$('mount').value;accSetup()};
@@ -728,13 +733,20 @@ function encInfo(){
   if(e.shape==='poly'){const n=Math.max(5,Math.min(8,Math.round(e.sides||6)));Object.assign(o,{span:e.W+2*band,Eh:g/2+6.5+.25+2.4,corner:'circle',alpha:Math.PI-2*Math.PI/n});return o}
   o.span=e.W+(e.roundWall==='mesh'?3:e.ts+.6)+4.8;return o;
 }
-function itemDesign(key,over,mount,seed){
+function pieceName(key,ov){
+  const it=ITEMS[key];let d='';
+  for(const k of ['kind','texture','style','shape','pattern']){if(ov[k]==null)continue;const sel=(it.selects||[]).find(x=>x[0]===k);const lab=sel?(sel[2].find(o=>o[0]===ov[k])||[])[1]:SHAPES[ov[k]];if(lab){d=lab;break}}
+  if(key==='stack')d=ov.kind==='foot'?`${({bun:'Bun',ball:'Ball',turned:'Turned',cone:'Tapered',hex:'Hexagon',block:'Block'})[ov.style]||''} feet`:d;
+  return it.name+(d?` – ${d}`:'');
+}
+function itemDesign(key,over,mount,seed,sc){
   const it=ITEMS[key],o={mount,md:Math.max(4,+$('magD').value||10),mh:Math.max(1,+$('magH').value||3),seed,drain:A.drain,kind:A.kind in (it.kinds||{})?A.kind:'ring'};
   const fields=it.kinds?it.kinds[o.kind].fields:it.fields,v=over?{}:(A.v[key]||{});
   for(const [k,,dv,x] of fields){const q=v[k];o[k]=x&&x.text?(q??dv):(q>0||((k==='taper'||k==='n')&&q===0)?q:dv)}
   if(it.shapes){o.shape=it.shapes.includes(A.shape[key])&&!over?A.shape[key]:it.shapes[0];if(o.shape==='round')o.W=o.L}
   for(const [k,,opts] of it.selects||[])o[k]=(!over&&((A.sel||{})[key]||{})[k])||opts[0][0];
   if(over)Object.assign(o,over);
+  if(sc&&sc!==1)for(const k of SCALE)if(typeof o[k]==='number'&&!(key==='light'))o[k]=Math.round(o[k]*sc*10)/10;
   if(o.shape==='round'&&o.L)o.W=o.L;
   if(key==='ledge'&&o.shape==='sharp')o.shape='square';
   return it.more?HabitatMore[it.more](o,encInfo()):HabitatParts[key](o,encInfo());
@@ -742,10 +754,12 @@ function itemDesign(key,over,mount,seed){
 function accDesign(){
   const it=ITEMS[A.item],mount=it.mounts.length?$('mount').value:'none',seed=A.seed[A.item]||1;
   if(A.item==='set'){
-    const th=SETS[(A.sel.set||{}).theme||'orchid'],name=((A.v.set||{}).t1)??'Shifty',parts=[],notes=[th[0]];let magnets=0;
-    th[1].forEach(([key,ov],i)=>{const its=ITEMS[key],m=ov.mount||(its.mounts.includes(mount)?mount:its.mounts.includes('free')?'free':its.mounts[0]||'none');
-      const o=Object.assign({},ov,key==='plate'||key==='moult'?{t1:name,t2:key==='moult'?'L1':''}:{});
-      try{const r=itemDesign(key,o,m,seed+i);magnets+=r.magnets||0;r.parts.forEach((p,j)=>parts.push(Object.assign({},p,{file:`${String(i+1).padStart(2,'0')}-${p.file}`,cluster:p.role==='Colour 2'?undefined:`${i}-${j}`})))}catch(e){notes.push(`${its.name} could not be made with these settings.`)}});
+    const sv=selVals(it),th=SETS[sv.theme]||SETS.orchid,name=((A.v.set||{}).t1)??'Shifty',off=new Set(((A.sel.set||{}).off||{})[sv.theme]||[]),parts=[],notes=[`${th.name}: ${th.note} Suggested colours: ${th.colours}.`];let magnets=0,n=0;
+    const sc=({s:.75,m:1,l:1.3}[sv.size]||1)*(th.size&&sv.size==='m'?th.size:1);
+    th.pieces.forEach(([key,ov,tier],i)=>{if(tier>+sv.pack||off.has(i))return;n++;const its=ITEMS[key],m=ov.mount||(its.mounts.includes(mount)?mount:its.mounts.includes('free')?'free':its.mounts[0]||'none');
+      const o=Object.assign({font:sv.font},ov,key==='plate'||key==='moult'?{t1:name,t2:key==='moult'?'L1':''}:{});
+      try{const r=itemDesign(key,o,m,seed+i,sc);magnets+=r.magnets||0;r.parts.forEach((p,j)=>parts.push(Object.assign({},p,{file:`${String(n).padStart(2,'0')}-${p.file}`})))}catch(e){notes.push(`${pieceName(key,ov)} could not be made with these settings.`)}});
+    if(!n)notes.push('Tick at least one piece.');
     return {parts,notes,magnets,mount,separate:true};
   }
   const r=itemDesign(A.item,null,mount,seed);r.mount=mount;return r;

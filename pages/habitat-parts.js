@@ -66,7 +66,7 @@
   function addMount(f,o,b,h,out){
     if(o.mount!=='magnet'&&o.mount!=='clip')return;
     const w=Math.min(b.x1-b.x0,o.mount==='clip'?Math.max(20,(b.x1-b.x0)*.7):60)*.9;
-    f.push(prism(o.mount==='clip'?CLIP.clearZ:0,h,intersect(rect(-w/2,0,w/2,b.cy),offset(unite(out,rect(-w/2,0,w/2,1)),0))));
+    f.push(prism(o.mount==='clip'?CLIP.clearZ:0,h,intersect(rect(-w/2,0,w/2,b.cy),unite(offset(out,-.3),rect(-w/2,0,w/2,1)))));
     if(o.mount==='clip')clipBack(f,{w,h});
   }
 
