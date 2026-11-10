@@ -108,7 +108,7 @@ h3{font:600 15px var(--body);margin:0 0 6px}
           <label class="f">Mesh hole (mm)<input id="hole" type="number" min="1" max="5" step="0.1"></label>
           <label class="f">Mesh bar (mm)<input id="bar" type="number" min="0.8" max="4" step="0.1"></label>
         </div>
-        <p class="hint">The lid is always a printed mesh, so the mantis has a grippy ceiling to hang from when it moults. Clear panels are acrylic sheet cut to the sizes on the right. Mesh sides add cross-ventilation, which orchid mantises need in warm, humid air.</p>
+        <p class="hint">The lid is always a printed mesh, so the mantis has a grippy ceiling to hang from when it moults. Clear panels are acrylic sheet cut to the sizes on the right. Mesh sides add cross-ventilation, which mantises from warm, humid places need.</p>
       </section>
 
       <section aria-labelledby="h-printer">
@@ -130,7 +130,7 @@ h3{font:600 15px var(--body);margin:0 0 6px}
           <li>If you feed fruit flies to small nymphs, they can get through printed mesh. Glue fine fabric mesh under the lid and mesh panels for that stage.</li>
           <li>Wash printed parts and let them air out for a day before the mantis moves in.</li>
         </ul>
-        <p class="src">Size rule and climate from the <a href="https://dubiaroaches.com/blogs/invert-care/orchid-mantis-care-sheet" target="_blank" rel="noopener">Dubia.com orchid mantis care sheet</a> and the <a href="https://www.reptilecentre.com/pages/info-orchid-mantis-care-sheet" target="_blank" rel="noopener">Reptile Centre care sheet</a>.</p>
+        <p class="src">Size rule and climate from the <a href="https://dubiaroaches.com/blogs/invert-care/orchid-mantis-care-sheet" target="_blank" rel="noopener">Dubia.com orchid mantis care sheet</a>, the <a href="https://www.reptilecentre.com/pages/info-orchid-mantis-care-sheet" target="_blank" rel="noopener">Reptile Centre care sheet</a> and the <a href="https://keepinginsects.com/praying-mantis/species/dead-leaf-mantis/" target="_blank" rel="noopener">Keeping Insects dead leaf mantis guide</a>.</p>
       </section>
     </div>
 
@@ -318,11 +318,16 @@ function render(cv,items){
 function slab(x0,y0,z0,x1,y1,z1){return mesh({adds:[[x0,y0,z0,x1,y1,z1]]}).tris}
 
 /* ---------- species ---------- */
+const ORCHID_CARE='Orchid mantises do best at about 25–29 °C with 60–80 % humidity. Mist lightly twice a day and let it dry out in between, since stagnant, damp air causes problems.';
+const DERO_CARE='Giant dead leaf mantises do best at about 26 °C, never below 22 °C by day, and can drop to about 18 °C at night. Keep humidity at 50–80 %, mist regularly, and keep it well ventilated. Dry leaves on the substrate give it cover.';
 const SPECIES=[
-  {id:'orchidF',name:'Orchid mantis, adult female',len:65,box:[200,200,300]},
-  {id:'orchidM',name:'Orchid mantis, adult male',len:30,box:[120,120,180]},
-  {id:'orchidN',name:'Orchid mantis, nymph',len:15,box:[100,100,150]},
-  {id:'custom',name:'Another mantis or insect',len:50,box:null}
+  {id:'orchidF',name:'Orchid mantis, adult female',len:65,box:[200,200,300],care:ORCHID_CARE,note:' Adult females are usually kept in about 200 × 200 × 300 mm.'},
+  {id:'orchidM',name:'Orchid mantis, adult male',len:30,box:[120,120,180],care:ORCHID_CARE},
+  {id:'orchidN',name:'Orchid mantis, nymph',len:15,box:[100,100,150],care:ORCHID_CARE,note:' Small nymphs are often kept in a ventilated deli cup until they grow.'},
+  {id:'deroF',name:'Giant dead leaf mantis (Deroplatys desiccata), adult female',len:90,box:[300,200,300],care:DERO_CARE,note:' Adult females are usually kept in about 300 × 200 × 300 mm or larger, with room for perches and dead leaves.'},
+  {id:'deroM',name:'Giant dead leaf mantis (Deroplatys desiccata), adult male',len:75,box:[200,200,250],care:DERO_CARE},
+  {id:'deroN',name:'Giant dead leaf mantis (Deroplatys desiccata), nymph',len:25,box:[120,120,150],care:DERO_CARE,note:' Small nymphs are often kept in a ventilated deli cup until they grow.'},
+  {id:'custom',name:'Another mantis or insect',len:50,box:null,care:'Check the temperature and humidity your species needs.'}
 ];
 const MATS={petg:{name:'PETG',rho:1.27},asa:{name:'ASA',rho:1.07},pla:{name:'PLA',rho:1.24}};
 const PANEL={clear:'Clear acrylic',mesh:'Printed mesh'};
@@ -342,11 +347,11 @@ function recommend(){
   const box=sp.box||[Math.max(minW,100),Math.max(minW,100),Math.max(minH,150)];
   const r=$('rec');r.innerHTML='';
   const p=document.createElement('div');
-  p.textContent=`For a ${fmt(L)} mm body, the usual rule is at least ${fmt(minW)} mm wide and deep, and ${fmt(minH)} mm tall, so it has room to hang and moult.`+(sp.id==='orchidF'?' Adult females are usually kept in about 200 × 200 × 300 mm.':sp.id==='orchidN'?' Small nymphs are often kept in a ventilated deli cup until they grow.':'');
+  p.textContent=`For a ${fmt(L)} mm body, the usual rule is at least ${fmt(minW)} mm wide and deep, and ${fmt(minH)} mm tall, so it has room to hang and moult.`+(sp.note||'');
   const b=document.createElement('button');b.type='button';b.className='btn';b.textContent=`Use ${box.join(' × ')} mm`;
   b.onclick=()=>{$('W').value=box[0];$('D').value=box[1];$('H').value=box[2];encChanged()};
   const care=document.createElement('div');care.style.cssText='font-size:14px;color:var(--muted)';
-  care.textContent='Orchid mantises do best at about 25–29 °C with 60–80 % humidity. Mist lightly twice a day and let it dry out in between, since stagnant, damp air causes problems.';
+  care.textContent=sp.care;
   r.append(p,b,care);
   return {minW,minH};
 }
