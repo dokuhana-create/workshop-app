@@ -100,7 +100,7 @@
   /* corner ornaments for the space beside the top of the window */
   function cornerArt(kind,cx,cy,s){
     if(kind==='curls'){const o=[spiral(cx,cy,s*.42,1.6,1,0),spiral(cx-s*.25,cy-s*.3,s*.25,1.4,-1,PI)];return U(stroke(o,max(1.2,s*.05)),leaf(cx-s*.1,cy+s*.15,s*.4,s*.16,.6))}
-    if(kind==='sunburst'){const o=[];for(let i=0;i<9;i++){const a=PI*(i+.5)/9;o.push([[cx,cy-s*.2],[cx+s*.5*cos(a),cy-s*.2+s*.5*sin(a)]])}return U(stroke(o,max(1.2,s*.05)),circle(cx,cy-s*.2,s*.12,32))}
+    if(kind==='sunburst'){const o=[];for(let i=0;i<9;i++){const a=PI*(i+.5)/9;o.push([[cx+s*.14*cos(a),cy-s*.2+s*.14*sin(a)],[cx+s*.5*cos(a),cy-s*.2+s*.5*sin(a)]])}return U(stroke(o,max(1.2,s*.05)),circle(cx,cy-s*.2,s*.12,32))}
     const m=MO.motif(kind,s);return move(m.fill,cx,cy-s/2);
   }
 
@@ -112,18 +112,18 @@
       raised.push(...[MO.motif('roseWindow',ch*.5)].map(a=>move(a.fill,m,y+ch*.12)))}
     else if(kind==='cartouche'){o.push(ellipse(m,y,W*.2,ch*.85,96));raised.push(stroke([spiral(m-W*.24,y+ch*.3,ch*.3,1.5,-1,0),spiral(m+W*.24,y+ch*.3,ch*.3,1.5,1,PI)],lw*1.3));
       o.push(offset(stroke([spiral(m-W*.24,y+ch*.3,ch*.3,1.5,-1,0),spiral(m+W*.24,y+ch*.3,ch*.3,1.5,1,PI)],lw*1.3),2));
-      for(let i=0;i<9;i++){const a=PI*(i+.5)/9;raised.push(stroke([[[m,y+ch*.1],[m+W*.15*cos(a),y+ch*.1+ch*.6*sin(a)]]],lw))}}
+      for(let i=0;i<9;i++){const a=PI*(i+.5)/9;raised.push(stroke([[[m+ch*.1*cos(a),y+ch*.1+ch*.1*sin(a)],[m+W*.15*cos(a),y+ch*.1+ch*.6*sin(a)]]],lw))}raised.push(circle(m,y+ch*.1,ch*.07,32))}
     else if(kind==='pediment'){o.push([[[0,y],[W,y],[m,y+ch*.7]]]);o.push(rect(-2,y,W+2,y+3.5));for(const x of [3,W-3,m])o.push(circle(x,y+(x===m?ch*.72:4),5,24));
       raised.push(subtract([[[W*.08,y+4],[W*.92,y+4],[m,y+ch*.7-4]]],[[[W*.08+lw*2.5,y+4+lw],[W*.92-lw*2.5,y+4+lw],[m,y+ch*.7-4-lw*2]]]))}
     else if(kind==='leafArch'){const pts=[];for(let i=0;i<=40;i++){const t=i/40;pts.push([W*.1+W*.8*t,y+ch*.75*sin(t*PI)])}o.push(offset(stroke([pts],ch*.18),1));
       for(let i=1;i<10;i++){const t=i/10,x=W*.1+W*.8*t,yy=y+ch*.75*sin(t*PI);o.push(leaf(x,yy,ch*.4,ch*.17,PI/2+(t-.5)*2+(i%2?.6:-.6)))}}
-    else if(kind==='fan'){o.push(ellipse(m,y,W*.24,ch,96));for(let i=0;i<11;i++){const a=PI*(i+.5)/11;raised.push(stroke([[[m,y+2],[m+W*.21*cos(a),y+2+ch*.85*sin(a)]]],lw))}}
+    else if(kind==='fan'){o.push(ellipse(m,y,W*.24,ch,96));for(let i=0;i<11;i++){const a=PI*(i+.5)/11;raised.push(stroke([[[m+ch*.12*cos(a),y+2+ch*.12*sin(a)],[m+W*.21*cos(a),y+2+ch*.85*sin(a)]]],lw))}raised.push(circle(m,y+2,ch*.08,32))}
     else if(kind==='roof'){const pts=[[-3,y],[W+3,y]];for(let i=0;i<=40;i++){const t=i/40,x=W+3-(W+6)*t,d=abs(x-m)/(W/2+3);pts.push([x,y+ch*.25+ch*.55*(1-d)**1.8+(d>.9?(d-.9)*ch*1.8:0)])}
       o.push([pts]);raised.push(stroke([[[W*.1,y+ch*.2],[W*.9,y+ch*.2]]],lw))}
     else if(kind==='sunrays'){o.push(circle(m,y,ch*.45,64));for(let i=0;i<13;i++){const a=PI*i/12;o.push([[[m+ch*.4*cos(a-.1),y+ch*.4*sin(a-.1)],[m+ch*cos(a),y+ch*sin(a)],[m+ch*.4*cos(a+.1),y+ch*.4*sin(a+.1)]]])}
       raised.push(...[MO.motif('sun',ch*.5)].map(a=>move(a.fill,m,y+ch*.02)))}
     else if(kind==='battlement'){const n=max(3,round(W/28)),u=W/(2*n-1);for(let i=0;i<n;i++)o.push(rect(i*2*u,y-1,i*2*u+u,y+ch*.45));o.push(rect(m-ch*.35,y-1,m+ch*.35,y+ch*.85),[[[m-ch*.42,y+ch*.85],[m+ch*.42,y+ch*.85],[m,y+ch*1.2]]])}
-    else if(kind==='ziggurat'){for(let i=0;i<4;i++){const hw=W*(.3-i*.07);o.push(rect(m-hw,y-1,m+hw,y+ch*(i+1)*.24))}for(let i=0;i<7;i++){const a=PI*(i+1)/8;raised.push(stroke([[[m,y+ch*.3],[m+ch*.9*cos(a),y+ch*.3+ch*.9*sin(a)]]],lw*.8))}}
+    else if(kind==='ziggurat'){for(let i=0;i<4;i++){const hw=W*(.3-i*.07);o.push(rect(m-hw,y-1,m+hw,y+ch*(i+1)*.24))}for(let i=0;i<7;i++){const a=PI*(i+1)/8;raised.push(stroke([[[m+ch*.14*cos(a),y+ch*.3+ch*.14*sin(a)],[m+ch*.9*cos(a),y+ch*.3+ch*.9*sin(a)]]],lw*.8))}raised.push(circle(m,y+ch*.3,ch*.1,32))}
     else if(kind==='branch'){const pts=[];for(let i=0;i<=30;i++){const t=i/30;pts.push([W*.05+W*.9*t,y+ch*.55*sin(t*PI)+ch*.06*sin(t*19)])}o.push(stroke([pts],ch*.14));
       for(const t of [.25,.45,.7]){const x=W*.05+W*.9*t,yy=y+ch*.55*sin(t*PI);o.push(stroke([[[x,yy],[x+ch*.3,yy+ch*.45]]],ch*.07),leaf(x+ch*.3,yy+ch*.45,ch*.3,ch*.14,1.1))}}
     return {fill:U(...o),raised:U(...raised)};
@@ -169,7 +169,7 @@
     let cuts=[null];
     if(tall>max(bed[0],bed[1])+.1||(tall>bed[1]+.1&&wide>bed[0]+.1)){
       const ys=Ht*.5,tab=(cx)=>[[cx-4,ys],[cx-4,ys+3],[cx-7,ys+9],[cx+7,ys+9],[cx+4,ys+3],[cx+4,ys]];
-      const lowP=[[[-50,-50],[W+50,-50],[W+50,ys],...tab(W-sw/2).reverse(),...tab(sw/2).reverse()]];
+      const lowP=[[[-50,-50],[W+50,-50],[W+50,ys],...tab(W-sw/2).reverse(),...tab(sw/2).reverse(),[-50,ys]]];
       cuts=[lowP,subtract(rect(-50,-50,W+50,full.y1+50),offset(lowP,.15))];
       notes.push('The frame is taller than your print bed, so it comes in two halves with puzzle joints in the sides: glue them together flat on a table.')}
     const parts=[],two=o.colour==='two';
