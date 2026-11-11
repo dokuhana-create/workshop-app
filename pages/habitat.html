@@ -3,18 +3,18 @@
 <script src="../shim.js"></script>
 <script src="../lib/clipper.js"></script>
 <script src="../lib/earcut.min.js"></script>
-<script src="../lib/geo.js?v=19"></script>
-<script src="habitat-parts.js?v=19"></script>
-<script src="habitat-enclosure.js?v=19"></script>
-<script src="habitat-more.js?v=19"></script>
-<script src="habitat-motifs.js?v=19"></script>
-<script src="habitat-keep.js?v=19"></script>
-<script src="../lib/sdf.js?v=19"></script>
-<script src="habitat-sculpt.js?v=19"></script>
-<script src="habitat-trim.js?v=19"></script>
-<script src="habitat-addons.js?v=19"></script>
-<script src="habitat-forms.js?v=19"></script>
-<script src="habitat-sets.js?v=19"></script>
+<script src="../lib/geo.js?v=20"></script>
+<script src="habitat-parts.js?v=20"></script>
+<script src="habitat-enclosure.js?v=20"></script>
+<script src="habitat-more.js?v=20"></script>
+<script src="habitat-motifs.js?v=20"></script>
+<script src="habitat-keep.js?v=20"></script>
+<script src="../lib/sdf.js?v=20"></script>
+<script src="habitat-sculpt.js?v=20"></script>
+<script src="habitat-trim.js?v=20"></script>
+<script src="habitat-addons.js?v=20"></script>
+<script src="habitat-forms.js?v=20"></script>
+<script src="habitat-sets.js?v=20"></script>
 <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Bricolage+Grotesque:opsz,wght@12..96,600;12..96,750&family=IBM+Plex+Mono:wght@500&family=IBM+Plex+Sans:wght@400;500;600&display=swap">
 <style>
 /* Same layout as the Resin Workshop: inputs on the left, the 3D preview and downloads beside them. */
@@ -57,6 +57,8 @@ select{font-family:var(--body)}
 .hint{font-size:14px;color:var(--muted);margin:12px 0 0;max-width:62ch}
 .rec{font-size:15px;margin-top:12px;padding:12px 14px;border:1px solid var(--line);border-left:4px solid var(--orchid);border-radius:6px;background:var(--panel);display:grid;gap:8px}
 .row{display:flex;flex-wrap:wrap;gap:8px;align-items:center}
+.tgrid{display:grid;gap:3px;margin:6px 0 12px}.tgrid button{height:40px;border-radius:4px;border:1px solid var(--frame);font:600 11px var(--body);cursor:pointer;padding:0;color:#fff;background:var(--mesh);background-image:radial-gradient(circle,rgba(0,0,0,.35) 1px,transparent 1.4px);background-size:5px 5px}
+.tgrid button.c{background:rgba(120,170,215,.35);color:var(--ink,#222)}.tgridHead{display:flex;gap:8px;align-items:center;flex-wrap:wrap;font-size:14px;margin-top:8px}
 .btn{font:600 14px var(--body);border-radius:6px;padding:9px 13px;border:1px solid var(--accent);background:transparent;color:var(--accent);cursor:pointer}
 .btn.solid{background:var(--accent);color:var(--on-accent);width:100%;padding:11px 13px}
 .result{position:sticky;top:calc(16px + env(safe-area-inset-top,0px));background:var(--panel);border:1px solid var(--line);border-radius:8px;padding:20px;display:grid;gap:16px;min-width:0}
@@ -147,6 +149,8 @@ h3{font:600 15px var(--body);margin:0 0 6px}
         </div>
         <p class="hint swingF">The swing door turns on a rod printed along its edge, which snaps into three printed clips on the frame. No pin, screws or glue. It closes onto a raised rim, held by two round magnets or by a printed rib that clicks into a groove in the door.</p>
         <p class="hint tileF">Swappable tile panels are a frame with square openings. Each opening takes a printed mesh tile or a clear acrylic tile, held by small printed turn buttons, so you can change which parts of the wall are clear or ventilated at any time.</p>
+        <div class="tileF" id="tileGrid"></div>
+        <p class="hint rectOnly">Click a wall in the picture to switch it between clear acrylic, printed mesh and swappable tiles. In a tile panel, click a single tile to switch it between mesh and clear.</p>
         <p class="hint notRound">Clip rails are small channels on the inside of printed mesh panels, 40 mm apart. Accessories made with a clip back drop into them and click in place, like IKEA Skådis.</p>
         <p class="hint">The lid is always a printed mesh, so the mantis has a grippy ceiling to hang from when it moults. Clear panels are acrylic sheet cut to the sizes on the right. Mesh sides add cross-ventilation, which mantises from warm, humid places need.</p>
       </section>
@@ -447,8 +451,10 @@ function render(cv,items){
   if(mnx>mxx)return;
   const pad=14*dpr*1.5,sc=Math.min((PW-2*pad)/(mxx-mnx||1),(PH-2*pad)/(mxy-mny||1)),ox=(PW-(mxx-mnx)*sc)/2-mnx*sc,oy=(PH-(mxy-mny)*sc)/2-mny*sc;
   const img=ctx.createImageData(PW,PH),px=img.data,zb=new Float32Array(PW*PH).fill(-1e9);
+  /* a pick buffer: which clickable part is in front at each pixel (solid parts block, other see-through ones don't) */
+  const picks=[],pz=new Float32Array(PW*PH).fill(-1e9),pid=new Int16Array(PW*PH);
   const draw=(it,blend)=>{
-    const t=it.tris,a=it.alpha??1;
+    const t=it.tris,a=it.alpha??1,pk=it.pick?picks.push(it.pick):(blend?0:-1);
     for(let b=0;b<t.length;b+=9){
       const ux=t[b+3]-t[b],uy=t[b+4]-t[b+1],uz=t[b+5]-t[b+2],vx=t[b+6]-t[b],vy=t[b+7]-t[b+1],vz=t[b+8]-t[b+2];
       const nx=uy*vz-uz*vy,ny=uz*vx-ux*vz,nz=ux*vy-uy*vx,l=Math.hypot(nx,ny,nz);if(!l||nx-ny+nz<=0)continue;
@@ -461,6 +467,7 @@ function render(cv,items){
         const cx=qx+.5,cy=py+.5,w0=((Y[1]-Y[2])*(cx-X[2])+(X[2]-X[1])*(cy-Y[2]))/den,w1=((Y[2]-Y[0])*(cx-X[2])+(X[0]-X[2])*(cy-Y[2]))/den,w2=1-w0-w1;
         if(w0<-1e-6||w1<-1e-6||w2<-1e-6)continue;
         const z=w0*Z[0]+w1*Z[1]+w2*Z[2],k=py*PW+qx;if(z<zb[k]-1e-3)continue;
+        if(pk&&z>=pz[k]){pz[k]=z;pid[k]=pk}
         const o=k*4;
         if(blend){px[o]=px[o]*(1-a)+R*a;px[o+1]=px[o+1]*(1-a)+G*a;px[o+2]=px[o+2]*(1-a)+B*a;px[o+3]=Math.max(px[o+3],255*a)}
         else{zb[k]=z;px[o]=R;px[o+1]=G;px[o+2]=B;px[o+3]=255}
@@ -470,7 +477,14 @@ function render(cv,items){
   for(const it of items)if((it.alpha??1)>=1)draw(it,false);
   for(const it of items)if((it.alpha??1)<1)draw(it,true);
   ctx.putImageData(img,0,0);
+  cv._pick={PW,PH,pid,picks};
 }
+/* what is under the pointer in a preview: 'panel:left', 'tile:back:3' or null */
+function pickAt(cv,ev){const P=cv._pick;if(!P)return null;const r=cv.getBoundingClientRect(),x=Math.floor((ev.clientX-r.left)/r.width*P.PW),y=Math.floor((ev.clientY-r.top)/r.height*P.PH);
+  if(x<0||y<0||x>=P.PW||y>=P.PH)return null;let best=null;
+  /* look in a small ring around the point, so thin frames are easy to hit with a finger */
+  for(const rad of [0,4,9])for(const [dx,dy] of rad?[[rad,0],[-rad,0],[0,rad],[0,-rad]]:[[0,0]]){const X=x+dx,Y=y+dy;if(X<0||Y<0||X>=P.PW||Y>=P.PH)continue;const v=P.pid[Y*P.PW+X];if(v>0)return P.picks[v-1]}
+  return best}
 /* A flat panel drawn as two triangles on both sides, for the clear and mesh panels in the assembly. */
 function slab(x0,y0,z0,x1,y1,z1){return mesh({adds:[[x0,y0,z0,x1,y1,z1]]}).tris}
 
@@ -541,7 +555,10 @@ $('species').onchange=()=>{const sp=SPECIES.find(s=>s.id===$('species').value);$
    Every shape becomes a model: the parts to print (in print orientation), how they sit in the preview, the cut
    list, notes and the read-me. The heavy mesh holes are only built for the download. */
 const HE=window.HabitatEnclosure;
-function readEnc(){const o={};for(const k in encIds){const el=$(encIds[k]);o[k]=el.tagName==='SELECT'?el.value:+el.value}return o}
+function readEnc(){const o={};for(const k in encIds){const el=$(encIds[k]);o[k]=el.tagName==='SELECT'?el.value:+el.value}o.tileMap=Object.assign({},state.encTiles||{});return o}
+/* which openings of a tile panel hold a mesh tile (m) and which a clear one (c), counted column by column from the
+   bottom left as seen from inside */
+function tileStates(p,k,n){const s=(p.tileMap||{})[k];return typeof s==='string'&&s.length===n?s:'m'.repeat(n)}
 function rectDims(p){const g=p.T+.6,s=6,r=2.4,a=g/2+s,band=g/2+r;return {W:p.W,D:p.D,S:p.S,H:p.H,s,g,band,Eh:a+.25+r,f:2.4,a,Lt:2.4,swing:p.front.startsWith('swing'),Hp:p.H-.5}}
 /* a printed mesh panel, flat on the bed: x across, y up the wall, z through it; the inner face is z=T */
 function meshPanelBox(q,p,s,Lt,preview){
@@ -583,12 +600,17 @@ function rectModel(p,pv){
     if(q.type==='clear'){cut.push([`${q.label}, acrylic ${fmt(p.T,1)} mm`,`${fmt(q.w,1)} × ${fmt(q.h,1)}`]);items.push({tris:panelToWorld(slab(0,0,0,q.w,q.h,p.T),q.k,d,p.T),color:c.clear,alpha:.3})}
     else if(q.type==='mesh'){const m=meshPanelBox(q,p,d.s,d.Lt,pv);parts.push({name:`${q.label} mesh panel${p.rails==='yes'&&q.k!=='front'?' with clip rails':''}`,file:`panel-${q.k}-mesh.stl`,tris:place(m.tris)});items.push({tris:panelToWorld(pv?m.tris:slab(0,0,0,q.w,q.h,p.T),q.k,d,p.T),color:c.mesh,alpha:.6})}
     else if(q.type==='tiles'){const t=HE.tilePanel(q,p,d.s,pv);parts.push({name:`${q.label} tile frame`,file:`panel-${q.k}-tile-frame.stl`,tris:place(t.frame.tris)});
-      q.tiles=t;items.push({tris:panelToWorld(t.frame.tris,q.k,d,p.T),color:c.frame},{tris:panelToWorld(slab(0,0,0,q.w,q.h,1),q.k,d,1),color:c.clear,alpha:.25});}
+      q.tiles=t;q.states=tileStates(p,q.k,t.cells);items.push({tris:panelToWorld(t.frame.tris,q.k,d,p.T),color:c.frame,pick:'panel:'+q.k});
+      const r0=HE.TILE.rebate;t.rects.forEach(([x0,y0,cw,ch],i)=>{const mesh_=q.states[i]==='m';
+        items.push({tris:panelToWorld(slab(x0-r0+.3,y0-r0+.3,0,x0+cw+r0-.3,y0+ch+r0-.3,1),q.k,d,1),color:mesh_?c.mesh:c.clear,alpha:mesh_?.75:.3,pick:`tile:${q.k}:${i}`})});}
+    if(q.type==='clear'||q.type==='mesh')items[items.length-1].pick='panel:'+q.k;
   }
   const tp=panels.filter(q=>q.tiles);
-  if(tp.length){const t=tp[0].tiles,cells=tp.reduce((a,q)=>a+q.tiles.cells,0),btn=tp.reduce((a,q)=>a+q.tiles.buttons,0);
-    parts.push({name:`Mesh tile (print up to ${cells})`,file:'tile-mesh.stl',tris:place(t.tile.tris)},{name:`Turn button (print ${btn})`,file:'turn-button.stl',tris:place(t.button.tris)});
-    cut.push([`Clear tiles, acrylic 3 mm, as many as you want clear (up to ${cells})`,`${fmt(t.tileSize[0],1)} × ${fmt(t.tileSize[1],1)}`]);
+  if(tp.length){const t=tp[0].tiles,cells=tp.reduce((a,q)=>a+q.tiles.cells,0),btn=tp.reduce((a,q)=>a+q.tiles.buttons,0),nm=tp.reduce((a,q)=>a+[...q.states].filter(x=>x==='m').length,0),nc=cells-nm;
+    if(nm)parts.push({name:`Mesh tile`,n:nm,file:`tile-mesh-print-${nm}.stl`,tris:place(t.tile.tris)});
+    parts.push({name:`Turn button (print ${btn})`,file:'turn-button.stl',tris:place(t.button.tris)});
+    if(nc)cut.push([`Clear tiles, acrylic 3 mm: ${nc} piece${nc>1?'s':''}`,`${fmt(t.tileSize[0],1)} × ${fmt(t.tileSize[1],1)}`]);
+    notes.push(`Tile panels: ${nm} mesh and ${nc} clear tiles. Click a tile in the picture, or use the grid under Walls and door, to switch it.`);
     if(tp.some(q=>Math.abs(q.tiles.tileSize[0]-t.tileSize[0])>.5||Math.abs(q.tiles.tileSize[1]-t.tileSize[1])>.5))notes.push('The tile panels have different tile sizes. The mesh tile file fits the first one; make the panels the same size to share tiles.');}
   let sw=null;
   if(d.swing){sw=HE.swingDoor({fbW,pH,T:p.T,postX:d.a-(d.g/2+.5),s:d.s},p,pv);
@@ -604,9 +626,11 @@ function rectModel(p,pv){
   if(base.pegs.length)rd+=`\nThe base has ${base.pegs.length} floor pegs for accessories with a floor socket.\n`;
   if(p.rails==='yes'&&panels.some(q=>q.type==='mesh'&&q.k!=='front'))rd+='\nThe mesh panels have clip rails. Put them in with the rails inside and the open side of each channel facing up.\n';
   if(tp.length)rd+='\nTile panels: put each tile into its opening from the inside, then turn the buttons over its edges. Push the buttons into their holes first; they stay in and turn stiffly.\n';
+  for(const q of tp){const {nx,ny}=q.tiles;rd+=`\n${q.label} tile panel, seen from inside (M = mesh tile, C = clear acrylic):\n`;
+    for(let j=ny-1;j>=0;j--){let row='  ';for(let i=0;i<nx;i++)row+=(q.states[i*ny+j]==='m'?'M':'C')+' ';rd+=row+'\n'}}
   if(sw&&sw.ok)rd+=`\nSwing door: the rod along the door's edge snaps into the three clips on the frame from the front. ${sw.catchM?`Catch: 4 round magnets, ${p.dMagD} x ${p.dMagH} mm (2 in the rim, 2 in the door).`:'Catch: the printed rib on the rim clicks into the groove in the door.'}\n`;
   rd+=`\nAssembly: dry-fit the posts in the base sockets, slide ${d.swing?'the front frame, ':''}the back and side panels into the grooves, put the lid on${d.swing?', then snap the door onto the hinge clips':', then drop the front door in through the slot in the lid'}.\n`;
-  return {parts,items,cut,notes,readme:rd,tag:`${p.W}x${p.D}x${p.H}`,hatch:lid.hatch};
+  return {parts,items,cut,notes,readme:rd,tag:`${p.W}x${p.D}x${p.H}`,hatch:lid.hatch,tiles:tp.map(q=>({k:q.k,label:q.label,nx:q.tiles.nx,ny:q.tiles.ny,states:q.states}))};
 }
 function polyModel(p,pv){
   const c=colours(),r=HE.polyEnclosure({...p,pFront:p.polyFront},pv),notes=[...r.lid.notes],cut=[],parts=[],items=[],Ztop=r.S+r.H+r.Lt;
@@ -706,8 +730,31 @@ function encCalc(){
   const ct=$('cutList');$('cutWrap').hidden=!m.cut.length;ct.innerHTML='<tr><th>Piece</th><th>Size (mm)</th></tr>';
   for(const [a,b] of m.cut){const r=document.createElement('tr');r.innerHTML=`<td></td><td class="n"></td>`;r.children[0].textContent=a;r.children[1].textContent=b;ct.append(r)}
   const n=$('encNote');n.hidden=!notes.length;n.innerHTML='';for(const x of notes){const dv=document.createElement('div');dv.textContent=x;n.append(dv)}
-  render($('encCv'),m.items);
+  render($('encCv'),m.items);tileGridUI(m);
 }
+/* the grid of tile switches, one per tile panel */
+function tileGridUI(m){const box=$('tileGrid');box.innerHTML='';for(const t of m.tiles||[]){
+  const head=document.createElement('div');head.className='tgridHead';const nm=[...t.states].filter(x=>x==='m').length;
+  head.innerHTML=`<b></b><span></span>`;head.children[0].textContent=t.label+' tiles, seen from inside';head.children[1].textContent=`${nm} mesh, ${t.states.length-nm} clear`;
+  for(const [lab,ch] of [['All mesh','m'],['All clear','c'],['Mesh at the bottom','b']]){const b=document.createElement('button');b.type='button';b.className='btn';b.style.padding='3px 8px';b.textContent=lab;
+    b.onclick=()=>{let s='';for(let i=0;i<t.nx;i++)for(let j=0;j<t.ny;j++)s+=ch==='b'?(j===0?'m':'c'):ch;setTiles(t.k,s)};head.append(b)}
+  const g=document.createElement('div');g.className='tgrid';g.style.gridTemplateColumns=`repeat(${t.nx},44px)`;
+  for(let j=t.ny-1;j>=0;j--)for(let i=0;i<t.nx;i++){const k=i*t.ny+j,b=document.createElement('button');b.type='button';const on=t.states[k]==='m';b.className=on?'':'c';b.textContent=on?'mesh':'clear';
+    b.setAttribute('aria-label',`${t.label}, column ${i+1}, row ${j+1} from the bottom: ${on?'mesh':'clear'}`);b.onclick=()=>flipTile(t.k,k,t.states);g.append(b)}
+  box.append(head,g)}}
+function setTiles(k,s){state.encTiles=Object.assign({},state.encTiles||{},{[k]:s});persist();if(typeof BMEMO!=='undefined')BMEMO.clear();encCalc()}
+function flipTile(k,i,cur){setTiles(k,cur.slice(0,i)+(cur[i]==='m'?'c':'m')+cur.slice(i+1))}
+/* clicking the picture: a wall cycles clear → mesh → tiles, a tile flips between mesh and clear */
+const NEXT_PANEL={clear:'mesh',mesh:'tiles',tiles:'clear'};
+function previewClick(cv,ev,after){const hit=pickAt(cv,ev);if(!hit)return;const [kind,k,i]=hit.split(':'),p=readEnc();
+  if(kind==='tile'){const m=encModel(p,true),t=(m.tiles||[]).find(x=>x.k===k);if(t)flipTile(k,+i,t.states)}
+  else if(kind==='panel'){const id={front:'pFront',back:'pBack',left:'pLeft',right:'pRight'}[k],el=$(id);if(!el)return;
+    if(k==='front'){if(el.value.startsWith('swing'))return;el.value=el.value==='clear'?'mesh':'clear'}else el.value=NEXT_PANEL[el.value]||'clear';
+    $('preset').value='keep';state.enc=readEnc();persist();encCalc()}
+  if(after)after()}
+for(const [id,after] of [['encCv',null],['bCv',()=>buildCalc()]]){const cv=$(id);
+  cv.addEventListener('click',ev=>previewClick(cv,ev,after));
+  cv.addEventListener('mousemove',ev=>{cv.style.cursor=pickAt(cv,ev)?'pointer':''})}
 async function save(filename,blob,msg,done){
   msg.textContent='';
   try{
@@ -729,7 +776,7 @@ for(const k in encIds)$(encIds[k]).addEventListener('input',()=>{if(k!=='species
 /* ---------- accessories ---------- */
 const SHAPES={round:'Round',oval:'Oval',pebble:'Pebble',hex:'Hexagon',square:'Rounded square',cylinder:'Cylinder',rock:'Rock',cone:'Cone',fungus:'Bracket fungus',lobed:'Lobed fungus',tiered:'Tiered fungus, three shelves',leaf:'Leaf',moon:'Half moon',classic:'Rounded rectangle',sharp:'Square corners',cloud:'Cloud'};
 const RANDOM=['pebble','rock','fungus','lobed','tiered'];
-const MOUNT={free:'Stands on its own',peg:'Floor peg',magnet:'Magnets',clip:'Clip rail',glue:'Glue or tape',tie:'Tied to the lid mesh',hook:'Hook over a branch',stem:'Stem for a twig holder',panel:'In a tile panel'};
+const MOUNT={free:'Stands on its own',peg:'Floor peg',magnet:'Magnets',clip:'Clip rail',glue:'Glue or tape',tie:'Tied to the lid mesh',hook:'Hook over a branch',stem:'Stem for a twig holder',panel:'In a tile panel',holder:'Pins into twig holders'};
 const LIGHT_LINK='<a href="https://insektenliebe.com/en/?p=158875" target="_blank" rel="noopener">Repto Compact LED</a>';
 const ITEMS={
   dish:{group:'food',name:'Pearl dish',fields:[['L','Length',50],['W','Width',40],['depth','Depth',12],['wall','Wall',2.4]],shapes:['round','oval','pebble','hex'],mounts:['free','peg','magnet','clip'],
@@ -759,9 +806,11 @@ Object.assign(ITEMS,{
   ladder:{group:'climb',more:'ladder',name:'Moulting ladder',fields:[['len','Length',120],['wid','Width',24],['dia','Branch thickness',8,{show:s=>s._mount==='hook'}]],
     selects:[['style','Style',[['rope','Rope ladder'],['net','Net'],['chain','Chain of rings'],['vine','Leafy vine'],['bark','Bark strip'],['zigzag','Zigzag'],['bamboo','Bamboo']]]],shuffle:true,mounts:['tie','hook','magnet','clip'],
     hint:'Mantises moult hanging upside down, and need about twice their body length of free space below them and something rough to grip. A ladder hanging from the lid gives them that. It prints flat.'},
-  bridge:{group:'climb',more:'bridge',name:'Twig bridge',fields:[['span','Span between holders',120],['rise','Rise',40],['dia','Twig holder size',6],['w','Thickness',6],['pinL','Pin length',15]],
-    selects:[['style','Shape',[['arch','Round arch'],['arc','Low arc'],['gothic','Pointed arch'],['straight','Straight beam'],['zigzag','Zigzag'],['wave','Wave'],['vine','Leafy vine'],['branch','Branch with side twigs']]],['texture','Surface',[['bark','Bark ridges'],['smooth','Smooth']]]],shuffle:true,mounts:[],
-    hint:'An arch or branch that spans between two twig holders. Its square pins push into the holders, so it adds a perch across the middle of the enclosure.'},
+  bridge:{group:'climb',more:'bridge',name:'Twig bridge',fields:[['span','Span (0 = automatic)',0],['sag','Sag in the middle',35,{show:s=>s._mount!=='holder'}],['drop','One end lower by',0,{show:s=>s._mount!=='holder'}],['rise','Rise',40,{show:s=>s._mount==='holder'}],['dia','Pin size (twig holder size)',6],['w','Thickness (walking width)',7],['pinL','Pin length',12]],
+    selects:[['across','Hangs across',[['width','Left wall to right wall'],['depth','Front wall to back wall']],{show:s=>s._mount!=='holder'}],
+      ['hstyle','Shape',[['rope','Rope bridge with a hand rope'],['swag','Hanging branch'],['branch','Hanging branch with side twigs'],['vine','Leafy vine'],['chain','Chain of links']],{show:s=>s._mount!=='holder'}],
+      ['style','Shape',[['arch','Round arch'],['arc','Low arc'],['gothic','Pointed arch'],['straight','Straight beam'],['zigzag','Zigzag'],['wave','Wave'],['vine','Leafy vine'],['branch','Branch with side twigs']],{show:s=>s._mount==='holder'}],['texture','Surface',[['bark','Bark ridges'],['smooth','Smooth']]]],shuffle:true,mounts:['magnet','clip','glue','holder'],
+    hint:'A bridge across the enclosure. Hung from wall to wall, it sags in the middle like a rope bridge: each end has a square pin that drops into a small bracket on the wall, held by a magnet, a clip rail or glue. Choose "Pins into twig holders" for an arch that stands between two twig holders on the floor instead. It prints flat on its side.'},
   flower:{group:'climb',more:'flower',name:'Flower perch',fields:[['R','Petal length',25],['n','Petal count (0 = natural)',0,{show:vis('kind',['daisy','cosmos','dahlia','anemone','star'])}],['lh','Layer height',1.2],['dia','Twig holder size',6,{show:s=>s._mount==='stem'}],['stemL','Stem length',60,{show:s=>s._mount==='stem'}]],
     selects:[['kind','Flower',FLW],['centre','Centre',[['auto','To match the flower'],['dome','Dome'],['stamens','Stamens'],['seedpod','Seed pod'],['spiral','Spiral'],['column','Orchid column'],['pistil','Long pistil'],['none','None']]],['veins','Petal veins',[['yes','Yes'],['no','No']]],['accent','Centre and veins',[['no','Same colour'],['yes','Separate accent file (glow or UV)']]]],shuffle:true,mounts:['magnet','clip','glue','peg','stem'],
     hint:'A flower to perch on. Orchid mantises sit on flowers in the wild, waiting for pollinators, and look their best on one. Petals are stacked in layers from back to front, so it prints face up with no supports, and two-colour prints work well: swap filament at a layer with the CFS.'},
@@ -834,7 +883,7 @@ Object.assign(ITEMS,{
     hint:'Dresses the enclosure in a style. The front frame sits in front of the clear front, with a shaped window (a pointed gothic arch, a round arch, a moon gate, a stepped deco top and so on), filigree in the corners, a patterned base with the name, and a crest on top. Finials go on the top corners and feet under the bottom corners. Sized from the Enclosure tab (the frame fits rectangular enclosures). The frame prints flat; a tall frame comes in two halves with puzzle joints.'},
   sculpt:{group:'dio',keep:'sculpt',name:'Sculpted piece (lifelike)',fields:[['size','Size: height, or wingspan for the bat and moth',50]],
     selects:[['kind','Piece',Object.entries(HabitatSculpt.SCULPTS)],['print','Printing',[['auto','No supports needed (fills under overhangs)'],['full','Full detail, with tree supports']]],
-      ['detail','Detail',[['normal','Normal'],['fine','Fine (slower to make)']]],['age','Bone',[['old','Weathered'],['clean','Smooth']],{show:vis('kind','skull')}]],shuffle:true,mounts:['free','magnet','glue'],
+      ['detail','Detail',[['normal','Normal'],['fine','Fine (slower to make)']]]],shuffle:true,mounts:['free','magnet','glue'],
     hint:'Lifelike pieces. The anatomical skull comes from a detailed model of a real human skull, with every bone, suture and tooth ("High quality skull" by Mariano Coretti, Wikimedia Commons, CC BY-SA 4.0: you may sell prints, with a credit on the card or listing). The others are sculpted with smooth organic shapes: a human skull, a raven on a stone, a coiled snake, and a bat and a death\'s-head moth for the wall. Standing pieces print without supports: anything that hangs out is filled underneath at 45°, out of sight. The bat and moth print flat on their backs; with magnets, the pockets are in the back. Big pieces take a few seconds to make.'},
   custom:{group:'dio',keep:'custom',file:true,name:'Your own model (STL from Blender)',fields:[['size','Size',50]],
     selects:[['fit','Size sets the',[['height','Height'],['longest','Longest side']]],['turn','Turn it',[['none','As exported'],['x','Stand up (90° about X)'],['xr','Lay down (−90° about X)'],['y','On its side (90° about Y)'],['flip','Upside down']]],
@@ -878,7 +927,7 @@ function accSetup(){
     s.onchange=()=>{A.shape[A.item]=s.value;accSetup()};field(box,'Shape',s);
   }
   const sv0=selVals(it);
-  for(const [k,l,opts,x] of it.selects||[]){if(x&&x.show&&!x.show(sv0))continue;const s=document.createElement('select');if(opts.some(o=>o[2])){const gs={};for(const [v,t,g] of opts){if(!gs[g]){gs[g]=document.createElement('optgroup');gs[g].label=g;s.append(gs[g])}const o=document.createElement('option');o.value=v;o.textContent=t;gs[g].append(o)}}else opt(s,opts);s.value=A.sel[A.item][k]||opts[0][0];s.onchange=()=>{A.sel[A.item][k]=s.value;accSetup()};field(box,l,s)}
+  for(const [k,l,opts,x] of it.selects||[]){if(x&&x.show&&!x.show(sv0))continue;const s=document.createElement('select');if(opts.some(o=>o[2])){const gs={};for(const [v,t,g] of opts){if(!gs[g]){gs[g]=document.createElement('optgroup');gs[g].label=g;s.append(gs[g])}const o=document.createElement('option');o.value=v;o.textContent=t;gs[g].append(o)}}else opt(s,opts);s.value=A.sel[A.item][k]||opts[0][0];if(!s.value)s.value=opts[0][0];s.onchange=()=>{A.sel[A.item][k]=s.value;accSetup()};field(box,l,s)}
   const sv=selVals(it);
   if(it.shuffle||(it.shapes&&RANDOM.includes(A.shape[A.item]||it.shapes[0]))||(A.item==='ledge'&&(A.sel.ledge.pattern||'solid')!=='solid')){const b=document.createElement('button');b.type='button';b.className='btn';b.textContent='Shuffle';b.style.alignSelf='end';b.onclick=()=>{A.seed[A.item]=(A.seed[A.item]||1)+1;accCalc()};box.append(b)}
   const shape=it.shapes?(it.shapes.includes(A.shape[A.item])?A.shape[A.item]:it.shapes[0]):sv.shape;
@@ -911,6 +960,7 @@ $('mount').onchange=()=>{A.mount[A.item]=$('mount').value;accSetup()};
 for(const id of ['magD','magH'])$(id).addEventListener('input',()=>{A[id]=+$(id).value;accSoon()});
 const MOUNT_HINT={
   free:'It stands on the substrate or floor.',
+  holder:'The square pins at the ends push down into two twig holders standing on the floor.',
   peg:'A socket underneath pushes onto one of the floor pegs, so it stays put. Turn on floor pegs for the enclosure base.',
   magnet:'Round magnets hold the piece against a panel, with a second magnet on the outside, so nothing needs drilling. Disc magnets of 10 × 3 mm hold small pieces through 3 mm acrylic. Check the poles attract before gluing.',
   clip:'The back plate drops into a clip rail on a printed mesh panel and clicks in place, like IKEA Skådis. Put it between two of the small ribs inside the rail (every 40 mm). Lift it straight up to take it off. Turn on clip rails for the enclosure.',
@@ -929,7 +979,7 @@ function trimEnc(){const p=readEnc(),k=JSON.stringify(p);if(trimMemo.k===k)retur
 HabitatKeep.trim=o=>HabitatTrim.piece(Object.assign({},trimEnc(),o));
 /* the anatomical skull loads in the background; redraw when it arrives */
 HabitatSculpt.SCAN.onready=()=>{if(typeof BMEMO!=='undefined')BMEMO.clear();if(state.tab==='acc'&&A.item==='sculpt')accCalc();else if(state.tab==='build')buildCalc()};
-HabitatSculpt.loadScan('skull-scan.bin?v=19');
+HabitatSculpt.loadScan('skull-scan.bin?v=20');
 HabitatKeep.hanger=o=>HabitatForms.hanger(Object.assign({},trimEnc(),o));HabitatKeep.carry=o=>HabitatForms.carry(Object.assign({},trimEnc(),o));
 function encInfo(){
   const e=Object.assign({},DEF,state.enc||{}),bed=Math.max(e.bx||350,e.by||350),g=e.T+.6,band=g/2+2.4,o={e,bed,band,hatchR:e.hatch!=='none'?(state.encHatchR||Math.min(30,e.hatchD/2)):0};
@@ -1110,7 +1160,7 @@ function buildDesign(pv){
   const sc={s:.75,m:1,l:1.3}[B.size]||1,out=[],enc=JSON.stringify(readEnc());let n=0;
   for(const p of buildPieces()){if(B.off[p.id])continue;n++;const m=pieceMount(p.key,p.ov);
     const o=Object.assign({font:B.font},p.ov,nameOv(p.key,p.ov,B.name),pv?{preview:1}:{});
-    const key=JSON.stringify([p.key,o,m,(B.seed||1)*31+n,sc,['trim','hanger','carry'].includes(p.key)?enc:'']);
+    const key=JSON.stringify([p.key,o,m,(B.seed||1)*31+n,sc,['trim','hanger','carry','bridge'].includes(p.key)?enc:'']);
     try{let r=BMEMO.get(key);if(!r){r=itemDesign(p.key,o,m,(B.seed||1)*31+n,sc);if(BMEMO.size>80)BMEMO.clear();BMEMO.set(key,r)}out.push({p,r,m,n})}catch(err){console.error(err);out.push({p,err:true,n})}}
   return out;
 }
@@ -1124,9 +1174,20 @@ function placeKind(key,ov,mount){
   if(key==='diorama'){const flat=['arch','torii','shelf','cottage','tombstone'].includes(ov.kind);return flat?(mount==='free'?'stand':'back'):'floor'}
   if(key==='motif'){if(ov.form==='cutout'&&mount==='free')return 'stand';return 'back'}
   if(key==='sculpt')return ['bat','moth'].includes(ov.kind)?'back':'floor';
-  if(['ledge','label','tile','plate','bark','emblem','ladder','bridge'].includes(key))return 'back';
+  if(key==='bridge')return mount==='holder'?'back':'span';
+  if(['ledge','label','tile','plate','bark','emblem','ladder'].includes(key))return 'back';
   return 'loose';
 }
+/* a bridge hung from wall to wall: the bridge across the middle, a bracket on each wall */
+function hangScene(r,e,S,H,col){const h=r.hang,out=[],wd=h.across!=='depth';
+  let lo,mid;if(e.shape==='rect'){lo=e.T/2;mid=wd?e.D/2+e.D*.12:e.W/2}
+  else{const R=e.shape==='poly'?e.W/2-e.T:(e.shape==='oval'&&!wd?e.D:e.W)/2-2;lo=-R;mid=wd?(e.shape==='oval'?e.D:e.W)*.06:0}
+  const zE=S+H*.68,hiB=lo+2*h.c+h.span,pm=wd?mid+h.t/2-h.ps/2:mid-h.t/2+h.ps/2,zb=zE-h.knob-h.top;
+  const fb=wd?(x,y,z)=>[lo+h.c+x,mid-z+h.t/2,zE+y]:(x,y,z)=>[mid+z-h.t/2,lo+h.c+x,zE+y];
+  for(const q of r.parts)if(q.m&&q.role!=='Second file')out.push({tris:place0(q.m.tris,fb),color:col});
+  const b1=wd?(x,y,z)=>[lo+z,pm+x,zb+y]:(x,y,z)=>[pm-x,lo+z,zb+y],b2=wd?(x,y,z)=>[hiB-z,pm-x,zb-h.drop+y]:(x,y,z)=>[pm+x,hiB-z,zb-h.drop+y];
+  out.push({tris:place0(h.bracket.tris,b1),color:col},{tris:place0(h.bracket.tris,b2),color:col});
+  return out}
 function buildScene(des){
   const e=readEnc(),hx=e.shape==='hexcell',S=hx?3:e.S,H=hx?e.W*.75:e.H,c=colours(),col=v=>cssColor(getComputedStyle(document.documentElement).getPropertyValue(v).trim()),c1=col('--acc'),c2=col('--acc2');
   let X0,X1,Y0,Y1,yBack;
@@ -1142,7 +1203,8 @@ function buildScene(des){
       else if(q.at==='bottom'){if(!te.rect)continue;const t=q.m.tris;let z1=0;for(let i=2;i<t.length;i+=3)z1=Math.max(z1,t[i]);const zt=z1-5;
         for(const [cx,cy,a] of [[mn[0]+15,mn[1]+15,0],[mx[0]-15,mn[1]+15,1],[mx[0]-15,mx[1]-15,2],[mn[0]+15,mx[1]-15,3]]){const c=[1,0,-1,0][a],s_=[0,1,0,-1][a];
           items.push({tris:place0(q.m.tris,(x,y,z)=>[cx+x*c-y*s_,cy+x*s_+y*c,z-zt]),color:col})}}}}
-  for(const d of des){if(!d.r||d.p.key==='trim')continue;const pk=placeKind(d.p.key,d.p.ov,d.m);if(pk==='loose')continue;
+  for(const d of des){if(!d.r||d.p.key==='trim')continue;let pk=placeKind(d.p.key,d.p.ov,d.m);if(pk==='loose')continue;
+    if(pk==='span'){if(d.r.hang&&!hx){items.push(...hangScene(d.r,e,S,H,c1));continue}pk='back'}
     let main=d.r.parts.filter(q=>q.m&&q.role!=='Second file');if(!main.length)continue;
     if(d.r.display)main=main.map(q=>({role:q.role,m:{tris:place0(q.m.tris,d.r.display)}}));
     const mn=[1e9,1e9,1e9],mx=[-1e9,-1e9,-1e9];for(const q of main){const t=q.m.tris;for(let i=0;i<t.length;i+=3)for(let a=0;a<3;a++){if(t[i+a]<mn[a])mn[a]=t[i+a];if(t[i+a]>mx[a])mx[a]=t[i+a]}}

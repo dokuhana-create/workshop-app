@@ -401,9 +401,88 @@
     return {parts:[part('moulting-ladder.stl',build(f))],notes,magnets};
   }
 
-  /* ---------------- twig bridge: printed flat, with square pins for the twig holders ---------------- */
-  function bridge(o){
-    const span=o.span,h=o.rise,ps=Math.max(3,(o.dia+.6)/Math.SQRT2-.3),w=Math.max(ps,o.w),t=ps,r=rnd(o.seed),f=[],notes=[];
+  /* ---------------- twig bridge ----------------
+     Two ways to hang it:
+     - between two twig holders on the floor (mount 'holder'): an arch or branch with square pins that push down
+       into the holders;
+     - from wall to wall (mount magnet, clip or glue): it hangs between two walls of the enclosure and sags in the
+       middle like a rope bridge. Each end has the same square pin, which drops into a small bracket on the wall.
+     The bridge prints flat on its side, so the walking surface is as wide as the print is thick. */
+  /* the inside length of the enclosure between two opposite walls */
+  function innerSpan(enc,across){const e=(enc&&enc.e)||{},W=+e.W||200,D=+e.D||W,T=+e.T||3;
+    if(e.shape==='rect')return (across==='depth'?D:W)-T;
+    if(e.shape==='poly')return W-2*T;
+    if(e.shape==='oval')return (across==='depth'?D:W)-4;
+    if(e.shape==='hexcell')return W*.9;
+    return W-4}
+  /* the wall bracket: a plate on the wall with a block on top, and a square hole down through the block */
+  function wallBracket(o,ps){
+    const cw=ps/2+3.2,foot=rrect(-cw-2,-20,cw+2,16,4),bm=backMount(o,foot,{my:-10}),f=bm.f,dy=bm.dy,bt=bm.bt;
+    const y0=2+dy,y1=16+dy,hz=ps+.4,hw=hz/2,z0=bt+2.4,zt=z0+hz+hw+1.6;
+    f.push(prism(bt-.01,zt,rrect(-cw,y0,cw,y1,1.2)));
+    /* the hole runs along the wall; its roof comes to a 45° point so it prints without bridging */
+    f.push(prism(z0,z0+hz,rect(-hw,y0-1,hw,y1+1),'sub'));
+    for(let z=z0+hz;z<z0+hz+hw-.15;z+=.3){const d=z+.3-(z0+hz);f.push(prism(z-.01,z+.3,rect(-hw+d,y0-1,hw-d,y1+1),'sub'))}
+    return {m:build(f),c:z0+hz/2,top:y1,magnets:bm.magnets,notes:bm.notes}}
+  /* 1 in the middle of the span, 0 at the ends: the curve of a hanging rope */
+  const cat=s=>{const a=1.4;return (Math.cosh(a*(2*s-1))-Math.cosh(a))/(1-Math.cosh(a))};
+  const HSTYLE_FROM={arch:'swag',arc:'swag',straight:'swag',gothic:'rope',zigzag:'chain',wave:'rope',vine:'vine',branch:'branch',twisted:'branch'};
+  function bridge(o,enc){
+    const hang=o.mount&&o.mount!=='holder'&&o.mount!=='none',ps=Math.max(3,(o.dia+.6)/Math.SQRT2-.3),r=rnd(o.seed),f=[],notes=[];
+    if(!hang)return holderBridge(o,ps,r);
+    const w=Math.max(ps+1,o.w),t=Math.max(ps,Math.min(14,o.w)),br=wallBracket(o,ps),c=br.c;
+    const across=o.across==='depth'?'depth':'width',auto=!(o.span>0),span=auto?Math.max(60,innerSpan(enc,across)-2*c-1.5):o.span;
+    const sag=Math.max(0,Math.min(o.sag,span*.45)),drop=Math.max(-span*.4,Math.min(span*.4,o.drop||0)),pinL=Math.min(o.pinL,13);
+    const style=o.hstyle||HSTYLE_FROM[o.style]||'swag',N=120,path=[];
+    /* the ends run level for a few mm, so the bridge clears the top of the bracket */
+    const e0=Math.min(span*.1,ps/2+5),U=s=>Math.max(0,Math.min(1,(s*span-e0)/(span-2*e0))),yAt=s=>-sag*cat(U(s))-drop*U(s);
+    for(let i=0;i<=N;i++){const s=i/N;path.push([s*span,yAt(s)])}
+    let shape,ridges=[];
+    if(style==='rope'){
+      /* deck, a hand rope above it, and short hangers between them */
+      const rh=Math.max(14,Math.min(30,sag*.35+12)),rail=[];for(let i=0;i<=N;i++){const s=i/N;rail.push([s*span,rh-sag*.62*cat(U(s))-drop*U(s)])}
+      const hangers=[];for(let x=10;x<span-6;x+=11){const s=x/span;hangers.push([[x,yAt(s)],[x,rh-sag*.62*cat(U(s))-drop*U(s)]])}
+      shape=unite(stroke([path],w*.8),stroke([rail],2.4),stroke(hangers,1.6),stroke([[[0,0],[0,rh]],[[span,-drop],[span,rh-drop]]],w*.8));
+      for(let i=3;i<N-2;i+=2){const [x,y]=path[i],[x1,y1]=path[i+1],l=Math.hypot(x1-x,y1-y)||1;ridges.push([[x-(y1-y)/l*w*.3,y+(x1-x)/l*w*.3],[x+(y1-y)/l*w*.3,y-(x1-x)/l*w*.3]])}
+    }else if(style==='chain'){
+      /* a chain of oval links along the curve, with a thin spine inside so it stays one piece */
+      const L=Math.max(10,w*2.2),links=[];let acc=0,k=0;
+      for(let i=1;i<=N;i++){const [x0,y0]=path[i-1],[x1,y1]=path[i];acc+=Math.hypot(x1-x0,y1-y0);if(acc>=L*.75||i===N){acc=0;k++;
+        const a=Math.atan2(y1-y0,x1-x0)*180/Math.PI;links.push(rot([E_(0,0,L/2,w*.55,0,360)],a*Math.PI/180).map(q=>q.map(([x,y])=>[x+x1-L*.375*Math.cos(a*Math.PI/180),y+y1-L*.375*Math.sin(a*Math.PI/180)]))[0])}}
+      shape=unite(stroke(links,1.8),stroke([path],2));
+    }else{
+      shape=stroke([path],w);
+      if(style==='vine')for(let i=6;i<N-5;i+=8){const [x,y]=path[i],sd=(i/8)%2?1:-1;shape=unite(shape,leafAt(x,y,w*2.2,w*1.1,sd>0?1.1:-1.1+Math.PI))}
+      if(style==='branch')for(const i of [26,52,78,100]){const [x,y]=path[i],up=i%52===0,a=(up?1.3:-1.6)+(r()-.5)*.6,len=w*2.5+r()*w*2;shape=unite(shape,stroke([[[x,y],[x+Math.cos(a)*len,y+Math.sin(a)*len]]],w*.55))}
+      if(o.texture==='bark')for(const d of [-w/4,w/4]){const q=[];for(let i=1;i<path.length;i++){const [x0,y0]=path[i-1],[x1,y1]=path[i],l=Math.hypot(x1-x0,y1-y0)||1;q.push([x1-(y1-y0)/l*d,y1+(x1-x0)/l*d])}ridges.push(q)}
+    }
+    /* the ends: a knob that rests on the bracket, and the square pin under it */
+    const knob=Math.max(w/2+1.2,ps/2+2.4);
+    const body=unite(shape,circle(0,0,knob,32),circle(span,-drop,knob,32));
+    /* the pin is only ps thick, so it fits the square hole; the rest of the bridge is t thick */
+    const pins=unite(rect(-ps/2,-knob-pinL,ps/2,-knob*.5),rect(span-ps/2,-drop-knob-pinL,span+ps/2,-drop-knob*.5));
+    const solid=[prism(0,t,body),prism(0,ps,pins)];
+    if(ridges.length)solid.push(prism(t,t+.5,intersect(stroke(ridges,.7),offset(body,-.6))));
+    /* too long for the bed: two halves joined with a dovetail in the middle */
+    const bed=(enc&&enc.bed)||350,parts=[];
+    if(span+2*knob>bed-10){const mx=span/2,my=yAt(.5),a=w*.28,b=w*.42,L=Math.min(8,w),tab=[[[mx-.5,my-a],[mx+L,my-b],[mx+L,my+b],[mx-.5,my+a]]];
+      const left=rect(-200,-2000,mx,2000),right=rect(mx,-2000,span+200,2000);
+      const half=(keep,add,sub)=>{const out=[prism(0,t,subtract(unite(intersect(body,keep),add?intersect(tab,offset(body,.01)):[]),sub?offset(tab,.15):[])),prism(0,ps,intersect(pins,keep))];
+        if(ridges.length)out.push(prism(t,t+.5,intersect(intersect(stroke(ridges,.7),offset(body,-.6)),keep)));return out};
+      parts.push({file:'twig-bridge-half-1.stl',role:'Main colour',m:build(half(left,true,false))},{file:'twig-bridge-half-2.stl',role:'Main colour',m:build(half(right,false,true))});
+      notes.push('The bridge is longer than your print bed, so it comes in two halves that join with a dovetail in the middle. Push them together and add a drop of glue.')}
+    else parts.push(part('twig-bridge.stl',build(solid)));
+    parts.push({file:'wall-bracket-print-2.stl',role:'Second file',m:br.m});
+    const where=across==='depth'?'the front and the back wall':'the left and the right wall';
+    notes.push(`It hangs between ${where}${auto?`, ${Math.round(span+2*c)} mm apart inside`:''}, and sags ${Math.round(sag)} mm in the middle${drop?`; one end sits ${Math.round(Math.abs(drop))} mm lower`:''}. Print 2 wall brackets.`);
+    notes.push(o.mount==='magnet'?'Each bracket holds to its wall with a magnet: put a second magnet on the outside of the panel, opposite it. Set both brackets at the same height first, then drop the bridge\'s square pins into them from above.':o.mount==='clip'?'Each bracket clicks into a clip rail on a mesh wall. Drop the bridge\'s square pins into them from above.':'Glue or tape a bracket to each wall at the same height, then drop the bridge\'s square pins into them from above.');
+    notes.push(`The bridge prints flat on its side, ${fmt1(t)} mm thick: that is the width the mantis walks on. The brackets print on their backs.`);
+    notes.push(...br.notes);
+    return {parts,notes,magnets:br.magnets*2,separate:true,hang:{span,drop,c,top:br.top,t,ps,knob,across,bracket:br.m}};
+  }
+  const fmt1=v=>(Math.round(v*10)/10).toString();
+  function holderBridge(o,ps,r){
+    const span=o.span>0?o.span:120,h=o.rise,w=Math.max(ps,o.w),t=ps,f=[],notes=[];
     const N=80,tri=u=>Math.abs(((u+1)%2)-1),path=[];
     for(let i=0;i<=N;i++){const s=i/N;let y;
       switch(o.style){case 'arc':y=h*.45*Math.sin(Math.PI*s);break;case 'straight':y=0;break;case 'zigzag':y=h*.6*tri(4*s);break;

@@ -166,11 +166,11 @@
     return {f,b:[-s*(W/2+.02),-s*.02,s*(W/2+.02),s*1.02,s*(cy+L/2+.02)],display:(x,y,z)=>[x,-z,y],credit:SCAN.credit,
       note:'Prints lying on its back, face up, with no supports: hollows that open downwards are filled in at 45°, out of sight. The back of the head is flat where it sat on the bed. The eye sockets have thin bone at the back, as a real skull does.'};
   }
-  const SCULPTS={real:'Human skull, anatomical (from a real model)',skull:'Human skull, sculpted',bat:'Bat, wings spread (wall)',moth:'Death\'s-head moth (wall)',raven:'Raven on a stone',snake:'Coiled snake'};
+  const SCULPTS={real:'Human skull (anatomical, from a real model)',bat:'Bat, wings spread (wall)',moth:'Death\'s-head moth (wall)',raven:'Raven on a stone',snake:'Coiled snake'};
 
   const MAKERS={real:realSkull,skull,bat,moth,raven,snake},CACHE=new Map();
   function build(o){
-    const k=MAKERS[o.kind]?o.kind:'skull',key=JSON.stringify([k,o.size,o.seed,o.print,o.detail,o.mount,o.dMagD,o.dMagH,o.age,o.preview]);
+    const k=o.kind==='skull'||!MAKERS[o.kind]?'real':o.kind,key=JSON.stringify([k,o.size,o.seed,o.print,o.detail,o.mount,o.dMagD,o.dMagH,o.age,o.preview]);
     if(CACHE.has(key))return CACHE.get(key);
     let sh=MAKERS[k](o);const late=!sh;if(!sh)sh=skull(o);
     const h=Math.max(.2,Math.min(.5,o.size/(sh.relief?220:140)))*(o.detail==='fine'?.75:1)*(o.preview?1.8:1);

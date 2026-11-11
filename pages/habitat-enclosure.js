@@ -254,7 +254,7 @@
     if(!preview){const hs=[];for(let x=3.5;x+p.hole<=tw-3.5;x+=p.hole+p.bar)for(let y=3.5;y+p.hole<=th-3.5;y+=p.hole+p.bar)hs.push(sq(x,y,p.hole));if(hs.length)tf.push(prism(-1,4,hs,'sub'))}
     const tile=build(tf);
     const button=build([prism(0,2,unite(G.rrect(-8,-3.5,8,3.5,3.5),circle(0,0,3.5))),prism(1.99,6.5,circle(0,0,1.6,20)),prism(1.99,2.6,circle(0,0,2.4,20))]);
-    return {frame,tile,button,cells:cells.length,tileSize:[tw,th],buttons:holes.length,Tf};
+    return {frame,tile,button,cells:cells.length,rects:cells.map(([x,y])=>[x,y,cw,ch]),nx,ny,tileSize:[tw,th],buttons:holes.length,Tf};
   }
 
   /* ---------- swing door with a printed snap hinge ----------
