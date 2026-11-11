@@ -113,7 +113,7 @@
     curio:{name:'Cabinet of curiosities',group:'Gothic',colours:'Bone white or aged ivory, with black and brass',note:'Lifelike sculpted pieces: a skull, a raven, a death\'s-head moth and a coiled snake, with old books and candles, like a Victorian collector\'s cabinet.',pieces:[
       ['sculpt',{kind:'real',size:34},1],['sculpt',{kind:'moth',size:70},1],['diorama',{kind:'books',n:4},1],['ledge',{shape:'classic',pattern:'solid',under:'ribs'},1],
       ['sculpt',{kind:'raven',size:45},2],['diorama',{kind:'candles',accent:'yes'},2],['tile',{texture:'planks'},2],['plate',{shape:'scroll',mode:'raised'},2],
-      ['sculpt',{kind:'snake',size:55},3],['sculpt',{kind:'bat',size:80},3],['diorama',{kind:'openBook'},3]]},
+      ['sculpt',{kind:'python',size:110},3],['sculpt',{kind:'bat',size:80},3],['diorama',{kind:'openBook'},3]]},
     wizard:{name:"Wizard's tower",group:'Fantasy',colours:'Deep purple, midnight blue and silver; translucent filament for crystals and potions',note:'A tower, crystals, potions and an open spell book.',pieces:[
       ['diorama',{kind:'tower',style:'intact'},1],['diorama',{kind:'crystals',accent:'yes'},1],['diorama',{kind:'potions',accent:'yes'},1],['motif',{motif:'moon',form:'plaque',base:'round'},1],
       ['diorama',{kind:'openBook'},2],['motif',{motif:'wizardHat',form:'cutout',mount:'free'},2],['tile',{texture:'stars',accent:'yes'},2],['ledge',{shape:'tiered',pattern:'solid',under:'D'},2],
