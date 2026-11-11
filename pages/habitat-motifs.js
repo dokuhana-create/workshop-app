@@ -151,7 +151,7 @@
     return {fill:U(page(1),page(-1),rect(-48,4,48,10)),lines:[[[0,10],[0,64]],...lines]}};
 
   const GROUPS=[
-    ['Gothic and vampire',[['bat','Bat'],['skull','Skull'],['crossbones','Skull and bones'],['coffin','Coffin'],['tombstone','Tombstone'],['roseWindow','Rose window'],['gothicWindow','Gothic window'],['gothicCross','Gothic cross'],['candles','Candles'],['raven','Raven'],['spider','Spider'],['web','Spider web'],['moon','Crescent moon']]],
+    ['Gothic and vampire',[['bat','Bat'],['skull','Skull'],['crossbones','Skull and bones'],['coffin','Coffin'],['tombstone','Tombstone'],['roseWindow','Rose window'],['gothicWindow','Gothic window'],['gothicCross','Gothic cross'],['candles','Candles'],['raven','Raven'],['web','Spider web'],['moon','Crescent moon']]],
     ['Greek and Roman',[['laurel','Laurel wreath'],['helmet','Corinthian helmet'],['temple','Temple'],['amphora','Amphora'],['owl','Owl of Athena'],['lyre','Lyre'],['ionic','Ionic column'],['meander','Greek key border']]],
     ['Zodiac',[['zodiacWheel','Zodiac wheel'],...Object.keys(Z).map(k=>['zodiac-'+k,k[0].toUpperCase()+k.slice(1)])]],
     ['Fantasy',[['dragon','Dragon'],['castle','Castle'],['crystal','Crystals'],['wizardHat','Wizard hat'],['potion','Potion'],['mushroomSil','Toadstool'],['tree','Gnarled tree']]],

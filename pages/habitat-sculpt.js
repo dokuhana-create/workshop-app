@@ -1,5 +1,4 @@
-/* Habitat, pieces from real 3D scans: a human skull, a mounted raven, a raven skull, a python skeleton, a bat and a
-   death's-head hawkmoth, each stored as a compact distance field and meshed here at the size you choose. Standing
+/* Habitat, pieces from real 3D scans of museum specimens, statues and shells, each stored as a compact distance field and meshed here at the size you choose. Standing
    pieces get every overhang filled to 45° so they print without supports; wall pieces are reliefs with a flat back.
    Also: your own model from an STL file. Every builder returns {parts:[{file,role,m}], notes, magnets}. */
 (function(root){
@@ -17,35 +16,88 @@
      far each point is from the surface. They load once, in the background, when the page opens.
      stand: prints standing on the bed, z up. relief: a wall piece, x across, y up, z out of the wall. */
   const SCANS={
-    real:{file:'skull-scan.bin',name:'Human skull',type:'stand',size:'height',legacy:true,
+    real:{group:'Gothic and curiosities',file:'skull-scan.bin',name:'Human skull',type:'stand',size:'height',legacy:true,
       credit:'Skull model: "High quality skull" by Mariano Coretti (DrCoretti), Wikimedia Commons, CC BY-SA 4.0.',
       note:'Prints lying on its back, face up, with no supports: hollows that open downwards are filled in at 45°, out of sight. The back of the head is flat where it sat on the bed. The eye sockets have thin bone at the back, as a real skull does.'},
-    raven:{file:'raven-scan.bin',name:'Raven on its perch',type:'stand',size:'height',
+    raven:{group:'Gothic and curiosities',file:'raven-scan.bin',name:'Raven on its perch',type:'stand',size:'height',
       credit:'Raven model: "Common raven", a mounted specimen of the Krystyna and Włodzimierz Tomek Natural Science Museum in Ciężkowice, scanned by Virtual Museums of Małopolska, CC0 (public domain): no credit needed.',
       note:'A real mounted raven, standing on the short branch it was mounted on. It prints standing up: the tail and the underside of the body are filled in at 45° below, out of sight, so no supports are needed.'},
-    ravenskull:{file:'ravenskull-scan.bin',name:'Raven skull',type:'stand',size:'length',cut:.05,
+    ravenskull:{group:'Gothic and curiosities',file:'ravenskull-scan.bin',name:'Raven skull',type:'stand',size:'length',cut:.05,
       credit:'Raven skull model: "Raven skull", a micro-CT scan by University of Dundee Museum Collections (D\'Arcy Thompson Zoology Museum), CC0 (public domain): no credit needed.',
       note:'A micro-CT scan of a real raven skull. It prints the right way up, cut flat a little at the bottom so it stands; hollows under the bone are filled in at 45°. Size is the length, beak to back.'},
-    python:{file:'python-scan.bin',name:'Python skeleton, coiled',type:'stand',size:'length',
+    python:{group:'Gothic and curiosities',file:'python-scan.bin',name:'Python skeleton, coiled',type:'stand',size:'length',
       credit:'Python skeleton model: "Royal Python (Python regius)" by The University of Edinburgh (CT courtesy of Dr. Tobias Schwarz, prepared by Brian Mather, Royal (Dick) School of Veterinary Studies), Sketchfab, CC BY 4.0.',
       note:'A CT scan of a real royal python skeleton, lying in a loose coil. The bones were thickened slightly so the ribs print; under 80 mm long they get very fine, so print it large (about 100–150 mm) and with a 0.2 mm nozzle layer height. It prints flat, as it lies.'},
-    bat:{file:'bat-scan.bin',name:'Bat, wings spread (wall)',type:'relief',size:'width',mags:[[0,-.02]],
+    bat:{group:'Gothic and curiosities',file:'bat-scan.bin',name:'Bat, wings spread (wall)',type:'relief',size:'width',mags:[[0,-.02]],
       credit:'Bat model: "Bat" by victorberdugo1, Sketchfab, CC BY 4.0.',
       note:'A bat with its wings spread wide, as a wall relief: its head and body stand out and the wings sweep back towards the wall. It prints flat on its back, without supports. Size is the wingspan.'},
-    moth:{file:'moth-scan.bin',name:'Death\'s-head hawkmoth (wall)',type:'relief',size:'length',mags:[[0,0]],
+    moth:{group:'Gothic and curiosities',file:'moth-scan.bin',name:'Death\'s-head hawkmoth (wall)',type:'relief',size:'length',mags:[[0,0]],
       credit:'Moth model: "Death\'s-head Hawk Moth Acherontia Atropos", a specimen of The Watt Institution (Greenock), Sketchfab, CC BY 4.0.',
-      note:'A scan of a real death\'s-head hawkmoth at rest, wings folded over its back, as a wall relief. It prints flat on its back, without supports. Size is its length, head to wing tips; paint the skull mark on the thorax.'}};
-  const SCULPTS={};for(const k in SCANS)SCULPTS[k]=SCANS[k].name;
+      note:'A scan of a real death\'s-head hawkmoth at rest, wings folded over its back, as a wall relief. It prints flat on its back, without supports. Size is its length, head to wing tips; paint the skull mark on the thorax.'},
+    angel:{file:'angel-scan.bin',name:'Praying angel',group:'Gothic and curiosities',type:'stand',size:'height',
+      credit:'Angel model: "Engel" by noe-3d.at (cultural heritage scans of Lower Austria), Sketchfab, CC BY 4.0.',
+      note:'A scan of a carved stone angel from a grave, wings folded, on its own plinth. It prints standing; the wings and arms are filled underneath at 45°, so no supports are needed. Size is the height.'},
+    tombstone:{file:'tombstone-scan.bin',name:'Grave monument with mourning figure',group:'Gothic and curiosities',type:'stand',size:'height',
+      credit:'Grave monument model: "Tombstone Familie Laurenz" by 3dhdscan, Sketchfab, CC BY 4.0.',
+      note:'A scan of a real grave monument: a veiled mourning figure on a tall stepped plinth. It prints standing, without supports. Size is the height.'},
+    barnowl:{file:'barnowl-scan.bin',name:'Barn owl (mounted specimen)',group:'Gothic and curiosities',type:'stand',size:'height',
+      credit:'Barn owl model: "Barn Owl (Tyto alba)", a specimen of The Watt Institution (Greenock), Sketchfab, CC BY 4.0.',
+      note:'A scan of a real mounted barn owl on its display base. It prints standing; the tail and the underside are filled at 45° below, out of sight. Size is the height.'},
+    stagbeetle:{file:'stagbeetle-scan.bin',name:'Stag beetle (specimen)',group:'Gothic and curiosities',type:'stand',size:'length',
+      credit:'Stag beetle model: "European stag beetle", a specimen scanned by Virtual Museums of Małopolska, CC0 (public domain): no credit needed.',
+      note:'A scan of a real European stag beetle. It prints lying as it was pinned; the legs are thin, so make it at least 80 mm long. Size is the length, antlers to tail.'},
+    ammonite:{file:'ammonite-scan.bin',name:'Ammonite fossil (wall)',group:'Gothic and curiosities',type:'relief',size:'width',cut:.3,mags:[[0,0]],
+      credit:'Ammonite model: "Ammonite Euaspidoceras paucituberkulatum Arkell", scanned by Virtual Museums of Małopolska, CC0 (public domain): no credit needed.',
+      note:'A scan of a real Jurassic ammonite, cut flat at the back so it hangs on the wall like a fossil plaque. It prints flat on its back. Size is its width.'},
+    nautilus:{file:'nautilus-scan.bin',name:'Nautilus shell',group:'Sea',type:'stand',size:'length',cut:.12,
+      credit:'Nautilus model: "Nautilus Shell" by RISD Nature Lab, Sketchfab, CC BY 4.0.',
+      note:'A scan of a real chambered nautilus shell, lying on its side with the spiral on top, cut a little flat underneath. It prints without supports. Size is the length.'},
+    murex:{file:'murex-scan.bin',name:'Murex shell',group:'Sea',type:'stand',size:'length',cut:.08,
+      credit:'Murex shell model: "Murex Shell" by Loïc Norgeot, Sketchfab, CC BY 4.0.',
+      note:'A scan of a spiny murex shell, cut a little flat underneath. The spines are filled at 45° below. Size is the length.'},
+    starfish:{file:'starfish-scan.bin',name:'Starfish',group:'Sea',type:'stand',size:'length',
+      credit:'Starfish model: "Asteroid: starfish or seastar" by the Digital Atlas of Ancient Life, CC0 (public domain): no credit needed.',
+      note:'A scan of a real starfish, lying flat. It prints flat, without supports. Size is the width across the arms.'},
+    pinecone:{file:'pinecone-scan.bin',name:'Pine cone with little mushrooms',group:'Forest and crystals',type:'stand',size:'height',
+      credit:'Pine cone model: "Pine Cone with Fungi" by Thomas Flynn, Sketchfab, CC BY 4.0.',
+      note:'A scan of a real pine cone with tiny mushrooms growing from it. It prints standing; tiny caps too thin to print are left off. Size is the height.'},
+    amethyst:{file:'amethyst-scan.bin',name:'Amethyst geode',group:'Forest and crystals',type:'stand',size:'length',cut:.05,
+      credit:'Amethyst model: "Amethyst Geode" by University Libraries at Virginia Tech, Sketchfab, CC BY 4.0.',
+      note:'A scan of a real amethyst geode: a rough rock opening onto a bed of crystals. Print it in a translucent purple, or paint it. Size is the length.'},
+    buddha:{file:'buddha-scan.bin',name:'Seated Buddha (Ming dynasty)',group:'Asian garden',type:'stand',size:'height',
+      credit:'Buddha model: "Chinese Amoghasiddhi Buddha, 1403–1424 CE", Minneapolis Institute of Art, CC0 (public domain): no credit needed.',
+      note:'A scan of a 15th-century bronze Buddha seated on a lotus throne. It prints standing, without supports. Size is the height.'},
+    komainu:{file:'komainu-scan.bin',name:'Komainu shrine guardian',group:'Asian garden',type:'stand',size:'height',
+      credit:'Komainu model: "Lion-dog (Komainu, from Yasui-konpiragu Kyoto)" by Yu (FFT_kedar), Sketchfab, CC BY 4.0.',
+      note:'A scan of a stone lion-dog that guards a shrine in Kyoto. They come in pairs: print two, and mirror one in the slicer. Size is the height.'},
+    lantern:{file:'lantern-scan.bin',name:'Japanese stone lantern',group:'Asian garden',type:'stand',size:'height',
+      credit:'Lantern model: "Japanese Stone Lantern" by Sahir Virmani, Sketchfab, CC BY 4.0.',
+      note:'A tōrō stone lantern on a tall post. It prints standing, without supports; the roof is filled at 45° underneath. Size is the height.'},
+    lion:{file:'lion-scan.bin',name:'Lion statue',group:'Ancient world',type:'stand',size:'height',
+      credit:'Lion model: "Lion Statue" by Thomas Flynn, Sketchfab, CC0 (public domain): no credit needed.',
+      note:'A scan of a classical stone lion with a shield, on its plinth. It prints standing, without supports. Size is the height.'},
+    sphinx:{file:'sphinx-scan.bin',name:'Winged sphinx',group:'Ancient world',type:'stand',size:'height',
+      credit:'Sphinx model: "Sphinx" by noe-3d.at (cultural heritage scans of Lower Austria), Sketchfab, CC0 (public domain): no credit needed.',
+      note:'A scan of a baroque garden sphinx with wings, on its plinth. It prints standing; the wings are filled at 45° underneath. Size is the height.'},
+    torso:{file:'torso-scan.bin',name:'Marble torso of Dionysos',group:'Ancient world',type:'stand',size:'height',cut:.02,
+      credit:'Torso model: "Marble torso from a statue of Dionysos" by Thomas Flynn, Sketchfab, CC BY 4.0.',
+      note:'A scan of an ancient Roman marble torso, broken as it was found, like a ruin. It prints standing. Size is the height.'},
+    ramesses:{file:'ramesses-scan.bin',name:'Bust of Ramesses II',group:'Ancient world',type:'stand',size:'height',
+      credit:'Ramesses model: "Colossal Bust of Ramesses II" by Thomas Flynn, Sketchfab, CC BY 4.0.',
+      note:'A scan of the colossal granite bust of the pharaoh Ramesses II. It prints standing, without supports. Size is the height.'}};
+  const SCULPTS={},OPTIONS=[];for(const k in SCANS){SCULPTS[k]=SCANS[k].name;OPTIONS.push([k,SCANS[k].name,SCANS[k].group])}
   /* older names for the same pieces */
   const ALIAS={skull:'real',snake:'python'};
   const SCAN=SCANS.real;
-  function loadOne(k,v){const S0=SCANS[k];if(S0.loading)return S0.loading;
+  function loadOne(k){const v=VER;const S0=SCANS[k];if(S0.loading)return S0.loading;
     return S0.loading=(async()=>{try{const r=await fetch(S0.file+(v?'?v='+v:''));if(!r.ok)throw new Error(r.status);
       if(typeof DecompressionStream==='undefined')throw new Error('no gzip');
       const buf=await new Response(r.body.pipeThrough(new DecompressionStream('gzip'))).arrayBuffer(),dv=new DataView(buf);
       Object.assign(S0,{nx:dv.getInt32(0,true),ny:dv.getInt32(4,true),nz:dv.getInt32(8,true),qs:dv.getInt32(12,true),vf:dv.getFloat32(16,true)});
       S0.q=new Int8Array(buf,20,S0.nx*S0.ny*S0.nz);S0.ready=true;if(api.onready)api.onready(k)}catch(e){S0.error=String(e)}})()}
-  function loadScans(v){return Promise.all(Object.keys(SCANS).map(k=>loadOne(k,v)))}
+  /* scans load when a piece first needs them; pending() waits for every one that has started */
+  let VER='';function setVersion(v){VER=v}
+  function pending(){return Promise.all(Object.values(SCANS).filter(S0=>S0.loading).map(S0=>S0.loading))}
   /* the scan as a distance field, in units where one voxel is vf; centred across, standing on z=0 */
   function field(S0){
     const {nx,ny,nz,qs,vf,q}=S0,ox=nx*vf/2,oy=ny*vf/2,oz=3*vf,far=7*vf,I=(i,j,k)=>q[(k*ny+j)*nx+i];
@@ -128,5 +180,5 @@
     notes.push('Your model is printed as you made it: if it hangs out over air, turn on supports in the slicer.');
     return {parts,notes,magnets};
   }
-  const api={SCULPTS,SCANS,build,custom,parseSTL,model:null,loadScans,SCAN,onready:null};root.HabitatSculpt=api;
+  const api={SCULPTS,OPTIONS,SCANS,build,custom,parseSTL,model:null,setVersion,pending,SCAN,onready:null};root.HabitatSculpt=api;
 })(typeof window!=='undefined'?window:globalThis);

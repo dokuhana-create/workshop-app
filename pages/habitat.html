@@ -3,18 +3,18 @@
 <script src="../shim.js"></script>
 <script src="../lib/clipper.js"></script>
 <script src="../lib/earcut.min.js"></script>
-<script src="../lib/geo.js?v=20"></script>
-<script src="habitat-parts.js?v=20"></script>
-<script src="habitat-enclosure.js?v=20"></script>
-<script src="habitat-more.js?v=20"></script>
-<script src="habitat-motifs.js?v=20"></script>
-<script src="habitat-keep.js?v=20"></script>
-<script src="../lib/sdf.js?v=20"></script>
-<script src="habitat-sculpt.js?v=20"></script>
-<script src="habitat-trim.js?v=20"></script>
-<script src="habitat-addons.js?v=20"></script>
-<script src="habitat-forms.js?v=20"></script>
-<script src="habitat-sets.js?v=20"></script>
+<script src="../lib/geo.js?v=21"></script>
+<script src="habitat-parts.js?v=21"></script>
+<script src="habitat-enclosure.js?v=21"></script>
+<script src="habitat-more.js?v=21"></script>
+<script src="habitat-motifs.js?v=21"></script>
+<script src="habitat-keep.js?v=21"></script>
+<script src="../lib/sdf.js?v=21"></script>
+<script src="habitat-sculpt.js?v=21"></script>
+<script src="habitat-trim.js?v=21"></script>
+<script src="habitat-addons.js?v=21"></script>
+<script src="habitat-forms.js?v=21"></script>
+<script src="habitat-sets.js?v=21"></script>
 <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Bricolage+Grotesque:opsz,wght@12..96,600;12..96,750&family=IBM+Plex+Mono:wght@500&family=IBM+Plex+Sans:wght@400;500;600&display=swap">
 <style>
 /* Same layout as the Resin Workshop: inputs on the left, the 3D preview and downloads beside them. */
@@ -881,10 +881,10 @@ Object.assign(ITEMS,{
       ['crest','Crest on top',[['yes','Yes'],['no','No']],{show:vis('piece',['all','top','frame'])}],['colour','Colours',[['one','One'],['two','Two: frame and filigree']],{show:vis('piece',['all','top','frame'])}],['font','Writing',[['script','Cursive'],['caps','Capitals']],{show:vis('piece',['all','top','frame'])}]],
     mounts:['magnet','glue'],
     hint:'Dresses the enclosure in a style. The front frame sits in front of the clear front, with a shaped window (a pointed gothic arch, a round arch, a moon gate, a stepped deco top and so on), filigree in the corners, a patterned base with the name, and a crest on top. Finials go on the top corners and feet under the bottom corners. Sized from the Enclosure tab (the frame fits rectangular enclosures). The frame prints flat; a tall frame comes in two halves with puzzle joints.'},
-  sculpt:{group:'dio',keep:'sculpt',name:'Real specimen (3D scan)',fields:[['size','Size: height of skull and raven, length of raven skull, python and moth, wingspan of bat',50]],
-    selects:[['kind','Piece',Object.entries(HabitatSculpt.SCULPTS)],['print','Printing',[['auto','No supports needed (fills under overhangs)'],['full','Full detail, with tree supports']]],
+  sculpt:{group:'dio',keep:'sculpt',name:'Real specimen or statue (3D scan)',fields:[['size','Size (mm): the note below says what it measures',50]],
+    selects:[['kind','Piece',HabitatSculpt.OPTIONS],['print','Printing',[['auto','No supports needed (fills under overhangs)'],['full','Full detail, with tree supports']]],
       ['detail','Detail',[['normal','Normal'],['fine','Fine (slower to make)']]]],shuffle:true,mounts:['free','magnet','glue'],
-    hint:'Pieces made from 3D scans of real specimens: a human skull, a mounted raven, a raven skull, a python skeleton, a bat and a death\'s-head hawkmoth. Their licences let you sell prints; the ones that ask for a credit say so in the notes below. Standing pieces print without supports: anything that hangs out is filled underneath at 45°, out of sight. The bat and the moth are wall reliefs that print flat on their backs; with magnets, the pockets are in the back.'},
+    hint:'Pieces made from 3D scans of real museum specimens, statues and shells: skulls, a raven and an owl, a bat and a moth, fossils and shells, an angel and a grave monument, a Buddha, a shrine guardian and a stone lantern, a lion, a sphinx and Roman and Egyptian sculpture. All of them may be printed and sold; the ones that ask for a credit say so in the notes below. Standing pieces print without supports: anything that hangs out is filled underneath at 45°, out of sight. The bat, the moth and the ammonite are wall pieces that print flat on their backs; with magnets, the pockets are in the back.'},
   custom:{group:'dio',keep:'custom',file:true,name:'Your own model (STL from Blender)',fields:[['size','Size',50]],
     selects:[['fit','Size sets the',[['height','Height'],['longest','Longest side']]],['turn','Turn it',[['none','As exported'],['x','Stand up (90° about X)'],['xr','Lay down (−90° about X)'],['y','On its side (90° about Y)'],['flip','Upside down']]],
       ['base','Base',[['none','None'],['round','Round plinth'],['rock','Rock']]]],mounts:['free','magnet','peg','glue'],
@@ -979,7 +979,7 @@ function trimEnc(){const p=readEnc(),k=JSON.stringify(p);if(trimMemo.k===k)retur
 HabitatKeep.trim=o=>HabitatTrim.piece(Object.assign({},trimEnc(),o));
 /* the anatomical skull loads in the background; redraw when it arrives */
 let scanT;HabitatSculpt.onready=()=>{clearTimeout(scanT);scanT=setTimeout(()=>{if(typeof BMEMO!=='undefined')BMEMO.clear();if(state.tab==='acc'&&['sculpt','set'].includes(A.item))accCalc();else if(state.tab==='build')buildCalc()},200)};
-const SCANS_READY=HabitatSculpt.loadScans('20');
+HabitatSculpt.setVersion('21');
 HabitatKeep.hanger=o=>HabitatForms.hanger(Object.assign({},trimEnc(),o));HabitatKeep.carry=o=>HabitatForms.carry(Object.assign({},trimEnc(),o));
 function encInfo(){
   const e=Object.assign({},DEF,state.enc||{}),bed=Math.max(e.bx||350,e.by||350),g=e.T+.6,band=g/2+2.4,o={e,bed,band,hatchR:e.hatch!=='none'?(state.encHatchR||Math.min(30,e.hatchD/2)):0};
@@ -1082,7 +1082,7 @@ function accCalc(){
   const n=$('accNote');n.hidden=!notes.length;n.innerHTML='';for(const x of notes){const dv=document.createElement('div');dv.textContent=x;n.append(dv)}
 }
 $('accDl').onclick=async()=>{
-  await SCANS_READY;const d=accDesign(),msg=$('accMsg');if(!d.parts.length)return;
+  accDesign();await HabitatSculpt.pending();const d=accDesign(),msg=$('accMsg');if(!d.parts.length)return;
   if(d.parts.length===1){const p=d.parts[0];await save(p.file,new Blob([stl(place(p.m.tris))]),msg,'Saved. Open it in Creality Print.');return}
   /* parts in a second colour keep their main part's origin, so they line up as one object; everything else sits on the bed */
   const groups=layout(d),files=[],enc=new TextEncoder();
@@ -1237,7 +1237,7 @@ function buildCalc1(){
   $('bMsg').textContent='';
 }
 $('bDl').onclick=async()=>{
-  const p=readEnc(),msg=$('bMsg');await SCANS_READY;BMEMO.clear();msg.textContent='Building all the files. This can take a minute…';await new Promise(r=>setTimeout(r,50));
+  const p=readEnc(),msg=$('bMsg');buildDesign(true);await HabitatSculpt.pending();BMEMO.clear();msg.textContent='Building all the files. This can take a minute…';await new Promise(r=>setTimeout(r,50));
   let m;try{m=encModel(p,false)}catch(e){msg.textContent='These enclosure settings don\'t make a valid enclosure.';return}
   const files=m.parts.map(r=>({name:'enclosure/'+r.file,data:stl(r.tris)}));const des=buildDesign(),enc=new TextEncoder();
   const th=SETS[B.theme]||SETS.orchid;let rd=`FULL BUILD: ${th.name}\n${'='.repeat(12+th.name.length)}\n\nSuggested colours: ${th.colours}.\n\n--- Enclosure ---\n${m.readme}\n\n--- Interior ---\n`;let mags=0;

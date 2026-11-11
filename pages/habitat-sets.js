@@ -18,7 +18,7 @@
       ['flower',{kind:'lotus'},1],['tile',{texture:'waves'},1],['dish',{shape:'round'},1],['plate',{shape:'leaf',mode:'engraved'},1],
       ['ledge',{shape:'moon',pattern:'rings',under:'D'},2],['moss',{shape:'round'},2],['mister',{shape:'leaf'},2],['flower',{kind:'lily',R:20},2],
       ['flower',{kind:'lotus',R:18,centre:'seedpod'},3],['bridge',{style:'arc',hstyle:'swag'},3],['moult',{shape:'oval',post:'leaf'},3],['feeder',{shape:'round'},3]]},
-    tropical:{name:'Tropical island',group:'Flowers',colours:'Coral, turquoise and sand',note:'Hibiscus, frangipani and pebble beaches.',pieces:[
+    tropical:{name:'Tropical island',group:'Flowers',colours:'Coral, turquoise and sand',note:'Hibiscus, frangipani and pebble beaches.',pieces:[['sculpt',{kind:'starfish',size:45},3],
       ['flower',{kind:'hibiscus'},1],['flower',{kind:'plumeria',R:20},1],['dish',{shape:'oval'},1],['plate',{shape:'banner',mode:'raised'},1],
       ['tile',{texture:'pebbles'},2],['planter',{shape:'cone'},2],['ledge',{shape:'leaf',pattern:'solid',under:'D'},2],['ladder',{style:'bamboo',mount:'tie'},2],
       ['mister',{shape:'flower'},3],['moss',{shape:'kidney'},3],['bridge',{style:'wave',hstyle:'rope'},3],['moult',{shape:'pebble',post:'leaf'},3]]},
@@ -26,7 +26,7 @@
       ['flower',{kind:'protea'},1],['flower',{kind:'star',R:18},1],['ledge',{shape:'tiered',pattern:'solid',under:'wedge'},1],['plate',{shape:'tag',mode:'stencil'},1],
       ['twig',{shape:'rock',mount:'free'},2],['dish',{shape:'pebble'},2],['tile',{texture:'stone'},2],['planter',{shape:'facet'},2],
       ['flower',{kind:'dahlia',R:18},3],['bridge',{style:'branch',hstyle:'branch'},3],['moult',{shape:'pebble',post:'fork'},3]]},
-    forest:{name:'Forest floor',group:'Woodland',colours:'Bark brown, moss green and mushroom cream',note:'Bark, fungus and pebbles, for a dead-leaf mantis like Deroplatys.',pieces:[
+    forest:{name:'Forest floor',group:'Woodland',colours:'Bark brown, moss green and mushroom cream',note:'Bark, fungus and pebbles, for a dead-leaf mantis like Deroplatys.',pieces:[['sculpt',{kind:'pinecone',size:45},2],['sculpt',{kind:'stagbeetle',size:80},3],
       ['ledge',{shape:'fungus',pattern:'solid',under:'D'},1],['bark',{style:'organic'},1],['dish',{shape:'pebble'},1],['plate',{shape:'cloud',mode:'engraved'},1],
       ['ledge',{shape:'tiered',pattern:'rings',under:'wedge'},2],['twig',{shape:'rock',mount:'free'},2],['tile',{texture:'bark'},2],['feeder',{shape:'pebble'},2],
       ['bridge',{style:'branch',hstyle:'branch'},3],['ledge',{shape:'lobed',pattern:'solid',under:'ribs'},3],['moss',{shape:'kidney'},3],['moult',{shape:'log',post:'branch'},3],['ladder',{style:'bark',mount:'tie'},3]]},
@@ -42,31 +42,31 @@
       ['ledge',{shape:'leaf',pattern:'vine',under:'D'},1],['ladder',{style:'vine',mount:'tie'},1],['moss',{shape:'kidney'},1],['plate',{shape:'leaf',mode:'raised'},1],
       ['tile',{texture:'leaves'},2],['planter',{shape:'halfround'},2],['bridge',{style:'vine',hstyle:'vine'},2],['mister',{shape:'leaf'},2],
       ['flower',{kind:'hibiscus',R:20},3],['ledge',{shape:'fungus',pattern:'vine',under:'flat'},3],['tile',{texture:'moss'},3],['moult',{shape:'leaf',post:'leaf'},3]]},
-    mossy:{name:'Mossy hollow',group:'Woodland',colours:'Moss green and stone grey',note:'Soft moss, roots and old stone.',pieces:[
+    mossy:{name:'Mossy hollow',group:'Woodland',colours:'Moss green and stone grey',note:'Soft moss, roots and old stone.',pieces:[['sculpt',{kind:'pinecone',size:45},2],
       ['tile',{texture:'moss'},1],['moss',{shape:'corner'},1],['ledge',{shape:'pebble',pattern:'solid',under:'D'},1],['plate',{shape:'cloud',mode:'raised'},1],
       ['tile',{texture:'roots'},2],['dish',{shape:'pebble'},2],['twig',{shape:'rock',mount:'free'},2],['mister',{shape:'pebble'},2],
       ['ledge',{shape:'lobed',pattern:'rings',under:'wedge'},3],['bark',{style:'organic'},3],['moult',{shape:'pebble',post:'branch'},3]]},
-    bamboo:{name:'Bamboo grove',group:'Asian garden',colours:'Bamboo green and natural cream',note:'Bamboo canes and quiet lines.',pieces:[
+    bamboo:{name:'Bamboo grove',group:'Asian garden',colours:'Bamboo green and natural cream',note:'Bamboo canes and quiet lines.',pieces:[['sculpt',{kind:'lantern',size:60},2],
       ['ladder',{style:'bamboo',mount:'tie'},1],['tile',{texture:'bamboo'},1],['pot',{shape:'square'},1],['plate',{shape:'banner',mode:'stencil'},1],
       ['bridge',{style:'straight',hstyle:'swag'},2],['dish',{shape:'round'},2],['moss',{shape:'corner'},2],['ledge',{shape:'classic',pattern:'solid',under:'flat'},2],
       ['planter',{shape:'square'},3],['mister',{shape:'leaf'},3],['moult',{shape:'square',post:'stake'},3],['stack',{kind:'foot',style:'block'},3]]},
-    zen:{name:'Zen garden',group:'Asian garden',colours:'Sand, slate grey and moss',note:'Raked waves, smooth stones and a little bridge.',pieces:[
+    zen:{name:'Zen garden',group:'Asian garden',colours:'Sand, slate grey and moss',note:'Raked waves, smooth stones and a little bridge.',pieces:[['sculpt',{kind:'lantern',size:70},1],['sculpt',{kind:'buddha',size:50},2],
       ['tile',{texture:'waves'},1],['dish',{shape:'pebble'},1],['bridge',{style:'arc',hstyle:'swag'},1],['plate',{shape:'arch',mode:'engraved'},1],
       ['moss',{shape:'crescent'},2],['ledge',{shape:'pebble',pattern:'solid',under:'D'},2],['pot',{shape:'round'},2],['mister',{shape:'round'},2],
       ['flower',{kind:'sakura',R:15},3],['moult',{shape:'round',post:'stake'},3],['stack',{kind:'foot',style:'turned'},3]]},
-    pagoda:{name:'Pagoda',group:'Asian garden',colours:'Lacquer red, black and gold',note:'Arches, scales and lacquer colours.',pieces:[
+    pagoda:{name:'Pagoda',group:'Asian garden',colours:'Lacquer red, black and gold',note:'Arches, scales and lacquer colours.',pieces:[['sculpt',{kind:'komainu',size:40},1],['sculpt',{kind:'lantern',size:70},2],
       ['bridge',{style:'gothic',hstyle:'rope'},1],['tile',{texture:'scales'},1],['plate',{shape:'scroll',mode:'raised'},1],['dish',{shape:'hex'},1],
       ['ledge',{shape:'moon',pattern:'scroll',under:'ribs'},2],['flower',{kind:'lotus',R:18},2],['ladder',{style:'chain',mount:'tie'},2],
       ['mister',{shape:'hex'},3],['stack',{kind:'foot',style:'turned'},3],['moult',{shape:'hex',post:'ring'},3],['transport',{shape:'octagon',handle:'loop'},3]]},
-    stone:{name:'River stone',group:'Earth and water',colours:'Slate grey and sand',note:'Smooth river stones.',pieces:[
+    stone:{name:'River stone',group:'Earth and water',colours:'Slate grey and sand',note:'Smooth river stones.',pieces:[['sculpt',{kind:'ammonite',size:55},3],
       ['dish',{shape:'pebble'},1],['ledge',{shape:'pebble',pattern:'solid',under:'D'},1],['tile',{texture:'pebbles'},1],['plate',{shape:'rounded',mode:'engraved'},1],
       ['pot',{shape:'pebble',taper:0},2],['moss',{shape:'pebble'},2],['feeder',{shape:'pebble'},2],['twig',{shape:'rock',mount:'free'},2],
       ['mister',{shape:'pebble'},3],['moult',{shape:'pebble',post:'branch'},3],['transport',{shape:'pebble'},3]]},
-    canyon:{name:'Desert canyon',group:'Earth and water',colours:'Terracotta, sand and sage',note:'Layered rock, cacti pots and dry stone walls.',pieces:[
+    canyon:{name:'Desert canyon',group:'Earth and water',colours:'Terracotta, sand and sage',note:'Layered rock, cacti pots and dry stone walls.',pieces:[['sculpt',{kind:'ramesses',size:55},2],['sculpt',{kind:'sphinx',size:50},3],
       ['ledge',{shape:'tiered',pattern:'solid',under:'D'},1],['tile',{texture:'stone'},1],['twig',{shape:'rock',mount:'free'},1],['plate',{shape:'tag',mode:'stencil'},1],
       ['planter',{shape:'facet'},2],['dish',{shape:'pebble'},2],['bridge',{style:'zigzag',hstyle:'chain'},2],['pot',{shape:'hex'},2],
       ['ledge',{shape:'sharp',pattern:'solid',under:'wedge'},3],['moult',{shape:'square',post:'fork'},3],['stack',{kind:'foot',style:'cone'},3]]},
-    reef:{name:'Coral reef',group:'Earth and water',colours:'Coral pink, sea blue and sand',note:'Coral shelves, scales and waves.',pieces:[
+    reef:{name:'Coral reef',group:'Earth and water',colours:'Coral pink, sea blue and sand',note:'Coral shelves, scales and waves.',pieces:[['sculpt',{kind:'starfish',size:50},1],['sculpt',{kind:'nautilus',size:45},2],['sculpt',{kind:'murex',size:45},3],
       ['ledge',{shape:'fungus',pattern:'rings',under:'ribs'},1],['tile',{texture:'scales'},1],['feeder',{shape:'scallop'},1],['plate',{shape:'cloud',mode:'raised'},1],
       ['ledge',{shape:'lobed',pattern:'web',under:'flat'},2],['tile',{texture:'waves'},2],['mister',{shape:'flower'},2],['dish',{shape:'oval'},2],
       ['flower',{kind:'anemone',R:20},3],['moss',{shape:'crescent'},3],['bridge',{style:'wave',hstyle:'rope'},3],['moult',{shape:'oval',post:'fork'},3]]},
@@ -74,7 +74,7 @@
       ['ledge',{shape:'moon',pattern:'rings',under:'D'},1],['flower',{kind:'star'},1],['moss',{shape:'crescent'},1],['plate',{shape:'arch',mode:'stencil'},1],
       ['flower',{kind:'star',R:15},2],['tile',{texture:'waves'},2],['mister',{shape:'round'},2],['dish',{shape:'round'},2],
       ['moult',{shape:'round',post:'ring'},3],['emblem',{shape:'round'},3],['ladder',{style:'chain',mount:'tie'},3]]},
-    gothic:{name:'Gothic',group:'Fantasy',colours:'Black, deep purple and silver',note:'Pointed arches, cobwebs and old brick.',pieces:[
+    gothic:{name:'Gothic',group:'Fantasy',colours:'Black, deep purple and silver',note:'Pointed arches, cobwebs and old brick.',pieces:[['sculpt',{kind:'angel',size:70},2],['sculpt',{kind:'barnowl',size:55},3],
       ['ledge',{shape:'classic',pattern:'web',under:'ribs'},1],['bridge',{style:'gothic',hstyle:'rope'},1],['tile',{texture:'brick'},1],['plate',{shape:'scroll',mode:'stencil'},1],
       ['ladder',{style:'chain',mount:'tie'},2],['flower',{kind:'rose'},2],['dish',{shape:'hex'},2],['moult',{shape:'hex',post:'ring'},2],
       ['ledge',{shape:'moon',pattern:'nouveau',under:'flat'},3],['emblem',{shape:'shield'},3],['stack',{kind:'foot',style:'turned'},3],['transport',{shape:'octagon',handle:'loop'},3]]},
@@ -86,15 +86,15 @@
       ['ledge',{shape:'classic',pattern:'nouveau',under:'ribs'},1],['ladder',{style:'vine',mount:'tie'},1],['plate',{shape:'scroll',mode:'raised'},1],['flower',{kind:'lily'},1],
       ['bridge',{style:'vine',hstyle:'vine'},2],['tile',{texture:'roots'},2],['ledge',{shape:'leaf',pattern:'scroll',under:'D'},2],['feeder',{shape:'flower'},2],
       ['moult',{shape:'oval',post:'leaf'},3],['mister',{shape:'flower'},3],['stack',{kind:'foot',style:'turned'},3],['emblem',{shape:'oval'},3]]},
-    ruins:{name:'Ancient ruins',group:'Diorama',colours:'Marble white and terracotta, with moss green',note:'Broken columns, an arch and a mosaic floor, like a Roman site gone wild.',pieces:[
+    ruins:{name:'Ancient ruins',group:'Diorama',colours:'Marble white and terracotta, with moss green',note:'Broken columns, an arch and a mosaic floor, like a Roman site gone wild.',pieces:[['sculpt',{kind:'torso',size:60},1],['sculpt',{kind:'lion',size:50},2],['sculpt',{kind:'sphinx',size:50},3],
       ['diorama',{kind:'column',style:'broken'},1],['diorama',{kind:'arch',style:'broken',mount:'free'},1],['diorama',{kind:'mosaic',pattern:'meander'},1],['plate',{shape:'scroll',mode:'engraved',font:'caps'},1],
       ['diorama',{kind:'column',style:'intact',h:70},2],['diorama',{kind:'amphora'},2],['tile',{texture:'stone'},2],['ledge',{shape:'tiered',pattern:'solid',under:'D'},2],
       ['diorama',{kind:'column',style:'broken',size:22,h:40},3],['diorama',{kind:'mosaic',pattern:'rosette'},3],['moss',{shape:'crescent'},3],['moult',{shape:'square',post:'stake'},3]]},
-    fairy:{name:'Fairy wood',group:'Diorama',colours:'Moss green, toadstool red and cream; glow filament for the accents',note:'A tiny cottage, toadstools and roots. With glow filament the windows and spots light up at night.',pieces:[
+    fairy:{name:'Fairy wood',group:'Diorama',colours:'Moss green, toadstool red and cream; glow filament for the accents',note:'A tiny cottage, toadstools and roots. With glow filament the windows and spots light up at night.',pieces:[['sculpt',{kind:'pinecone',size:45},1],
       ['diorama',{kind:'cottage',accent:'yes',mount:'free'},1],['diorama',{kind:'mushroom',accent:'yes',n:3},1],['tile',{texture:'roots'},1],['plate',{shape:'cloud',mode:'raised'},1],
       ['diorama',{kind:'mushroom',accent:'yes',n:1,size:22},2],['ladder',{style:'vine',mount:'tie'},2],['moss',{shape:'kidney'},2],['bridge',{style:'branch',hstyle:'branch'},2],
       ['flower',{kind:'star',R:15,accent:'yes'},3],['tile',{texture:'moss'},3],['moult',{shape:'log',post:'branch'},3],['bark',{style:'organic'},3]]},
-    temple:{name:'Temple garden',group:'Diorama',colours:'Vermilion red, black and moss green',note:'A torii gate, a pagoda and a lotus pond.',pieces:[
+    temple:{name:'Temple garden',group:'Diorama',colours:'Vermilion red, black and moss green',note:'A torii gate, a pagoda and a lotus pond.',pieces:[['sculpt',{kind:'komainu',size:40},1],['sculpt',{kind:'buddha',size:55},2],['sculpt',{kind:'lantern',size:70},3],
       ['diorama',{kind:'torii',mount:'free'},1],['diorama',{kind:'pagoda'},1],['flower',{kind:'lotus'},1],['plate',{shape:'banner',mode:'raised'},1],
       ['tile',{texture:'waves'},2],['moss',{shape:'crescent'},2],['bridge',{style:'arc',hstyle:'swag'},2],['dish',{shape:'pebble'},2],
       ['diorama',{kind:'pagoda',tiers:2,size:22,h:40},3],['flower',{kind:'sakura',R:16},3],['tile',{texture:'bamboo'},3]]},
@@ -102,23 +102,23 @@
       ['diorama',{kind:'shelf',mount:'free'},1],['diorama',{kind:'books',n:4},1],['plate',{shape:'scroll',mode:'raised'},1],['tile',{texture:'planks'},1],
       ['diorama',{kind:'books',n:6,size:22},2],['ledge',{shape:'classic',pattern:'solid',under:'ribs'},2],['dish',{shape:'round'},2],
       ['diorama',{kind:'shelf',h:50,mount:'free'},3],['moult',{shape:'square',post:'stake'},3],['stack',{kind:'foot',style:'turned'},3]]},
-    glow:{name:'Midnight glow',group:'Fantasy',colours:'Dark blue or black, with glow-in-the-dark accents',note:'Every piece has an accent part for glow-in-the-dark or UV-reactive filament.',pieces:[
+    glow:{name:'Midnight glow',group:'Fantasy',colours:'Dark blue or black, with glow-in-the-dark accents',note:'Every piece has an accent part for glow-in-the-dark or UV-reactive filament.',pieces:[['sculpt',{kind:'amethyst',size:55},2],
       ['tile',{texture:'stars',accent:'yes'},1],['flower',{kind:'star',accent:'yes'},1],['diorama',{kind:'mushroom',accent:'yes',n:3},1],['plate',{shape:'arch',mode:'raised'},1],
       ['ledge',{shape:'moon',pattern:'rings',under:'D'},2],['flower',{kind:'lily',R:20,accent:'yes'},2],['diorama',{kind:'cottage',accent:'yes',mount:'free'},2],
       ['moult',{shape:'round',post:'ring'},3],['emblem',{shape:'round'},3]]},
-    graveyard:{name:'Vampire graveyard',group:'Gothic',colours:'Black, blood red and bone white',note:'Tombstones, a coffin, candles and bats, for a spooky enclosure or a Halloween sale.',pieces:[
+    graveyard:{name:'Vampire graveyard',group:'Gothic',colours:'Black, blood red and bone white',note:'Tombstones, a coffin, candles and bats, for a spooky enclosure or a Halloween sale.',pieces:[['sculpt',{kind:'tombstone',size:80},1],['sculpt',{kind:'angel',size:70},2],
       ['diorama',{kind:'tombstone',style:'intact',mount:'free'},1],['diorama',{kind:'coffin',accent:'yes'},1],['sculpt',{kind:'bat',size:80},1],['ledge',{shape:'moon',pattern:'web',under:'flat'},1],
       ['sculpt',{kind:'real',size:32},2],['diorama',{kind:'candles',accent:'yes'},2],['motif',{motif:'gothicWindow',form:'plaque',base:'arch'},2],['flower',{kind:'rose'},2],['tile',{texture:'brick'},2],
       ['sculpt',{kind:'raven',size:45},3],['diorama',{kind:'tombstone',style:'broken',size:24,h:44,mount:'free'},3],['motif',{motif:'roseWindow',form:'stencil',base:'round'},3],['motif',{motif:'bat',form:'ornament'},3]]},
-    curio:{name:'Cabinet of curiosities',group:'Gothic',colours:'Bone white or aged ivory, with black and brass',note:'Lifelike sculpted pieces: a skull, a raven, a death\'s-head moth and a coiled snake, with old books and candles, like a Victorian collector\'s cabinet.',pieces:[
+    curio:{name:'Cabinet of curiosities',group:'Gothic',colours:'Bone white or aged ivory, with black and brass',note:'Lifelike sculpted pieces: a skull, a raven, a death\'s-head moth and a coiled snake, with old books and candles, like a Victorian collector\'s cabinet.',pieces:[['sculpt',{kind:'ammonite',size:60},1],['sculpt',{kind:'stagbeetle',size:80},2],['sculpt',{kind:'nautilus',size:45},2],['sculpt',{kind:'barnowl',size:55},3],
       ['sculpt',{kind:'real',size:34},1],['sculpt',{kind:'moth',size:70},1],['diorama',{kind:'books',n:4},1],['ledge',{shape:'classic',pattern:'solid',under:'ribs'},1],
       ['sculpt',{kind:'raven',size:45},2],['diorama',{kind:'candles',accent:'yes'},2],['tile',{texture:'planks'},2],['plate',{shape:'scroll',mode:'raised'},2],
       ['sculpt',{kind:'python',size:110},3],['sculpt',{kind:'bat',size:80},3],['diorama',{kind:'openBook'},3]]},
-    wizard:{name:"Wizard's tower",group:'Fantasy',colours:'Deep purple, midnight blue and silver; translucent filament for crystals and potions',note:'A tower, crystals, potions and an open spell book.',pieces:[
+    wizard:{name:"Wizard's tower",group:'Fantasy',colours:'Deep purple, midnight blue and silver; translucent filament for crystals and potions',note:'A tower, crystals, potions and an open spell book.',pieces:[['sculpt',{kind:'barnowl',size:55},1],['sculpt',{kind:'amethyst',size:55},2],
       ['diorama',{kind:'tower',style:'intact'},1],['diorama',{kind:'crystals',accent:'yes'},1],['diorama',{kind:'potions',accent:'yes'},1],['motif',{motif:'moon',form:'plaque',base:'round'},1],
       ['diorama',{kind:'openBook'},2],['motif',{motif:'wizardHat',form:'cutout',mount:'free'},2],['tile',{texture:'stars',accent:'yes'},2],['ledge',{shape:'tiered',pattern:'solid',under:'D'},2],
       ['diorama',{kind:'mushroom',accent:'yes',n:2},3],['motif',{motif:'potion',form:'ornament'},3],['diorama',{kind:'books',n:4},3]]},
-    hoard:{name:"Dragon's hoard",group:'Fantasy',colours:'Dragon green or red, with gold',note:'A treasure chest, dice, a sword in the stone and a dragon on the wall, for D&D fans.',pieces:[
+    hoard:{name:"Dragon's hoard",group:'Fantasy',colours:'Dragon green or red, with gold',note:'A treasure chest, dice, a sword in the stone and a dragon on the wall, for D&D fans.',pieces:[['sculpt',{kind:'amethyst',size:60},1],
       ['diorama',{kind:'chest',accent:'yes'},1],['motif',{motif:'dragon',form:'plaque',base:'shield'},1],['diorama',{kind:'dice'},1],['ledge',{shape:'fungus',pattern:'solid',under:'D'},1],
       ['diorama',{kind:'sword'},2],['motif',{motif:'d20',form:'plaque',base:'hex'},2],['motif',{motif:'swordShield',form:'cutout',mount:'free'},2],['tile',{texture:'stone'},2],
       ['motif',{motif:'castle',form:'plaque',base:'arch'},3],['diorama',{kind:'tower',style:'broken',h:50},3],['motif',{motif:'scroll',form:'plaque',base:'square'},3]]},
@@ -126,7 +126,7 @@
       ['motif',{motif:'zodiacWheel',form:'plaque',base:'round'},1],['tile',{texture:'stars',accent:'yes'},1],['ledge',{shape:'moon',pattern:'rings',under:'D'},1],['flower',{kind:'star',accent:'yes'},1],
       ['motif',{motif:'sun',form:'plaque',base:'round'},2],['motif',{motif:'moon',form:'plaque',base:'round'},2],['diorama',{kind:'crystals',accent:'yes'},2],
       ['motif',{motif:'zodiac-leo',form:'ornament'},3],['motif',{motif:'zodiac-pisces',form:'ornament'},3],['moult',{shape:'round',post:'ring'},3]]},
-    olympus:{name:'Mount Olympus',group:'Diorama',colours:'Marble white with gold or terracotta',note:'Greek temples, laurels, an owl of Athena and a Corinthian helmet.',pieces:[
+    olympus:{name:'Mount Olympus',group:'Diorama',colours:'Marble white with gold or terracotta',note:'Greek temples, laurels, an owl of Athena and a Corinthian helmet.',pieces:[['sculpt',{kind:'torso',size:60},2],['sculpt',{kind:'lion',size:50},3],
       ['motif',{motif:'temple',form:'plaque',base:'square'},1],['diorama',{kind:'column',style:'intact'},1],['diorama',{kind:'amphora'},1],['motif',{motif:'laurel',form:'plaque',base:'round'},1],
       ['motif',{motif:'owl',form:'cutout',mount:'free'},2],['motif',{motif:'helmet',form:'plaque',base:'shield'},2],['diorama',{kind:'mosaic',pattern:'meander'},2],['ledge',{shape:'classic',pattern:'solid',under:'ribs'},2],
       ['motif',{motif:'ionic',form:'plaque',base:'arch'},3],['motif',{motif:'lyre',form:'ornament'},3],['diorama',{kind:'column',style:'broken',size:22,h:40},3],['plate',{shape:'scroll',mode:'engraved',font:'caps'},3]]},
