@@ -442,10 +442,12 @@
         const layers=[];for(let i=0;i<n;i++){const q=segs.filter(s=>s.wd-i*.6>.6);if(!q.length)break;layers.push(intersect(unite(q.flatMap(s=>stroke([s.q],s.wd-i*.6))),box))}return layers}
       case 'bamboo':{const st=[],nodes=[];for(let x=3+r()*4;x<w;x+=10+r()*4){const sw=6+r()*3;st.push(...rect(x,0,x+sw,h));for(let y=8+r()*10;y<h-2;y+=18+r()*10)nodes.push(...rrect(x-.8,y,x+sw+.8,y+1.6,.6))}
         const base=unite(st);return [intersect(unite(base,nodes),box),...shrink(base,.5,Math.min(n,3)).slice(1),intersect(nodes,box)].filter(q=>q.length)}
+      case 'stars':{const st=[];for(let k=0;k<w*h/90;k++){const x=r()*w,y=r()*h,rr=1.2+r()*2.6,n=r()<.7?5:4;st.push(...polar(x,y,a=>rr*(Math.cos(n*a/2)**2*.62+.38),n*12).map(q=>q.map(([px,py])=>[px,py])))}
+        for(let k=0;k<w*h/25;k++)st.push(...circle(r()*w,r()*h,.5+r()*.4,10));return [intersect(unite(st),offset(box,-1))]}
       default:return [box];
     }
   }
-  const TEXTURES=[['stone','Stone wall'],['bark','Tree bark'],['pebbles','Pebbles'],['moss','Moss'],['planks','Wooden planks'],['hex','Honeycomb'],['brick','Brick'],['waves','Waves'],['scales','Scales'],['leaves','Leaf litter'],['roots','Roots'],['bamboo','Bamboo']];
+  const TEXTURES=[['stone','Stone wall'],['bark','Tree bark'],['pebbles','Pebbles'],['moss','Moss'],['planks','Wooden planks'],['hex','Honeycomb'],['brick','Brick'],['waves','Waves'],['scales','Scales'],['leaves','Leaf litter'],['roots','Roots'],['bamboo','Bamboo'],['stars','Starry sky']];
   function tile(o,enc){
     const notes=[],panel=o.mount==='panel';let w=o.w,h=o.h,f,bt,dy=0,magnets=0;
     if(panel){const ts=enc.tileSize&&enc.tileSize();if(!ts){notes.push('Turn on swappable tile panels for a rectangular enclosure first. Using the size you entered.')}else{w=ts[0];h=ts[1]}}
@@ -453,6 +455,10 @@
     if(panel){f=[prism(0,3,outline)];bt=3}
     else{const m=backMount(o,outline,{min:2});f=m.f;bt=m.bt;dy=m.dy;magnets=m.magnets;notes.push(...m.notes)}
     const layers=texture(o.texture,w,h,o.depth,o.seed);
+    if(o.texture==='stars'){const st=layers[0]||[];const sp=prism(bt,bt+Math.min(1.2,o.depth),move(st,0,dy));
+      if(o.accent==='yes'){f.push(prism(bt-.6,bt+.01,move(st,0,dy),'sub'));const ap=prism(bt-.6,bt+Math.min(1.2,o.depth),move(st,0,dy));
+        return {parts:[part('backdrop-stars.stl',build(f),'Colour 1'),part('backdrop-stars-accent.stl',build([ap]),'Colour 2')],notes:[...notes,'The stars are a separate accent file: print them in glow-in-the-dark filament for a night sky.'],magnets}}
+      f.push(sp);return {parts:[part('backdrop-stars.stl',build(f))],notes,magnets}}
     layers.forEach((L,i)=>{const q=intersect(move(L,0,dy),move(offset(outline,-.6),0,dy));if(q.length)f.push(prism(bt+i*.5,bt+(i+1)*.5,q))});
     if(panel)notes.push('Fits the openings of your swappable tile panels, with the texture facing into the enclosure.');
     return {parts:[part(`backdrop-${o.texture}.stl`,build(f))],notes,magnets};
@@ -503,20 +509,26 @@
     /* each layer sits strictly inside the one below, so no two layers share an edge that could leave a sliver */
     let prevL=null;layers.forEach((L,i)=>{const q=i?intersect(offset(L,-.2),offset(prevL,-.06)):L;prevL=q;if(q.length)f.push(prism(z0+i*lh,z0+(i+1)*lh,mv(q)))});
     let zTop=z0+layers.length*lh;
+    const nv=f.length;
     if(o.veins==='yes')tiersSpec.forEach((t,k)=>{const vis=offset(subtract(tiers[k],unite(tiers.slice(k+1).flat())),-.9);if(!vis.length)return;
       const ls=t.map(p=>rot([[[p.len*.28,p.dy||0],[p.len*.86,p.dy||0]]],p.a)[0]);f.push(prism(z0+(k+1)*lh,z0+(k+1)*lh+.5,mv(intersect(stroke(ls,.7),vis))))});
+    const veinF=f.splice(nv);
     const cx=0,cy=dy,rc=R*(o.kind==='orchid'||o.kind==='moth'?.11:.17),style=o.centre==='auto'?CENTRE_FOR[o.kind]:o.centre;
     let rHub=0;
     if(o.mount==='peg'){f.push(prism(0,PEG.depth+1.5,circle(cx,cy,PEG.hub)),prism(-1,PEG.depth,circle(cx,cy,PEG.sock),'sub'));rHub=PEG.hub;zTop=Math.max(zTop,PEG.depth+1.5)}
     if(o.mount==='stem'){if(zTop<5){f.push(prism(0,5,circle(cx,cy,4)));zTop=Math.max(zTop,5)}f.push(prism(-1,3.6,circle(cx,cy,2.1,24),'sub'))}
     const rcc=Math.max(rc,rHub);
+    const nc=f.length;
     if(style==='dome'){const hc=rcc*.75;f.push(varying(zTop,zTop+hc,z=>circle(cx,cy,Math.max(.6,rcc*Math.sqrt(Math.max(0,1-((z-zTop)/hc)**2))),40),.3))}
     else if(style==='stamens'){f.push(prism(zTop,zTop+1,circle(cx,cy,rcc*.55,24)));for(let k=0;k<9;k++){const a=k*TAU/9,d=rcc*(.55+(k%2)*.3);f.push(prism(zTop,zTop+2.4+(k%3)*.8,circle(cx+Math.cos(a)*d,cy+Math.sin(a)*d,.7,12)))}}
     else if(style==='seedpod'){f.push(prism(zTop,zTop+1.8,circle(cx,cy,rcc,40)));const hs=[];for(let k=0;k<7;k++){const a=k*TAU/7;hs.push(...circle(cx+Math.cos(a)*rcc*.55,cy+Math.sin(a)*rcc*.55,.7,12))}hs.push(...circle(cx,cy,.7,12));f.push(prism(zTop+.8,zTop+2.5,hs,'sub'))}
     else if(style==='spiral'){f.push(prism(zTop,zTop+.8,circle(cx,cy,rcc,40)));const q=[];for(let a=0;a<TAU*2.2;a+=.2){const rr=rcc*.95*(1-a/(TAU*2.4));q.push([cx+Math.cos(a)*rr,cy+Math.sin(a)*rr])}f.push(prism(zTop+.79,zTop+2,stroke([q],.8)))}
     else if(style==='column'){f.push(varying(zTop,zTop+2.2,z=>ellipse(cx,cy-rcc*.3,rcc*(1-.3*(z-zTop)/2.2),rcc*1.2*(1-.3*(z-zTop)/2.2),24),.3))}
     else if(style==='pistil'){f.push(prism(zTop,zTop+7,circle(cx,cy,1.1,16)));for(let k=0;k<5;k++){const a=k*TAU/5;f.push(prism(zTop+5.5,zTop+7.6,circle(cx+Math.cos(a)*1.4,cy+Math.sin(a)*1.4,.65,10)))}}
-    const parts=[part(`flower-${o.kind}.stl`,build(f))];
+    const centreF=f.splice(nc),acc=o.accent==='yes'&&(veinF.length||centreF.length);
+    if(!acc)f.push(...veinF,...centreF);
+    const parts=[part(`flower-${o.kind}.stl`,build(f),acc?'Colour 1':'Main colour')];
+    if(acc){parts.push(part(`flower-${o.kind}-accent.stl`,build([...veinF,...centreF]),'Colour 2'));notes.push('The centre and veins are a separate accent file: glow-in-the-dark or UV-reactive filament makes the flower light up at night, and a contrasting colour looks good by day.')}
     if(o.mount==='stem'){parts.push(part('flower-stem.stl',build([prism(0,o.stemL,circle(0,0,o.dia/2,32)),prism(o.stemL,o.stemL+3.4,circle(0,0,1.9,24))]),'Second file'));notes.push(`The stem pushes into a twig holder made for ${o.dia} mm twigs, and the flower sits on its top.`)}
     if(o.mount==='peg')notes.push('Pushes onto a floor peg.');
     if(o.kind==='orchid'||o.kind==='moth')notes.push('Orchid mantises sit on flowers like this in the wild to wait for pollinators. Pink, white or pale purple filament suits them best.');

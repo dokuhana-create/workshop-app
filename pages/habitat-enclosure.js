@@ -67,11 +67,12 @@
     f.push(prism(-1,boss+1,circle(h.x,h.y,h.R),'sub'));
     if(p.hatch==='magnet')for(const dx of [-(h.R+6),h.R+6])f.push(prism(-1,pd,circle(h.x+dx,h.y,R),'sub'));
   }
-  function hatchCover(h,p,preview){
-    const R=(p.dMagD||10)/2+.2,pd=(p.dMagH||3)+.2,f=[];
-    const holes=r=>{if(preview)return [];const o=[];for(let x=-r;x<r;x+=p.hole+p.bar)for(let y=-r;y<r;y+=p.hole+p.bar){const q=sq(x,y,p.hole);if(q.every(([u,v])=>Math.hypot(u,v)<r)&&Math.hypot(x+p.hole/2,y+p.hole/2)>8)o.push(q)}return o};
+  /* opt.hole: a round opening through the middle instead of vent holes, for a chute or airlock that sits in it */
+  function hatchCover(h,p,preview,opt){
+    opt=opt||{};const R=(p.dMagD||10)/2+.2,pd=(p.dMagH||3)+.2,f=[];
+    const holes=r=>{if(preview||opt.hole)return [];const o=[];for(let x=-r;x<r;x+=p.hole+p.bar)for(let y=-r;y<r;y+=p.hole+p.bar){const q=sq(x,y,p.hole);if(q.every(([u,v])=>Math.hypot(u,v)<r)&&Math.hypot(x+p.hole/2,y+p.hole/2)>8)o.push(q)}return o};
     if(p.hatch==='magnet'){
-      const th=pd+1.4;f.push(prism(0,th,circle(0,0,h.R+11)),prism(th-.01,th+8,circle(0,0,6)));
+      const th=pd+1.4;f.push(prism(0,th,circle(0,0,h.R+11)));if(!opt.hole)f.push(prism(th,th+8,circle(0,0,6)));
       for(const dx of [-(h.R+6),h.R+6])f.push(prism(-1,pd,circle(dx,0,R),'sub'));
       const hs=holes(h.R-4);if(hs.length)f.push(prism(-1,th+1,hs,'sub'));
     }else if(p.hatch==='twist'){
@@ -90,6 +91,7 @@
       const th=2.4;f.push(prism(0,th,unite(circle(0,0,h.R+8),G.rrect(h.R+4,-6,h.R+18,6,4))),prism(th-.01,th+4.5,subtract(circle(0,0,h.R-.2),circle(0,0,h.R-2))));
       const hs=holes(h.R-4);if(hs.length)f.push(prism(-1,th+1,hs,'sub'));
     }
+    if(opt.hole)f.push(prism(-1,30,circle(0,0,opt.hole,64),'sub'));
     return build(f);
   }
 
@@ -287,5 +289,5 @@
     return {ok:true,frameM:build(ff),doorM:build(df),pinLen:0,win:p.front==='swingWindow'?[xo1-xo0-6+12,zo1-zo0-6+12]:null,mesh:p.front==='swingMesh',catchM};
   }
 
-  root.HabitatEnclosure={base,lid,rectBase,rectLid,rectPost,polyGeom,polyEnclosure,spineToWorld,roundEnclosure,perimeter,tilePanel,TILE,swingDoor,lightWindows,mirrorY};
+  root.HabitatEnclosure={hatchCover,TW,base,lid,rectBase,rectLid,rectPost,polyGeom,polyEnclosure,spineToWorld,roundEnclosure,perimeter,tilePanel,TILE,swingDoor,lightWindows,mirrorY};
 })(typeof window!=='undefined'?window:globalThis);

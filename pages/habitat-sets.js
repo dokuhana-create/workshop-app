@@ -86,6 +86,26 @@
       ['ledge',{shape:'classic',pattern:'nouveau',under:'ribs'},1],['ladder',{style:'vine',mount:'tie'},1],['plate',{shape:'scroll',mode:'raised'},1],['flower',{kind:'lily'},1],
       ['bridge',{style:'vine'},2],['tile',{texture:'roots'},2],['ledge',{shape:'leaf',pattern:'scroll',under:'D'},2],['feeder',{shape:'flower'},2],
       ['moult',{shape:'oval',post:'leaf'},3],['mister',{shape:'flower'},3],['stack',{kind:'foot',style:'turned'},3],['emblem',{shape:'oval'},3]]},
+    ruins:{name:'Ancient ruins',group:'Diorama',colours:'Marble white and terracotta, with moss green',note:'Broken columns, an arch and a mosaic floor, like a Roman site gone wild.',pieces:[
+      ['diorama',{kind:'column',style:'broken'},1],['diorama',{kind:'arch',style:'broken',mount:'free'},1],['diorama',{kind:'mosaic',pattern:'meander'},1],['plate',{shape:'scroll',mode:'engraved',font:'caps'},1],
+      ['diorama',{kind:'column',style:'intact',h:70},2],['diorama',{kind:'amphora'},2],['tile',{texture:'stone'},2],['ledge',{shape:'tiered',pattern:'solid',under:'D'},2],
+      ['diorama',{kind:'column',style:'broken',size:22,h:40},3],['diorama',{kind:'mosaic',pattern:'rosette'},3],['moss',{shape:'crescent'},3],['moult',{shape:'square',post:'stake'},3]]},
+    fairy:{name:'Fairy wood',group:'Diorama',colours:'Moss green, toadstool red and cream; glow filament for the accents',note:'A tiny cottage, toadstools and roots. With glow filament the windows and spots light up at night.',pieces:[
+      ['diorama',{kind:'cottage',accent:'yes',mount:'free'},1],['diorama',{kind:'mushroom',accent:'yes',n:3},1],['tile',{texture:'roots'},1],['plate',{shape:'cloud',mode:'raised'},1],
+      ['diorama',{kind:'mushroom',accent:'yes',n:1,size:22},2],['ladder',{style:'vine',mount:'tie'},2],['moss',{shape:'kidney'},2],['bridge',{style:'branch'},2],
+      ['flower',{kind:'star',R:15,accent:'yes'},3],['tile',{texture:'moss'},3],['moult',{shape:'log',post:'branch'},3],['bark',{style:'organic'},3]]},
+    temple:{name:'Temple garden',group:'Diorama',colours:'Vermilion red, black and moss green',note:'A torii gate, a pagoda and a lotus pond.',pieces:[
+      ['diorama',{kind:'torii',mount:'free'},1],['diorama',{kind:'pagoda'},1],['flower',{kind:'lotus'},1],['plate',{shape:'banner',mode:'raised'},1],
+      ['tile',{texture:'waves'},2],['moss',{shape:'crescent'},2],['bridge',{style:'arc'},2],['dish',{shape:'pebble'},2],
+      ['diorama',{kind:'pagoda',tiers:2,size:22,h:40},3],['flower',{kind:'sakura',R:16},3],['tile',{texture:'bamboo'},3]]},
+    library:{name:'Little library',group:'Diorama',colours:'Walnut brown with bright book colours',note:'Bookshelves and book stacks, for a mantis that looks well read.',pieces:[
+      ['diorama',{kind:'shelf',mount:'free'},1],['diorama',{kind:'books',n:4},1],['plate',{shape:'scroll',mode:'raised'},1],['tile',{texture:'planks'},1],
+      ['diorama',{kind:'books',n:6,size:22},2],['ledge',{shape:'classic',pattern:'solid',under:'ribs'},2],['dish',{shape:'round'},2],
+      ['diorama',{kind:'shelf',h:50,mount:'free'},3],['moult',{shape:'square',post:'stake'},3],['stack',{kind:'foot',style:'turned'},3]]},
+    glow:{name:'Midnight glow',group:'Fantasy',colours:'Dark blue or black, with glow-in-the-dark accents',note:'Every piece has an accent part for glow-in-the-dark or UV-reactive filament.',pieces:[
+      ['tile',{texture:'stars',accent:'yes'},1],['flower',{kind:'star',accent:'yes'},1],['diorama',{kind:'mushroom',accent:'yes',n:3},1],['plate',{shape:'arch',mode:'raised'},1],
+      ['ledge',{shape:'moon',pattern:'rings',under:'D'},2],['flower',{kind:'lily',R:20,accent:'yes'},2],['diorama',{kind:'cottage',accent:'yes',mount:'free'},2],
+      ['moult',{shape:'round',post:'ring'},3],['emblem',{shape:'round'},3]]},
     honey:{name:'Honeycomb',group:'Modern',colours:'Honey yellow and black',note:'Hexagons everywhere.',pieces:[
       ['dish',{shape:'hex'},1],['tile',{texture:'hex'},1],['pot',{shape:'hex'},1],['plate',{shape:'hex',mode:'stencil'},1],
       ['feeder',{shape:'hex'},2],['twig',{shape:'hex',mount:'free'},2],['mister',{shape:'hex'},2],['moss',{shape:'hex'},2],
@@ -101,15 +121,15 @@
     nursery:{name:'Nymph nursery',group:'Keeper kits',colours:'Any light colour, so tiny nymphs are easy to spot',note:'Small, fine pieces for young nymphs: thin perches, a ladder for moulting and a fly lid for food.',size:.75,pieces:[
       ['ladder',{style:'net',mount:'tie',wid:18},1],['flyLid',{},1],['feeder',{shape:'round'},1],['ledge',{shape:'leaf',pattern:'solid',under:'flat'},1],
       ['moss',{shape:'round'},2],['mister',{shape:'round'},2],['flower',{kind:'daisy',R:16},2],['plate',{shape:'cloud',mode:'raised'},2],
-      ['transport',{shape:'round'},3],['moult',{shape:'round',post:'stake'},3],['ladder',{style:'rope',mount:'tie',wid:16},3]]},
+      ['transport',{shape:'round'},3],['moult',{shape:'round',post:'stake'},3],['ladder',{style:'rope',mount:'tie',wid:16},3],['incubator',{},1],['oothClip',{style:'clip'},2],['cupRack',{cols:3,rows:2},2]]},
     breeder:{name:'Breeder kit',group:'Keeper kits',colours:'Practical colours; one colour is fine',note:'The working set for breeding feeders and raising mantises: fly cup lids, feeder cups, transport and records.',pieces:[
       ['flyLid',{mode:'fabric',pattern:'hex'},1],['flyLid',{mode:'vent',pattern:'grid',cork:'yes'},1],['feeder',{shape:'round'},1],['transport',{shape:'round'},1],
       ['label',{},2],['moult',{shape:'square',post:'stake',font:'caps'},2],['transport',{shape:'square'},2],['dish',{shape:'round'},2],
-      ['ladder',{style:'rope',mount:'tie'},3],['mister',{kind:'hatch'},3],['plate',{shape:'tag',mode:'engraved',font:'caps'},3]]},
+      ['ladder',{style:'rope',mount:'tie'},3],['mister',{kind:'hatch'},3],['plate',{shape:'tag',mode:'engraved',font:'caps'},3],['incubator',{},2],['cupRack',{},2],['oothClip',{},3],['chute',{},3],['airlock',{},3],['divider',{},3],['ship',{},3]]},
     shop:{name:'Shop display',group:'Keeper kits',colours:'Your brand colours',note:'Everything to show and sell your mantises and enclosures under your own mark.',pieces:[
       ['emblem',{shape:'round'},1],['plate',{shape:'banner',mode:'raised',logo:'yes'},1],['transport',{shape:'round',handle:'loop'},1],
       ['moult',{shape:'round',post:'branch'},2],['emblem',{shape:'shield',size:40},2],['plate',{shape:'tag',mode:'engraved'},2],
-      ['transport',{shape:'hex'},3],['moult',{shape:'log',post:'leaf'},3],['label',{},3]]}
+      ['transport',{shape:'hex'},3],['moult',{shape:'log',post:'leaf'},3],['label',{},3],['ship',{},1],['turntable',{},2]]}
   };
   root.HABITAT_SETS=S;
 })(typeof window!=='undefined'?window:globalThis);

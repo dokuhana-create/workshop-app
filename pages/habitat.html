@@ -3,11 +3,12 @@
 <script src="../shim.js"></script>
 <script src="../lib/clipper.js"></script>
 <script src="../lib/earcut.min.js"></script>
-<script src="../lib/geo.js?v=13"></script>
-<script src="habitat-parts.js?v=13"></script>
-<script src="habitat-enclosure.js?v=13"></script>
-<script src="habitat-more.js?v=13"></script>
-<script src="habitat-sets.js?v=13"></script>
+<script src="../lib/geo.js?v=14"></script>
+<script src="habitat-parts.js?v=14"></script>
+<script src="habitat-enclosure.js?v=14"></script>
+<script src="habitat-more.js?v=14"></script>
+<script src="habitat-keep.js?v=14"></script>
+<script src="habitat-sets.js?v=14"></script>
 <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Bricolage+Grotesque:opsz,wght@12..96,600;12..96,750&family=IBM+Plex+Mono:wght@500&family=IBM+Plex+Sans:wght@400;500;600&display=swap">
 <style>
 /* Same layout as the Resin Workshop: inputs on the left, the 3D preview and downloads beside them. */
@@ -74,6 +75,7 @@ h3{font:600 15px var(--body);margin:0 0 6px}
 .pieces legend{font-weight:600;padding:0 4px}
 .pieces label{display:flex;flex-direction:row;justify-content:flex-start;text-align:left;gap:8px;align-items:center;font-size:14px;margin:0}
 .pieces input[type=checkbox]{width:auto;flex:none;margin:0;accent-color:var(--accent)}
+.result .big{font:700 40px var(--display,var(--body));line-height:1.1;margin:6px 0 2px}
 </style></head><body>
 <div class="wrap">
   <header>
@@ -82,6 +84,7 @@ h3{font:600 15px var(--body);margin:0 0 6px}
     <div class="tabs" role="tablist" aria-label="Habitat sections">
       <button type="button" role="tab" id="tabEnc" aria-controls="viewEnc" aria-selected="true">Enclosure</button>
       <button type="button" role="tab" id="tabAcc" aria-controls="viewAcc" aria-selected="false">Accessories</button>
+      <button type="button" role="tab" id="tabPrice" aria-controls="viewPrice" aria-selected="false">Price</button>
     </div>
   </header>
 
@@ -220,6 +223,51 @@ h3{font:600 15px var(--body);margin:0 0 6px}
       <div class="note" id="accNote" hidden></div>
       <button class="btn solid" id="accDl" type="button">Download STL</button>
       <span class="saved" id="accMsg" role="status"></span>
+    </aside>
+  </div>
+
+  <!-- ===== Price ===== -->
+  <div class="grid" id="viewPrice" role="tabpanel" aria-labelledby="tabPrice" hidden>
+    <div class="inputs">
+      <section aria-labelledby="h-what">
+        <h2 id="h-what">What you are selling</h2>
+        <div class="fields">
+          <label class="f">Take the numbers from<select id="prSrc"></select></label>
+          <button class="btn" id="prFill" type="button" style="align-self:end">Fill in from the design</button>
+          <label class="f">Filament (g)<input id="prG" type="number" min="0" step="1"></label>
+          <label class="f">Print time (hours)<input id="prHrs" type="number" min="0" step="0.5"></label>
+          <label class="f">Magnets<input id="prMag" type="number" min="0" step="1"></label>
+          <label class="f">Acrylic or PET sheet (m²)<input id="prAc" type="number" min="0" step="0.01"></label>
+          <label class="f">Other parts (lights, bearings…)<input id="prOther" type="number" min="0" step="0.5"></label>
+          <label class="f">Your work (hours)<input id="prWork" type="number" min="0" step="0.25"></label>
+        </div>
+        <p class="hint" id="prFillMsg">Fill in from the design takes the filament weight, magnets and sheet size from the enclosure or accessory you last made. Check the print time against Creality Print once you slice it.</p>
+      </section>
+      <section aria-labelledby="h-rates">
+        <h2 id="h-rates">Your prices and rates</h2>
+        <div class="fields">
+          <label class="f">Currency<input id="prCur" type="text" maxlength="4"></label>
+          <label class="f">Filament per kg<input id="prKg" type="number" min="0" step="0.5"></label>
+          <label class="f">Printing speed (g per hour)<input id="prRate" type="number" min="1" step="1"></label>
+          <label class="f">Printer power (W)<input id="prW" type="number" min="0" step="10"></label>
+          <label class="f">Electricity per kWh<input id="prKwh" type="number" min="0" step="0.01"></label>
+          <label class="f">Printer wear per hour<input id="prWear" type="number" min="0" step="0.05"></label>
+          <label class="f">Failed prints (%)<input id="prFail" type="number" min="0" step="1"></label>
+          <label class="f">Per magnet<input id="prMagP" type="number" min="0" step="0.05"></label>
+          <label class="f">Sheet per m²<input id="prAcP" type="number" min="0" step="1"></label>
+          <label class="f">Your hourly rate<input id="prHour" type="number" min="0" step="1"></label>
+          <label class="f">Packaging<input id="prPack" type="number" min="0" step="0.5"></label>
+          <label class="f">Shop and payment fees (%)<input id="prFee" type="number" min="0" max="50" step="0.5"></label>
+          <label class="f">Profit on top (%)<input id="prProfit" type="number" min="0" step="1"></label>
+        </div>
+        <p class="hint">Typical rates are filled in; change them to yours. Printer wear covers nozzles, belts, the build plate and eventually a new printer. Below CHF 100,000 turnover a year you don't need to add Swiss VAT.</p>
+      </section>
+    </div>
+    <aside class="result" aria-label="Price">
+      <div class="big" id="prPrice"></div>
+      <p class="cap" id="prSub"></p>
+      <table id="prTable"></table>
+      <div class="note" id="prNote" hidden></div>
     </aside>
   </div>
 </div>
@@ -607,7 +655,7 @@ const ITEMS={
   light:{group:'addon',name:'Light holder',kinds:{ring:{name:'Ring light seats',fields:[['rd','Ring diameter',90],['n','Number of rings',2]]},clamp:{name:'Clamp lamp bridge',fields:[['tab','Tab thickness',4],['tabH','Tab height',30]]},puck:{name:'Round light cradle',fields:[['pd','Light diameter',60]]},bar:{name:'LED bar cradle',fields:[['bl','Bar length',120],['bw','Bar width',15]]}},mounts:[],
     hint:`Ring light seats hold the round LED heads of under-cabinet plant lights (the AliExpress kind with 1–4 rings, a timer and a USB controller) flat on the lid, shining down through the mesh. Each ring rests on three small pads, and a gap in the wall lets the cable out. You can also make a bridge with a tab for a clip-on gooseneck lamp such as the ${LIGHT_LINK}, or a cradle for a round or bar light. Keep lights on top of the mesh, never inside, and check the enclosure doesn't overheat.`}
 };
-const GROUPS={food:'Food and water',climb:'Climbing and perching',plants:'Plants and humidity',decor:'Walls, names and display',addon:'Enclosure add-ons',sets:'Matching sets'};
+const GROUPS={food:'Food and water',climb:'Climbing and perching',plants:'Plants and humidity',decor:'Walls, names and display',dio:'Diorama and display',breed:'Breeding and nymphs',addon:'Enclosure add-ons',sets:'Matching sets'};
 const PAT=HabitatMore.PATTERNS,TXT=HabitatMore.TEXTURES,FLW=HabitatMore.FLOWERS;
 const vis=(k,v)=>s=>[].concat(v).includes(s[k]);
 Object.assign(ITEMS,{
@@ -624,7 +672,7 @@ Object.assign(ITEMS,{
     selects:[['style','Shape',[['arch','Round arch'],['arc','Low arc'],['gothic','Pointed arch'],['straight','Straight beam'],['zigzag','Zigzag'],['wave','Wave'],['vine','Leafy vine'],['branch','Branch with side twigs']]],['texture','Surface',[['bark','Bark ridges'],['smooth','Smooth']]]],shuffle:true,mounts:[],
     hint:'An arch or branch that spans between two twig holders. Its square pins push into the holders, so it adds a perch across the middle of the enclosure.'},
   flower:{group:'climb',more:'flower',name:'Flower perch',fields:[['R','Petal length',25],['n','Petal count (0 = natural)',0,{show:vis('kind',['daisy','cosmos','dahlia','anemone','star'])}],['lh','Layer height',1.2],['dia','Twig holder size',6,{show:s=>s._mount==='stem'}],['stemL','Stem length',60,{show:s=>s._mount==='stem'}]],
-    selects:[['kind','Flower',FLW],['centre','Centre',[['auto','To match the flower'],['dome','Dome'],['stamens','Stamens'],['seedpod','Seed pod'],['spiral','Spiral'],['column','Orchid column'],['pistil','Long pistil'],['none','None']]],['veins','Petal veins',[['yes','Yes'],['no','No']]]],shuffle:true,mounts:['magnet','clip','glue','peg','stem'],
+    selects:[['kind','Flower',FLW],['centre','Centre',[['auto','To match the flower'],['dome','Dome'],['stamens','Stamens'],['seedpod','Seed pod'],['spiral','Spiral'],['column','Orchid column'],['pistil','Long pistil'],['none','None']]],['veins','Petal veins',[['yes','Yes'],['no','No']]],['accent','Centre and veins',[['no','Same colour'],['yes','Separate accent file (glow or UV)']]]],shuffle:true,mounts:['magnet','clip','glue','peg','stem'],
     hint:'A flower to perch on. Orchid mantises sit on flowers in the wild, waiting for pollinators, and look their best on one. Petals are stacked in layers from back to front, so it prints face up with no supports, and two-colour prints work well: swap filament at a layer with the CFS.'},
   bark:{group:'climb',more:'bark',name:'Cork bark holder',fields:[['bw','Bark width',80],['bh','Bark height',100],['bk','Bark thickness',15]],
     selects:[['style','Style',[['classic','Two hooks'],['minimal','One hook'],['cradle','Side cradle'],['organic','Organic plate']]],['open','Back plate',[['yes','See-through cells'],['no','Solid']]]],shuffle:true,mounts:['magnet','clip','glue'],
@@ -639,7 +687,7 @@ Object.assign(ITEMS,{
     selects:[['kind','Type',[['plate','Plate on the mesh'],['hatch','Cover for the feeding hatch']]],['shape','Plate shape',[['round','Round'],['hex','Hexagon'],['flower','Flower'],['leaf','Leaf'],['pebble','Pebble']]],['vent','Vent holes (hatch cover)',[['yes','Yes'],['no','No']]]],mounts:[],
     hint:'A funnel for the nozzle of a spray bottle, so you can mist without opening the enclosure. It comes with a cap that closes it between mistings.'},
   tile:{group:'decor',more:'tile',name:'Backdrop tile',fields:[['w','Width',80,{show:s=>s._mount!=='panel'}],['h','Height',80,{show:s=>s._mount!=='panel'}],['depth','Texture depth',2]],
-    selects:[['texture','Texture',TXT],['corners','Corners',[['square','Square'],['rounded','Rounded']]]],shuffle:true,mounts:['magnet','clip','glue','panel'],
+    selects:[['texture','Texture',TXT],['corners','Corners',[['square','Square'],['rounded','Rounded']]],['accent','Stars',[['yes','Separate accent file (glow)'],['no','Same colour']],{show:vis('texture','stars')}]],shuffle:true,mounts:['magnet','clip','glue','panel'],
     hint:'Textured tiles for the back or side walls, which give the mantis grip and make the enclosure look natural. Set them edge to edge for a whole wall. With "In a tile panel" the tile fits the swappable tile panels of your enclosure.'},
   plate:{group:'decor',more:'nameplate',name:'Name plate',fields:[['t1','Name','Shifty',{text:true}],['t2','Second line','',{text:true}],['th','Letter height',10]],
     selects:[['font','Writing',[['script','Cursive'],['caps','Capitals']]],['mode','Letters',[['stencil','Stencil, cut through'],['raised','Raised'],['engraved','Engraved']]],['shape','Plate shape',[['rounded','Rounded rectangle'],['oval','Oval'],['banner','Banner'],['leaf','Leaf'],['hex','Hexagon'],['arch','Arch'],['cloud','Cloud'],['tag','Luggage tag'],['scroll','Scroll']]],['logo','Shifty\'s mark',[['no','No'],['yes','Yes']]],['border','Border',[['yes','Yes'],['no','No']]],['colour','Colours',[['two','Two colours (raised letters)'],['one','One colour']]]],shuffle:true,mounts:['magnet','clip','glue'],
@@ -656,6 +704,26 @@ Object.assign(ITEMS,{
   transport:{group:'addon',more:'transport',name:'Transport box',fields:[['L','Length',90],['W','Width',70],['H','Height',80]],
     selects:[['shape','Shape',[['round','Round'],['square','Square'],['hex','Hexagon'],['octagon','Octagon'],['oval','Oval'],['pebble','Pebble']]],['vents','Air holes',[['both','Lid and sides'],['lid','Lid only'],['sides','Sides only']]],['pattern','Lid pattern',PAT],['handle','Handle',[['tabs','Lift tabs'],['loop','Carry handle']]]],shuffle:true,mounts:[],
     hint:'A small box with a vented push-in lid, for taking a mantis to the vet, a show or a new owner. Useful when you sell them too. Size it to at least three times the body length tall.'},
+  incubator:{group:'breed',keep:'incubator',name:'Ootheca incubator',fields:[['W','Box width',90],['H','Body height',110],['slot','Vent slot width',1.2],['spout','Funnel opening',24],['cup','Collection cup rim',95]],mounts:[],
+    hint:'A hatching box for an egg case (ootheca). It hangs from a bar inside a vented body; when the nymphs hatch they climb up towards the light, through a funnel, into a clear cup on top, so you can collect dozens of tiny nymphs without chasing them. Keep it warm and lightly misted.'},
+  oothClip:{group:'breed',keep:'oothClip',name:'Ootheca hanger',fields:[['edge','Wall or mesh thickness',3],['dia','Twig thickness',5,{show:vis('style','clip')}],['n','How many',3]],
+    selects:[['style','Holds the egg case by',[['clip','A clip on its twig'],['string','A thread through an eye']]]],mounts:[],
+    hint:'Hangs an egg case from the top of any enclosure or the incubator. Egg cases must hang free, the way the mother laid them, so the nymphs can drop and hang while they hatch.'},
+  divider:{group:'breed',keep:'divider',name:'Mating divider',fields:[],selects:[['style','Panel',[['mesh','Mesh, so they can see each other'],['solid','Solid']]]],mounts:['magnet','glue'],
+    hint:'Splits a rectangular enclosure in two with a panel that slides down between two channels on the side walls. Keep the male on one side and the female on the other until she is well fed, then lift the panel out. It is sized from your Enclosure tab.'},
+  cupRack:{group:'breed',keep:'cupRack',name:'Nymph cup rack',fields:[['cupD','Cup bottom diameter',70],['cols','Columns',3],['rows','Rows',2]],selects:[['tags','Number tags',[['yes','Yes'],['no','No']]]],mounts:[],
+    hint:'A board with a numbered place for each deli cup, for raising nymphs one per cup, plus matching number tags for the cups.'},
+  chute:{group:'food',keep:'chute',name:'Feeder drop chute',fields:[['top','Funnel opening',70],['hatchD','Hatch diameter (if none yet)',60]],mounts:[],
+    hint:'Sits in the feeding hatch in place of the cover. Tip crickets, roaches or flies into the funnel with the shutter closed, then pull the shutter so they drop in, without ever opening the enclosure. It fits the hatch type you chose under Enclosure.'},
+  airlock:{group:'food',keep:'airlock',name:'Feeding airlock',fields:[['cham','Chamber width',50],['chamH','Chamber height',60],['hatchD','Hatch diameter (if none yet)',60]],mounts:[],
+    hint:'A small closed chamber on the feeding hatch, with a shutter underneath and a cap on top. Put flying feeders in, close the cap, then open the shutter: the flies go in and none get out.'},
+  diorama:{group:'dio',keep:'diorama',name:'Diorama piece',fields:[['size','Size',30],['h','Height',60,{show:vis('kind',['column','amphora','arch','pagoda','torii','shelf','cottage'])}],['n','How many',3,{show:vis('kind',['books','mushroom'])}],['tiers','Roof tiers',3,{show:vis('kind','pagoda')}]],
+    selects:[['kind','Piece',Object.entries(HabitatKeep.DIORAMA)],['style','Condition',[['broken','Ruined'],['intact','Whole']],{show:vis('kind',['column','arch'])}],['pattern','Mosaic',[['rosette','Rosette'],['meander','Greek key'],['waves','Waves'],['checker','Checkerboard']],{show:vis('kind','mosaic')}],['accent','Accent file',[['no','No'],['yes','Yes, for glow or UV filament']],{show:vis('kind',['mushroom','cottage'])}]],shuffle:true,mounts:['free','magnet','clip','glue','peg'],
+    hint:'Little scenery pieces to turn an enclosure into a scene: Roman ruins, a temple garden, a library or a fairy wood. Flat pieces (arch, gate, bookshelf, cottage) print lying down and stand up or hang on a wall; the others print upright. Mantises on miniature props make great photos for your shop.'},
+  turntable:{group:'dio',keep:'turntable',name:'Turntable display stand',fields:[['D','Platter diameter',220],['mLen','Motor length (motor and gearbox)',24,{show:vis('drive','motor')}]],selects:[['drive','Turning',[['manual','By hand (lazy Susan)'],['motor','Slow USB motor']]]],mounts:[],
+    hint:'A turntable to show an enclosure from every side, at a market stall or in photos. It runs on a skateboard bearing and a ring of airsoft BBs, so it carries a full enclosure. With the motor option, a tiny USB gear motor turns it about once a minute.'},
+  ship:{group:'addon',keep:'shipInsert',name:'Shipping box insert',fields:[['L','Box inside length',150],['W','Box inside width',110],['cupB','Cup bottom diameter',70],['cupT','Cup top diameter',90],['cupH','Cup height',80],['n','Cups',1],['text','Name on the insert','Shifty\'s',{text:true}]],selects:[['both','Top and bottom',[['yes','Yes, print 2'],['no','Bottom only']]],['font','Writing',[['script','Cursive'],['caps','Capitals']]]],mounts:[],
+    hint:'Holds deli cups upright and still inside a shipping box, for sending mantises to buyers. Measure the inside of your box and your cups.'},
   set:{group:'sets',name:'Matching set',fields:[['t1','Name','Shifty',{text:true}]],
     selects:[['theme','Theme',Object.entries(HABITAT_SETS).map(([k,v])=>[k,v.name,v.group])],['pack','Pack',[['2','Full set'],['1','Essentials'],['3','Deluxe']]],['size','Size',[['m','Standard'],['s','Small, for nymphs'],['l','Large, for big species']]],['font','Writing',[['script','Cursive'],['caps','Capitals']]]],shuffle:true,mounts:['magnet','clip','glue'],
     hint:'A group of pieces in one style, to fit out an enclosure in one go or to sell as a bundle. Essentials has 3–4 pieces, Full set about 8, Deluxe everything. Untick any piece you don\'t want. Each piece downloads as its own STL file; make any of them again in its own item if you want to change it.'}
@@ -682,7 +750,8 @@ function accSetup(){
     const s=document.createElement('select');opt(s,it.shapes.map(k=>[k,SHAPES[k]]));s.value=it.shapes.includes(A.shape[A.item])?A.shape[A.item]:it.shapes[0];
     s.onchange=()=>{A.shape[A.item]=s.value;accSetup()};field(box,'Shape',s);
   }
-  for(const [k,l,opts] of it.selects||[]){const s=document.createElement('select');if(opts.some(o=>o[2])){const gs={};for(const [v,t,g] of opts){if(!gs[g]){gs[g]=document.createElement('optgroup');gs[g].label=g;s.append(gs[g])}const o=document.createElement('option');o.value=v;o.textContent=t;gs[g].append(o)}}else opt(s,opts);s.value=A.sel[A.item][k]||opts[0][0];s.onchange=()=>{A.sel[A.item][k]=s.value;accSetup()};field(box,l,s)}
+  const sv0=selVals(it);
+  for(const [k,l,opts,x] of it.selects||[]){if(x&&x.show&&!x.show(sv0))continue;const s=document.createElement('select');if(opts.some(o=>o[2])){const gs={};for(const [v,t,g] of opts){if(!gs[g]){gs[g]=document.createElement('optgroup');gs[g].label=g;s.append(gs[g])}const o=document.createElement('option');o.value=v;o.textContent=t;gs[g].append(o)}}else opt(s,opts);s.value=A.sel[A.item][k]||opts[0][0];s.onchange=()=>{A.sel[A.item][k]=s.value;accSetup()};field(box,l,s)}
   const sv=selVals(it);
   if(it.shuffle||(it.shapes&&RANDOM.includes(A.shape[A.item]||it.shapes[0]))||(A.item==='ledge'&&(A.sel.ledge.pattern||'solid')!=='solid')){const b=document.createElement('button');b.type='button';b.className='btn';b.textContent='Shuffle';b.style.alignSelf='end';b.onclick=()=>{A.seed[A.item]=(A.seed[A.item]||1)+1;accCalc()};box.append(b)}
   const shape=it.shapes?(it.shapes.includes(A.shape[A.item])?A.shape[A.item]:it.shapes[0]):sv.shape;
@@ -725,7 +794,7 @@ const MOUNT_HINT={
   panel:'Sized to drop into the openings of your swappable tile panels, in place of a mesh or acrylic tile.'
 };
 function encInfo(){
-  const e=Object.assign({},DEF,state.enc||{}),bed=Math.max(e.bx||350,e.by||350),g=e.T+.6,band=g/2+2.4,o={bed,band,hatchR:e.hatch!=='none'?Math.min(30,e.hatchD/2):0};
+  const e=Object.assign({},DEF,state.enc||{}),bed=Math.max(e.bx||350,e.by||350),g=e.T+.6,band=g/2+2.4,o={e,bed,band,hatchR:e.hatch!=='none'?Math.min(30,e.hatchD/2):0};
   if(e.shape==='rect'){const d=rectDims(e);Object.assign(o,{span:e.W+2*band,Eh:d.Eh,corner:e.corners==='rounded'?'rounded':'square',alpha:Math.PI/2});
     const pn=[['front',e.W-d.g-1],['back',e.W-d.g-1],['left',e.D-d.g-1],['right',e.D-d.g-1]].find(([k])=>e[k]==='tiles');
     if(pn)o.tileSize=()=>{const E=d.s+1,iw=pn[1]-2*E,ih=e.H-.5-2*E,nx=Math.max(1,Math.round(iw/95)),ny=Math.max(1,Math.round(ih/95)),bw=HE.TILE.bar,r=HE.TILE.rebate;return [(iw-(nx+1)*bw)/nx+2*r-.6,(ih-(ny+1)*bw)/ny+2*r-.6]};
@@ -746,10 +815,10 @@ function itemDesign(key,over,mount,seed,sc){
   if(it.shapes){o.shape=it.shapes.includes(A.shape[key])&&!over?A.shape[key]:it.shapes[0];if(o.shape==='round')o.W=o.L}
   for(const [k,,opts] of it.selects||[])o[k]=(!over&&((A.sel||{})[key]||{})[k])||opts[0][0];
   if(over)Object.assign(o,over);
-  if(sc&&sc!==1)for(const k of SCALE)if(typeof o[k]==='number'&&!(key==='light'))o[k]=Math.round(o[k]*sc*10)/10;
+  if(sc&&sc!==1&&!['ship','turntable','cupRack','divider','chute','airlock'].includes(key))for(const k of SCALE)if(typeof o[k]==='number'&&!(key==='light'))o[k]=Math.round(o[k]*sc*10)/10;
   if(o.shape==='round'&&o.L)o.W=o.L;
   if(key==='ledge'&&o.shape==='sharp')o.shape='square';
-  return it.more?HabitatMore[it.more](o,encInfo()):HabitatParts[key](o,encInfo());
+  return it.keep?HabitatKeep[it.keep](o,encInfo()):it.more?HabitatMore[it.more](o,encInfo()):HabitatParts[key](o,encInfo());
 }
 function accDesign(){
   const it=ITEMS[A.item],mount=it.mounts.length?$('mount').value:'none',seed=A.seed[A.item]||1;
@@ -826,16 +895,56 @@ $('accDl').onclick=async()=>{
   await save(ITEMS[A.item].name.toLowerCase().replace(/'/g,'').replace(/[^a-z0-9]+/g,'-').replace(/-$/,'')+'.zip',zipStore(files),msg,two?'Saved. Unzip it, and add each second-colour file to its main file as one object in Creality Print.':'Saved. Unzip it, then open the STL files in Creality Print.');
 };
 
+
+/* ---------- price ---------- */
+const PR_DEF={src:'enc',g:0,hrs:0,mag:0,ac:0,other:0,work:1,cur:'CHF',kg:25,rate:18,w:350,kwh:.3,wear:.4,fail:10,magP:.2,acP:70,hour:30,pack:4,fee:9,profit:25};
+const PR_IDS={src:'prSrc',g:'prG',hrs:'prHrs',mag:'prMag',ac:'prAc',other:'prOther',work:'prWork',cur:'prCur',kg:'prKg',rate:'prRate',w:'prW',kwh:'prKwh',wear:'prWear',fail:'prFail',magP:'prMagP',acP:'prAcP',hour:'prHour',pack:'prPack',fee:'prFee',profit:'prProfit'};
+opt($('prSrc'),[['enc','The enclosure'],['acc','The current accessory'],['both','Both together']]);
+const PR=Object.assign({},PR_DEF,state.price||{});
+for(const k in PR_IDS){const el=$(PR_IDS[k]);el.value=PR[k];el.addEventListener('input',()=>{PR[k]=el.type==='number'?+el.value:el.value;state.price=PR;persist();priceCalc()})}
+const volOf=t=>{let v=0;for(let i=0;i<t.length;i+=9){const [ax,ay,az,bx,by,bz,cx,cy,cz]=t.subarray?t.subarray(i,i+9):t.slice(i,i+9);v+=(ax*(by*cz-bz*cy)-ay*(bx*cz-bz*cx)+az*(bx*cy-by*cx))/6}return Math.abs(v)};
+$('prFill').onclick=()=>{
+  const msg=$('prFillMsg');msg.textContent='Working it out…';
+  setTimeout(()=>{try{
+    let g=0,mag=0,ac=0;const src=$('prSrc').value;
+    if(src!=='acc'){const p=readEnc(),m=encModel(p,false),rho=(MATS[p.mat]||MATS.petg).rho;
+      for(const r of m.parts)g+=volOf(r.tris)/1000*rho*(r.n||1);
+      mag+=(p.hatch==='magnet'?4:0)+(p.shape==='rect'&&p.front.startsWith('swing')&&p.doorCatch==='magnet'?2:0);
+      for(const [a,b] of m.cut){const n=(b.match(/[\d.,]+/g)||[]).map(x=>+x.replace(/,/g,''));if(/acrylic|PET/i.test(a)&&!/as many/.test(a)&&n.length>=2)ac+=n[0]*n[1]/1e6}}
+    if(src!=='enc'){const d=accDesign(),rho=(MATS[$('mat').value]||MATS.petg).rho;for(const q of d.parts)if(q.m)g+=q.m.vol/1000*rho;mag+=d.magnets||0}
+    g*=1.08; /* walls are printed solid here; real prints with infill come out lighter, supports and purge come out heavier */
+    PR.g=Math.round(g);PR.mag=mag;PR.ac=Math.round(ac*1000)/1000;PR.hrs=Math.round(g/PR.rate*2)/2;
+    for(const k of ['g','mag','ac','hrs'])$(PR_IDS[k]).value=PR[k];state.price=PR;persist();
+    msg.textContent='Filled in from the design. The weight is worked out from the solid model, so it is a little high for parts with infill; Creality Print gives the exact figure once sliced.';priceCalc();
+  }catch(e){console.error(e);msg.textContent='Could not read the design. Open the Enclosure or Accessories tab once, then try again.'}},30);
+};
+function priceCalc(){
+  const P=PR,c=P.cur||'CHF',m=v=>`${c} ${fmt(v,2)}`;
+  const fil=P.g/1000*P.kg,pow=P.hrs*P.w/1000*P.kwh,wear=P.hrs*P.wear,fail=(fil+pow+wear)*P.fail/100,mags=P.mag*P.magP,acr=P.ac*P.acP,labour=P.work*P.hour;
+  const rows=[['Filament',fil],['Electricity',pow],['Printer wear',wear],['Failed prints',fail],['Magnets',mags],['Acrylic or PET sheet',acr],['Other parts',P.other],['Packaging',P.pack],['Your work',labour]];
+  const cost=rows.reduce((a,r)=>a+(+r[1]||0),0),fee=Math.min(.5,P.fee/100),raw=cost*(1+P.profit/100)/(1-fee),price=raw<=0?0:Math.ceil(raw-.9)+.9;
+  const fees=price*fee,profit=price-fees-cost;
+  $('prPrice').textContent=m(price);
+  $('prSub').textContent=`Suggested price. Materials ${m(cost-labour)}, your work ${m(labour)}, fees ${m(fees)}, profit ${m(profit)}.`;
+  const t=$('prTable');t.innerHTML='<tr><th>Cost</th><th class="n">Amount</th></tr>';
+  for(const [a,v] of rows){if(!v)continue;const r=document.createElement('tr');r.innerHTML=`<td>${a}</td><td class="n">${m(v)}</td>`;t.append(r)}
+  const add=(a,v,b)=>{const r=document.createElement('tr');r.innerHTML=`<td>${b?'<b>'+a+'</b>':a}</td><td class="n">${b?'<b>'+m(v)+'</b>':m(v)}</td>`;t.append(r)};
+  add('Total cost',cost,true);add(`Shop and payment fees (${fmt(P.fee,1)} %)`,fees);add('Profit',profit);add('Price',price,true);
+  const notes=[];if(P.work>0&&profit>=0)notes.push(`You earn ${m((labour+profit)/Math.max(.25,P.work))} per hour of your own work, counting the profit.`);
+  if(!P.g)notes.push('Fill in the filament weight, or press Fill in from the design.');
+  if(P.hrs>0&&P.g/P.hrs>40)notes.push('That print time looks short for this much filament. Check it in Creality Print.');
+  const n=$('prNote');n.hidden=!notes.length;n.innerHTML='';for(const x of notes){const dv=document.createElement('div');dv.textContent=x;n.append(dv)}
+}
+
 /* ---------- tabs ---------- */
 function view(k){
-  const enc=k!=='acc';$('viewEnc').hidden=!enc;$('viewAcc').hidden=enc;
-  $('tabEnc').setAttribute('aria-selected',enc);$('tabAcc').setAttribute('aria-selected',!enc);
+  for(const [v,t,key] of [['viewEnc','tabEnc','enc'],['viewAcc','tabAcc','acc'],['viewPrice','tabPrice','price']]){$(v).hidden=k!==key;$(t).setAttribute('aria-selected',k===key)}
   state.tab=k;persist();
-  if(enc)encCalc();else accSetup();
+  if(k==='enc')encCalc();else if(k==='acc')accSetup();else priceCalc();
 }
-$('tabEnc').onclick=()=>view('enc');$('tabAcc').onclick=()=>view('acc');
-let rz;addEventListener('resize',()=>{clearTimeout(rz);rz=setTimeout(()=>state.tab==='acc'?accCalc():encCalc(),150)});
-matchMedia('(prefers-color-scheme:dark)').addEventListener?.('change',()=>state.tab==='acc'?accCalc():encCalc());
-recommend();view(state.tab==='acc'?'acc':'enc');
+$('tabEnc').onclick=()=>view('enc');$('tabAcc').onclick=()=>view('acc');$('tabPrice').onclick=()=>view('price');
+let rz;const redraw=()=>state.tab==='acc'?accCalc():state.tab==='enc'?encCalc():null;addEventListener('resize',()=>{clearTimeout(rz);rz=setTimeout(redraw,150)});
+matchMedia('(prefers-color-scheme:dark)').addEventListener?.('change',redraw);
+recommend();view(['acc','price'].includes(state.tab)?state.tab:'enc');
 </script>
 </body></html>
