@@ -414,6 +414,8 @@
     if(e.shape==='poly')return W-2*T;
     if(e.shape==='oval')return (across==='depth'?D:W)-4;
     if(e.shape==='hexcell')return W*.9;
+    if(e.shape==='corner')return W*Math.sqrt(1-.09)-6;
+    if(e.shape==='nursery')return W-6;
     return W-4}
   /* the wall bracket: a plate on the wall with a block on top, and a square hole down through the block */
   function wallBracket(o,ps){

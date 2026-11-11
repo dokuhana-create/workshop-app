@@ -1,0 +1,182 @@
+<!doctype html><html lang="de"><head><meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
+<title>Enclosure Designer</title>
+<meta name="description" content="Design your own printed insect enclosure and send the order.">
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Bricolage+Grotesque:opsz,wght@12..96,600;12..96,750&family=IBM+Plex+Sans:wght@400;500;600&display=swap">
+<style>
+:root{--bg:#edf0ea;--panel:#fafbf8;--fg:#1c231b;--muted:#5a6658;--line:#cdd6c9;--accent:#41703a;--on-accent:#fff;--orchid:#b8578f;--pick:#e7efe3;
+  --display:"Bricolage Grotesque",ui-sans-serif,system-ui,sans-serif;--body:"IBM Plex Sans",ui-sans-serif,system-ui,sans-serif}
+@media (prefers-color-scheme:dark){:root:not([data-theme="light"]){--bg:#131813;--panel:#1b221a;--fg:#e6ede4;--muted:#9fae9c;--line:#304030;--accent:#8cc97f;--on-accent:#10200d;--orchid:#e79cc6;--pick:#24331f;color-scheme:dark}}
+:root[data-theme="dark"]{--bg:#131813;--panel:#1b221a;--fg:#e6ede4;--muted:#9fae9c;--line:#304030;--accent:#8cc97f;--on-accent:#10200d;--orchid:#e79cc6;--pick:#24331f;color-scheme:dark}
+*{box-sizing:border-box}[hidden]{display:none!important}
+html,body{margin:0}body{background:var(--bg);color:var(--fg);font:400 16px/1.5 var(--body)}
+.wrap{max-width:1080px;margin:0 auto;padding:28px max(16px,env(safe-area-inset-right)) 64px max(16px,env(safe-area-inset-left));display:grid;gap:20px}
+header{display:flex;justify-content:space-between;align-items:end;gap:12px;flex-wrap:wrap}
+h1{font:750 clamp(30px,6vw,46px)/1.05 var(--display);margin:0;letter-spacing:-.01em}
+.shop{font:600 15px var(--body);color:var(--orchid);letter-spacing:.06em;text-transform:uppercase;margin-bottom:6px}
+.lang{display:flex;gap:4px}.lang button{font:600 14px var(--body);background:none;border:1px solid var(--line);color:var(--muted);border-radius:6px;padding:5px 10px;cursor:pointer}
+.lang button[aria-pressed=true]{color:var(--fg);border-color:var(--accent)}
+.lead{color:var(--muted);max-width:60ch;margin:0}
+.grid{display:grid;grid-template-columns:minmax(0,1fr) 320px;gap:20px;align-items:start}
+@media (max-width:860px){.grid{grid-template-columns:1fr}}
+section{background:var(--panel);border:1px solid var(--line);border-radius:12px;padding:18px}
+h2{font:700 20px var(--display);margin:0 0 4px}
+.sub{color:var(--muted);font-size:14px;margin:0 0 12px}
+.cards{display:grid;grid-template-columns:repeat(auto-fill,minmax(150px,1fr));gap:8px}
+.card{display:grid;gap:4px;text-align:left;font:inherit;color:inherit;background:none;border:1px solid var(--line);border-radius:10px;padding:10px;cursor:pointer}
+.card svg{width:100%;height:64px;color:var(--accent)}
+.card b{font-size:15px}.card span{font-size:13px;color:var(--muted);line-height:1.35}
+.card[aria-pressed=true]{border-color:var(--accent);background:var(--pick);box-shadow:inset 0 0 0 1px var(--accent)}
+.fields{display:grid;grid-template-columns:repeat(auto-fill,minmax(200px,1fr));gap:12px}
+label.f{display:grid;gap:4px;font-size:14px;font-weight:500}
+input,select,textarea{font:inherit;font-size:16px;width:100%;padding:9px 10px;border:1px solid var(--line);border-radius:7px;background:var(--bg);color:var(--fg)}
+textarea{min-height:80px}
+.check{display:flex;gap:10px;align-items:flex-start;padding:8px 0;font-size:15px}.check input{width:20px;height:20px;margin-top:2px;flex:none}
+.check small{display:block;color:var(--muted)}
+.seg{display:flex;gap:6px;flex-wrap:wrap}.seg button{font:600 15px var(--body);border:1px solid var(--line);background:none;color:var(--fg);border-radius:8px;padding:8px 14px;cursor:pointer}
+.seg button[aria-pressed=true]{border-color:var(--accent);background:var(--pick)}
+.note{font-size:14px;color:var(--muted);margin:10px 0 0}
+aside{position:sticky;top:16px;display:grid;gap:12px}
+.price{font:750 34px var(--display)}.lines{display:grid;gap:4px;font-size:14px}.lines div{display:flex;justify-content:space-between;gap:8px}
+.btn{font:600 15px var(--body);border-radius:8px;padding:11px 14px;border:1px solid var(--accent);background:var(--accent);color:var(--on-accent);cursor:pointer;width:100%}
+.btn.o{background:none;color:var(--accent)}
+.msg{font-size:14px;color:var(--muted);min-height:1.4em}
+code{font-size:12px;word-break:break-all;display:block;background:var(--bg);border:1px solid var(--line);border-radius:6px;padding:8px;max-height:90px;overflow:auto}
+:focus-visible{outline:2px solid var(--accent);outline-offset:2px}
+</style></head><body>
+<div class="wrap">
+  <header>
+    <div><div class="shop" id="shopName">Shifty's</div><h1 id="t-title">Gestalte dein Terrarium</h1></div>
+    <div class="lang"><button type="button" data-l="de" aria-pressed="true">Deutsch</button><button type="button" data-l="en" aria-pressed="false">English</button></div>
+  </header>
+  <p class="lead" id="t-lead"></p>
+  <div class="grid">
+    <div style="display:grid;gap:16px">
+      <section><h2 id="t-s1"></h2><p class="sub" id="t-s1s"></p>
+        <div class="fields"><label class="f"><span id="t-animal"></span><select id="species"></select></label></div>
+        <p class="note" id="care"></p></section>
+      <section><h2 id="t-s2"></h2><p class="sub" id="t-s2s"></p><div class="cards" id="shapes"></div></section>
+      <section><h2 id="t-s3"></h2><p class="sub" id="t-s3s"></p><div class="seg" id="sizes"></div>
+        <div class="fields nurF" style="margin-top:12px"><label class="f"><span id="t-cols"></span><input id="cols" type="number" min="1" max="6" value="3"></label><label class="f"><span id="t-rows"></span><input id="rows" type="number" min="1" max="6" value="3"></label></div>
+        <p class="note" id="dims"></p></section>
+      <section><h2 id="t-s4"></h2><p class="sub" id="t-s4s"></p>
+        <div class="fields"><label class="f"><span id="t-theme"></span><select id="theme"></select></label><label class="f"><span id="t-pack"></span><select id="pack"></select></label></div>
+        <p class="note" id="themeNote"></p>
+        <label class="check"><input type="checkbox" id="trim"><span><span id="t-trim"></span><small id="t-trims"></small></span></label></section>
+      <section><h2 id="t-s5"></h2>
+        <label class="check"><input type="checkbox" id="lamp"><span><span id="t-lamp"></span><small id="t-lamps"></small></span></label>
+        <label class="check lockF"><input type="checkbox" id="lock"><span><span id="t-lock"></span><small id="t-locks"></small></span></label>
+        <label class="check"><input type="checkbox" id="plate"><span><span id="t-plate"></span><small id="t-plates"></small></span></label>
+        <div class="fields plateF"><label class="f"><span id="t-pname"></span><input id="pname" maxlength="24"></label></div></section>
+      <section><h2 id="t-s6"></h2>
+        <div class="fields"><label class="f"><span id="t-name"></span><input id="cname" autocomplete="name"></label><label class="f"><span id="t-contact"></span><input id="contact" autocomplete="email"></label>
+          <label class="f"><span id="t-deliv"></span><select id="deliv"></select></label></div>
+        <label class="f" style="margin-top:12px"><span id="t-msg"></span><textarea id="cmsg"></textarea></label></section>
+    </div>
+    <aside><section>
+      <div class="sub" id="t-est"></div><div class="price" id="price">–</div>
+      <div class="lines" id="lines"></div>
+      <p class="note" id="t-estn"></p>
+      <div style="display:grid;gap:8px;margin-top:12px"><button class="btn" id="send" type="button"></button><button class="btn o" id="copy" type="button"></button></div>
+      <div class="msg" id="out"></div>
+      <code id="code" hidden></code>
+    </section></aside>
+  </div>
+</div>
+<script src="pages/habitat-sets.js"></script>
+<script>
+/* The shop's own settings arrive in the link (#cfg=...), made in Habitat under Price: name, e-mail and prices. */
+const DEFAULT={shop:"Shifty's",email:'',cur:'CHF',base:{rect:79,cabinet:119,book:129,corner:99,dome:149,cage:129,round:79,hexcell:69,tower:199,showcase:99,nursery:15},
+  size:{s:-.15,m:0,l:.25},pack:{0:0,1:15,2:29,3:45},trim:25,lamp:18,lock:8,plate:12,ship:12};
+let CFG=DEFAULT;try{const m=location.hash.match(/cfg=([^&]+)/);if(m)CFG=Object.assign({},DEFAULT,JSON.parse(decodeURIComponent(escape(atob(m[1].replace(/-/g,'+').replace(/_/g,'/')))))) }catch(e){}
+const $=id=>document.getElementById(id);
+const SPECIES=[['orchidF',[65,[200,200,300]]],['orchidM',[30,[120,120,180]]],['orchidN',[15,[100,100,150]]],['deroF',[90,[300,200,300]]],['deroM',[75,[200,200,250]]],['deroN',[25,[120,120,150]]],['other',[50,[160,160,240]]]];
+const SHAPES=[['rect','M8 10h48v46H8z M8 10l6-4h48l-6 4 M56 10l6-4v46l-6 4'],['cabinet','M10 58V20q22-18 44 0v38z M10 58h44 M20 58V26q12-10 24 0v32'],['book','M14 6h34a4 4 0 0 1 4 4v48H18a4 4 0 0 1-4-4z M18 6v52 M14 14h4 M14 50h4 M24 16h22v30H24z'],
+  ['corner','M8 56V8h48 M8 56A48 48 0 0 0 56 8'],['dome','M8 58h48v-16h-48z M8 42q24-44 48 0 M20 42q12-26 24 0 M32 12v30'],['cage','M14 58h36 M16 58V30q16-30 32 0v28 M24 58V24 M32 58V12 M40 58V24 M32 8v4'],
+  ['round','M10 18a22 8 0 1 0 44 0a22 8 0 1 0-44 0 M10 18v34a22 8 0 0 0 44 0V18'],['hexcell','M32 6l22 13v26L32 58 10 45V19z M32 14l15 9v18l-15 9-15-9V23z'],
+  ['tower','M14 6h36v16H14z M14 24h36v16H14z M14 42h36v16H14z'],['showcase','M6 22h52v30H6z M6 22l8-8h44l-8 8 M58 14v30l-8 8'],['nursery','M8 8h48v48H8z M24 8v48 M40 8v48 M8 24h48 M8 40h48']];
+const T={
+de:{title:'Gestalte dein Terrarium',lead:'Wähle Tier, Form, Grösse, Stil und Extras. Rechts siehst du sofort den Preis. Am Schluss sendest du die Bestellung per E-Mail; ich melde mich mit Bildern und dem genauen Angebot.',
+ s1:'1. Dein Tier',s1s:'Die Grösse richtet sich danach, wie viel Platz das Tier zum Klettern und Häuten braucht.',animal:'Tier',
+ s2:'2. Form',s2s:'Alle durchsichtigen Wände sind aus Acryl oder PET, nichts Durchsichtiges ist gedruckt.',
+ s3:'3. Grösse',s3s:'Standard passt für ausgewachsene Tiere; klein für Jungtiere.',cols:'Schubladen nebeneinander',rows:'Schubladen übereinander',
+ s4:'4. Stil',s4s:'Ein Stilpaket bringt passende Einrichtung mit: Blumen, Äste, Futternapf, Deko.',theme:'Stil',pack:'Paket',trim:'Passender Zierrahmen',trims:'Front, Eckaufsätze und Füsse im gleichen Stil.',
+ s5:'5. Extras',lamp:'Pflanzenlampe mit Timer',lamps:'Runde 9-cm-Lampe mit 3/9/12-h-Timer und Dimmer, in einem Halter auf dem Deckel.',lock:'Türschloss',locks:'Ein Sicherungsstift, passend für ein Mini-Vorhängeschloss: gut bei Kindern und Katzen.',
+ plate:'Namensschild',plates:'Mit dem Namen deines Tiers, in Schreibschrift.',pname:'Name auf dem Schild',
+ s6:'6. Deine Angaben',name:'Dein Name',contact:'E-Mail oder Telefon',deliv:'Lieferung',msg:'Wünsche oder Fragen',
+ est:'Richtpreis',estn:'Richtpreis inkl. Material und Arbeit. Den genauen Preis bestätige ich dir nach der Bestellung.',send:'Bestellung per E-Mail senden',copy:'Bestellcode kopieren',
+ pick:'Abholen',ship:'Versand',copied:'Kopiert. Füge den Code in deine Nachricht ein.',noMail:'Kopiere den Bestellcode und schicke ihn mir per Nachricht.',need:'Bitte gib deinen Namen und eine Kontaktmöglichkeit an.',
+ sizes:{s:'Klein',m:'Standard',l:'Gross'},packs:{0:'Ohne Einrichtung',1:'Grundausstattung',2:'Komplettset',3:'Deluxe'},
+ species:{orchidF:'Orchideenmantis, Weibchen',orchidM:'Orchideenmantis, Männchen',orchidN:'Orchideenmantis, Jungtier',deroF:'Grosse Totes Blatt, Weibchen',deroM:'Grosse Totes Blatt, Männchen',deroN:'Grosse Totes Blatt, Jungtier',other:'Andere Mantis oder Insekt'},
+ shapes:{rect:['Klassisch','Rechteckig, Schiebetür aus Acryl'],cabinet:['Gotischer Schrank','Hoch, mit Flügeltür und Spitzbogen'],book:['Buch im Regal','Ein grosses antikes Buch; der Deckel ist die Tür'],corner:['Eckterrarium','Viertelkreis für eine Regal- oder Zimmerecke'],
+  dome:['Glashauskuppel','Facettierte Kuppel wie ein Gewächshaus'],cage:['Viktorianischer Vogelkäfig','Runder Gitterkäfig mit Glockendach'],round:['Rund','Runde, klare Wand'],hexcell:['Wabe für die Wand','Sechseckige Zelle, mehrere als Wabe'],
+  tower:['Turm','Drei Terrarien übereinander'],showcase:['Vitrine','Rundum durchsichtig, für Ausstellungen'],nursery:['Kinderzimmer-Schrank','Schubladen für Jungtiere']},
+ total:'Total',base:'Terrarium',packL:'Stilpaket',trimL:'Zierrahmen',lampL:'Lampe',lockL:'Schloss',plateL:'Namensschild',shipL:'Versand',subj:'Terrarium-Bestellung',dims:'Innenmasse etwa'},
+en:{title:'Design your enclosure',lead:'Choose the animal, shape, size, style and extras; the price updates on the right. At the end, send the order by e-mail, and I\'ll get back to you with pictures and the exact quote.',
+ s1:'1. Your animal',s1s:'The size follows how much room the animal needs to climb and moult.',animal:'Animal',
+ s2:'2. Shape',s2s:'Every clear wall is acrylic or PET sheet; nothing see-through is printed.',
+ s3:'3. Size',s3s:'Standard suits adults; small is for nymphs.',cols:'Drawers across',rows:'Drawers down',
+ s4:'4. Style',s4s:'A style pack brings matching furnishings: flowers, branches, a feeding dish, decorations.',theme:'Style',pack:'Pack',trim:'Matching decorative frame',trims:'Front, corner finials and feet in the same style.',
+ s5:'5. Extras',lamp:'Plant lamp with timer',lamps:'A round 9 cm lamp with a 3/9/12 h timer and dimmer, in a seat on the lid.',lock:'Door lock',locks:'A locking pin that takes a mini padlock: good with children and cats.',
+ plate:'Name plate',plates:'With your pet\'s name in cursive.',pname:'Name on the plate',
+ s6:'6. Your details',name:'Your name',contact:'E-mail or phone',deliv:'Delivery',msg:'Wishes or questions',
+ est:'Estimated price',estn:'Estimate including materials and work. I\'ll confirm the exact price after your order.',send:'Send the order by e-mail',copy:'Copy the order code',
+ pick:'Pick up',ship:'Shipping',copied:'Copied. Paste the code into your message.',noMail:'Copy the order code and send it to me in a message.',need:'Please add your name and a way to reach you.',
+ sizes:{s:'Small',m:'Standard',l:'Large'},packs:{0:'No furnishings',1:'Essentials',2:'Full set',3:'Deluxe'},
+ species:{orchidF:'Orchid mantis, adult female',orchidM:'Orchid mantis, adult male',orchidN:'Orchid mantis, nymph',deroF:'Giant dead leaf mantis, female',deroM:'Giant dead leaf mantis, male',deroN:'Giant dead leaf mantis, nymph',other:'Another mantis or insect'},
+ shapes:{rect:['Classic','Rectangular, sliding acrylic door'],cabinet:['Gothic cabinet','Tall, with a swing door and a pointed arch'],book:['Book on the shelf','A big antique book; the cover is the door'],corner:['Corner enclosure','A quarter circle for a shelf or room corner'],
+  dome:['Glass-house dome','A faceted dome like a greenhouse'],cage:['Victorian birdcage','A round cage with a bell-shaped top'],round:['Round','A round clear wall'],hexcell:['Honeycomb wall cell','A hexagonal cell; several make a honeycomb'],
+  tower:['Tower','Three enclosures stacked'],showcase:['Show case','Clear all round, for fairs'],nursery:['Nursery cabinet','Drawers for nymphs']},
+ total:'Total',base:'Enclosure',packL:'Style pack',trimL:'Decorative frame',lampL:'Lamp',lockL:'Lock',plateL:'Name plate',shipL:'Shipping',subj:'Enclosure order',dims:'Inside about'}};
+let L='de';const st={species:'orchidF',shape:'rect',size:'m'};
+const fmt=v=>`${CFG.cur} ${(Math.round(v*100)/100).toFixed(2)}`;
+function dimsOf(){const box=SPECIES.find(s=>s[0]===st.species)[1][1],k={s:.8,m:1,l:1.25}[st.size],r=v=>Math.round(v*k/5)*5;
+  if(st.shape==='nursery')return {W:80,H:100,D:100};
+  if(['corner','dome','cage','round'].includes(st.shape))return {W:r(Math.max(box[0],box[1])*1.05),D:r(box[1]),H:r(box[2]*(st.shape==='dome'?.55:st.shape==='cage'?.6:1))};
+  if(st.shape==='book')return {W:r(box[0]),D:r(box[1]*.6),H:r(box[2]*.95)};
+  return {W:r(box[0]),D:r(box[1]),H:r(box[2])}}
+function price(){const t=T[L],lines=[];const k=st.shape==='nursery'?(+$('cols').value||1)*(+$('rows').value||1):1;
+  const base=(CFG.base[st.shape]||CFG.base.rect)*k*(1+(CFG.size[st.size]||0));lines.push([t.base,base]);
+  const pk=+$('pack').value;if(pk)lines.push([t.packL+' · '+t.packs[pk],CFG.pack[pk]||0]);
+  if($('trim').checked)lines.push([t.trimL,CFG.trim]);if($('lamp').checked)lines.push([t.lampL,CFG.lamp]);
+  if($('lock').checked&&!$('lock').closest('.lockF').hidden)lines.push([t.lockL,CFG.lock]);if($('plate').checked)lines.push([t.plateL,CFG.plate]);
+  if($('deliv').value==='ship')lines.push([t.shipL,CFG.ship]);
+  const tot=lines.reduce((a,l)=>a+l[1],0);$('price').textContent=fmt(tot);
+  $('lines').innerHTML='';for(const [a,b] of lines){const d=document.createElement('div');d.innerHTML='<span></span><span></span>';d.children[0].textContent=a;d.children[1].textContent=fmt(b);$('lines').append(d)}
+  return tot}
+function order(){const d=dimsOf();return {v:1,species:st.species,shape:st.shape,size:st.size,...d,cols:+$('cols').value||3,rows:+$('rows').value||3,theme:$('theme').value,pack:+$('pack').value,trim:$('trim').checked,
+  lamp:$('lamp').checked,lock:$('lock').checked&&!['round','corner','dome','cage','hexcell','nursery'].includes(st.shape),plate:$('plate').checked?($('pname').value||''):null,
+  name:$('cname').value.trim(),contact:$('contact').value.trim(),deliv:$('deliv').value,msg:$('cmsg').value.trim(),price:price()}}
+const encode=o=>'ORDER1:'+btoa(unescape(encodeURIComponent(JSON.stringify(o)))).replace(/\+/g,'-').replace(/\//g,'_').replace(/=+$/,'');
+function render(){const t=T[L];document.documentElement.lang=L;
+  for(const k of ['title','lead','s1','s1s','animal','s2','s2s','s3','s3s','cols','rows','s4','s4s','theme','pack','trim','trims','s5','lamp','lamps','lock','locks','plate','plates','pname','s6','name','contact','deliv','msg','est','estn']){const el=$('t-'+k);if(el)el.textContent=t[k]}
+  $('send').textContent=t.send;$('copy').textContent=t.copy;
+  const sp=$('species');sp.innerHTML='';for(const [id] of SPECIES){const o=new Option(t.species[id],id);sp.append(o)}sp.value=st.species;
+  const sh=$('shapes');sh.innerHTML='';for(const [k,path] of SHAPES){const [n,dsc]=t.shapes[k],b=document.createElement('button');b.type='button';b.className='card';b.setAttribute('aria-pressed',st.shape===k);
+    b.innerHTML=`<svg viewBox="0 0 64 64" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linejoin="round" stroke-linecap="round"><path d="${path}"/></svg><b></b><span></span>`;b.querySelector('b').textContent=n;b.querySelector('span').textContent=dsc;
+    b.onclick=()=>{st.shape=k;render()};sh.append(b)}
+  const sz=$('sizes');sz.innerHTML='';for(const k of ['s','m','l']){const b=document.createElement('button');b.type='button';b.textContent=t.sizes[k];b.setAttribute('aria-pressed',st.size===k);b.onclick=()=>{st.size=k;render()};sz.append(b)}
+  sz.hidden=st.shape==='nursery';document.querySelector('.nurF').hidden=st.shape!=='nursery';
+  const d=dimsOf();$('dims').textContent=st.shape==='nursery'?`${t.dims} 80 × 100 × 100 mm`:`${t.dims} ${d.W} × ${d.D} × ${d.H} mm`;
+  const pk=$('pack'),pv=pk.value||'2';pk.innerHTML='';for(const k of [0,1,2,3])pk.append(new Option(t.packs[k],k));pk.value=pv;
+  const dl=$('deliv'),dv=dl.value||'pick';dl.innerHTML='';dl.append(new Option(t.pick,'pick'),new Option(t.ship,'ship'));dl.value=dv;
+  document.querySelector('.lockF').hidden=['round','corner','dome','cage','hexcell','nursery'].includes(st.shape);
+  document.querySelector('.plateF').hidden=!$('plate').checked;
+  const th=HABITAT_SETS[$('theme').value];$('themeNote').textContent=th?`${th.note} ${L==='de'?'Farben':'Colours'}: ${th.colours}.`:'';
+  const s0=SPECIES.find(s=>s[0]===st.species);
+  document.querySelectorAll('.lang button').forEach(b=>b.setAttribute('aria-pressed',b.dataset.l===L));price()}
+/* styles, grouped */
+{const th=$('theme'),groups={};for(const [k,v] of Object.entries(HABITAT_SETS)){if(['namekit','breeder','shop','nursery','fanclub','spider'].includes(k))continue;if(!groups[v.group]){groups[v.group]=document.createElement('optgroup');groups[v.group].label=v.group;th.append(groups[v.group])}groups[v.group].append(new Option(v.name,k))}th.value='orchid'}
+$('shopName').textContent=CFG.shop;
+document.querySelectorAll('.lang button').forEach(b=>b.onclick=()=>{L=b.dataset.l;render()});
+$('species').onchange=e=>{st.species=e.target.value;render()};
+for(const id of ['theme','pack','trim','lamp','lock','plate','deliv','cols','rows'])$(id).addEventListener('input',render);
+$('send').onclick=()=>{const t=T[L],o=order();if(!o.name||!o.contact){$('out').textContent=t.need;return}
+  const code=encode(o);$('code').hidden=false;$('code').textContent=code;
+  const body=`${t.shapes[o.shape][0]}, ${t.sizes[o.size]||''}\n${t.theme}: ${(HABITAT_SETS[o.theme]||{}).name||''}, ${t.packs[o.pack]}\n${[o.trim&&t.trimL,o.lamp&&t.lampL,o.lock&&t.lockL,o.plate!==null&&(t.plateL+': '+o.plate)].filter(Boolean).join(', ')}\n${t.total}: ${fmt(o.price)}\n\n${o.name}\n${o.contact}\n${o.msg}\n\n${code}\n`;
+  if(CFG.email){location.href=`mailto:${encodeURIComponent(CFG.email)}?subject=${encodeURIComponent(t.subj+' – '+o.name)}&body=${encodeURIComponent(body)}`;$('out').textContent=''}
+  else $('out').textContent=t.noMail};
+$('copy').onclick=async()=>{const t=T[L],o=order(),code=encode(o);$('code').hidden=false;$('code').textContent=code;try{await navigator.clipboard.writeText(code);$('out').textContent=t.copied}catch(e){$('out').textContent=''}};
+if(/^en/.test(navigator.language||''))L='en';render();
+</script>
+</body></html>
