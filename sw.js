@@ -1,5 +1,5 @@
-const V='workshop-habitat-17';
-const FILES=['./','index.html','shim.js','manifest.webmanifest','icon-180.png','icon-192.png','icon-512.png','pages/hub.html','pages/resin.html','pages/sewing.html','pages/habitat.html','pages/habitat-parts.js?v=17','pages/habitat-enclosure.js?v=17','pages/habitat-more.js?v=17','pages/habitat-motifs.js?v=17','pages/habitat-keep.js?v=17','pages/habitat-sets.js?v=17','lib/geo.js?v=17','lib/earcut.min.js','lib/clipper.js','lib/jspdf.umd.min.js'];
+const V='workshop-habitat-18';
+const FILES=['./','index.html','shim.js','manifest.webmanifest','icon-180.png','icon-192.png','icon-512.png','pages/hub.html','pages/resin.html','pages/sewing.html','pages/habitat.html','pages/habitat-parts.js?v=18','pages/habitat-enclosure.js?v=18','pages/habitat-more.js?v=18','pages/habitat-motifs.js?v=18','pages/habitat-keep.js?v=18','pages/habitat-sets.js?v=18','pages/habitat-sculpt.js?v=18','lib/sdf.js?v=18','lib/geo.js?v=18','lib/earcut.min.js','lib/clipper.js','lib/jspdf.umd.min.js'];
 self.addEventListener('install',e=>e.waitUntil(caches.open(V).then(c=>c.addAll(FILES)).then(()=>self.skipWaiting())));
 self.addEventListener('activate',e=>e.waitUntil(caches.keys().then(k=>Promise.all(k.filter(x=>x.startsWith('workshop-')&&x!==V).map(x=>caches.delete(x)))).then(()=>self.clients.claim())));
 self.addEventListener('fetch',e=>{

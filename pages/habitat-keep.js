@@ -505,5 +505,5 @@
     return res;
   }
 
-  root.HabitatKeep={motif:o=>root.HabitatMotifs.piece(o),incubator,oothClip,divider,cupRack,chute,airlock,shipInsert,turntable,gear,diorama,DIORAMA};
+  root.HabitatKeep={motif:o=>root.HabitatMotifs.piece(o),sculpt:o=>root.HabitatSculpt.build(Object.assign({},o,{dMagD:o.md,dMagH:o.mh})),custom:o=>root.HabitatSculpt.custom(o),incubator,oothClip,divider,cupRack,chute,airlock,shipInsert,turntable,gear,diorama,DIORAMA};
 })(typeof window!=='undefined'?window:globalThis);

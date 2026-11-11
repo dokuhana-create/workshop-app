@@ -3,13 +3,15 @@
 <script src="../shim.js"></script>
 <script src="../lib/clipper.js"></script>
 <script src="../lib/earcut.min.js"></script>
-<script src="../lib/geo.js?v=17"></script>
-<script src="habitat-parts.js?v=17"></script>
-<script src="habitat-enclosure.js?v=17"></script>
-<script src="habitat-more.js?v=17"></script>
-<script src="habitat-motifs.js?v=17"></script>
-<script src="habitat-keep.js?v=17"></script>
-<script src="habitat-sets.js?v=17"></script>
+<script src="../lib/geo.js?v=18"></script>
+<script src="habitat-parts.js?v=18"></script>
+<script src="habitat-enclosure.js?v=18"></script>
+<script src="habitat-more.js?v=18"></script>
+<script src="habitat-motifs.js?v=18"></script>
+<script src="habitat-keep.js?v=18"></script>
+<script src="../lib/sdf.js?v=18"></script>
+<script src="habitat-sculpt.js?v=18"></script>
+<script src="habitat-sets.js?v=18"></script>
 <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Bricolage+Grotesque:opsz,wght@12..96,600;12..96,750&family=IBM+Plex+Mono:wght@500&family=IBM+Plex+Sans:wght@400;500;600&display=swap">
 <style>
 /* Same layout as the Resin Workshop: inputs on the left, the 3D preview and downloads beside them. */
@@ -777,6 +779,14 @@ Object.assign(ITEMS,{
       ['style','Condition',[['broken','Ruined'],['intact','Whole']],{show:vis('kind',['column','arch','tower','tombstone'])}],['pattern','Mosaic',[['rosette','Rosette'],['meander','Greek key'],['waves','Waves'],['checker','Checkerboard']],{show:vis('kind','mosaic')}],
       ['accent','Accent file',[['no','No'],['yes','Yes, for a second colour, glow or UV filament']],{show:vis('kind',['mushroom','cottage','candles','crystals','chest','potions','coffin'])}],['font','Writing',[['caps','Capitals'],['script','Cursive']],{show:vis('kind','tombstone')}]],shuffle:true,mounts:['free','magnet','clip','glue','peg'],
     hint:'Little scenery pieces to turn an enclosure into a scene: a spooky graveyard, a wizard\'s tower, Roman ruins, a temple garden, a library or a fairy wood. Flat pieces (arch, gate, bookshelf, cottage, tombstone) print lying down and stand up or hang on a wall; the others print upright. Mantises on miniature props make great photos for your shop.'},
+  sculpt:{group:'dio',keep:'sculpt',name:'Sculpted piece (lifelike)',fields:[['size','Size: height, or wingspan for the bat and moth',50]],
+    selects:[['kind','Piece',Object.entries(HabitatSculpt.SCULPTS)],['print','Printing',[['auto','No supports needed (fills under overhangs)'],['full','Full detail, with tree supports']]],
+      ['detail','Detail',[['normal','Normal'],['fine','Fine (slower to make)']]],['age','Bone',[['old','Weathered'],['clean','Smooth']],{show:vis('kind','skull')}]],shuffle:true,mounts:['free','magnet','glue'],
+    hint:'Lifelike sculpted pieces, modelled with smooth organic shapes instead of flat outlines: a human skull, a raven on a stone, a coiled snake, and a bat and a death\'s-head moth for the wall. Standing pieces print without supports: anything that hangs out is filled underneath at 45°, out of sight. The bat and moth print flat on their backs; with magnets, the pockets are in the back. Big pieces take a few seconds to make.'},
+  custom:{group:'dio',keep:'custom',file:true,name:'Your own model (STL from Blender)',fields:[['size','Size',50]],
+    selects:[['fit','Size sets the',[['height','Height'],['longest','Longest side']]],['turn','Turn it',[['none','As exported'],['x','Stand up (90° about X)'],['xr','Lay down (−90° about X)'],['y','On its side (90° about Y)'],['flip','Upside down']]],
+      ['base','Base',[['none','None'],['round','Round plinth'],['rock','Rock']]]],mounts:['free','magnet','peg','glue'],
+    hint:'Bring in a model you sculpted in Blender (File > Export > STL, with "Selection only" ticked) or one you bought with a licence to sell prints. It is sized here, can get a round plinth or a rock base, and a magnet pocket, a floor-peg socket or a magnet plate for the wall. The file stays on your device. After reloading the page, choose it again.'},
   motif:{group:'dio',keep:'motif',name:'Motif: plaque, cut-out or stencil',fields:[['size','Height',60]],
     selects:[['motif','Motif',HabitatMotifs.MOTIFS],['form','Made as',[['plaque','Raised plaque'],['cutout','Stand-up cut-out'],['stencil','Cut-through stencil plate'],['ornament','Hanging ornament']]],
       ['base','Plaque shape',[['round','Round'],['oval','Oval'],['shield','Shield'],['arch','Arch'],['hex','Hexagon'],['square','Rounded square']],{show:vis('form',['plaque','stencil'])}],['border','Border',[['yes','Yes'],['no','No']],{show:vis('form','plaque')}],['colour','Colours',[['two','Two colours'],['one','One colour']],{show:vis('form',['plaque','cutout','ornament'])}]],mounts:['magnet','clip','glue','free'],
@@ -807,6 +817,9 @@ function accSetup(){
     field(box,'Type',s).style.gridColumn='1/-1';
   }
   A.sel=A.sel||{};A.sel[A.item]=A.sel[A.item]||{};
+  if(it.file){const i=document.createElement('input');i.type='file';i.accept='.stl,model/stl';
+    i.onchange=async()=>{const f=i.files[0];if(!f)return;try{HabitatSculpt.model={name:f.name,tris:HabitatSculpt.parseSTL(await f.arrayBuffer())};accCalc()}catch(e){HabitatSculpt.model=null;$('accNote').hidden=false;$('accNote').textContent='That file could not be read as an STL.'}};
+    const l=field(box,HabitatSculpt.model?'Model: '+HabitatSculpt.model.name:'STL file',i);l.style.gridColumn='1/-1'}
   if(it.shapes){
     const s=document.createElement('select');opt(s,it.shapes.map(k=>[k,SHAPES[k]]));s.value=it.shapes.includes(A.shape[A.item])?A.shape[A.item]:it.shapes[0];
     s.onchange=()=>{A.shape[A.item]=s.value;accSetup()};field(box,'Shape',s);
@@ -969,7 +982,7 @@ $('accDl').onclick=async()=>{
 
 /* ---------- build: a whole enclosure with a styled interior ---------- */
 const MUST=[['dish','A pearl dish'],['pot','A plant pot'],['twig','A twig holder'],['wall','A wall perch'],['deco','A decoration']];
-const INTERIOR=['dish','feeder','twig','ledge','ladder','bridge','flower','bark','pot','planter','moss','mister','label','tile','plate','moult','emblem','diorama','motif'];
+const INTERIOR=['dish','feeder','twig','ledge','ladder','bridge','flower','bark','pot','planter','moss','mister','label','tile','plate','moult','emblem','diorama','motif','sculpt'];
 const FLOORFIRST=['dish','feeder','twig','pot','moss','moult'];
 const B=Object.assign({theme:'orchid',pack:'2',size:'m',mount:'magnet',font:'script',name:'Shifty',must:{dish:1,pot:1,twig:1,wall:1,deco:1},off:{},extra:[],seed:1},state.build||{});
 for(const k of ['must','off'])B[k]=B[k]||{};B.extra=B.extra||[];
@@ -988,7 +1001,7 @@ $('bEncGo').onclick=()=>view('enc');
 function catOf(key,ov,mount){
   if(key==='dish')return 'dish';if(key==='pot'||key==='planter')return 'pot';if(key==='twig')return 'twig';
   if(key==='ledge'||key==='bark'||(key==='flower'&&!['peg','stem'].includes(mount)))return 'wall';
-  if(['diorama','motif','emblem','plate','moult','tile','label'].includes(key))return 'deco';return '';
+  if(['diorama','motif','emblem','plate','moult','tile','label','sculpt'].includes(key))return 'deco';return '';
 }
 function pieceMount(key,ov){const its=ITEMS[key],e=readEnc();if(ov.mount&&its.mounts.includes(ov.mount))return ov.mount;
   if(FLOORFIRST.includes(key)){if(e.pegs==='grid'&&its.mounts.includes('peg')&&key!=='moult')return 'peg';if(its.mounts.includes('free'))return 'free'}
@@ -1037,6 +1050,7 @@ function placeKind(key,ov,mount){
   if(key==='flower')return wall?'back':'floor';
   if(key==='diorama'){const flat=['arch','torii','shelf','cottage','tombstone'].includes(ov.kind);return flat?(mount==='free'?'stand':'back'):'floor'}
   if(key==='motif'){if(ov.form==='cutout'&&mount==='free')return 'stand';return 'back'}
+  if(key==='sculpt')return ['bat','moth'].includes(ov.kind)?'back':'floor';
   if(['ledge','label','tile','plate','bark','emblem','ladder','bridge'].includes(key))return 'back';
   return 'loose';
 }
@@ -1047,7 +1061,8 @@ function buildScene(des){
   else{const hw=e.W/2*.6,hd=(e.shape==='oval'?e.D:e.W)/2*.6;X0=-hw;X1=hw;Y0=-hd;Y1=hd;yBack=(e.shape==='oval'?e.D:e.W)/2*(e.shape==='poly'?.97:.9)}
   const items=[],rows=[.62,.34,.84];let wx=X0,wr=0,fx=X0,fy=Y0+4,fdep=0;
   for(const d of des){if(!d.r)continue;const pk=placeKind(d.p.key,d.p.ov,d.m);if(pk==='loose')continue;
-    const main=d.r.parts.filter(q=>q.m&&q.role!=='Second file');if(!main.length)continue;
+    let main=d.r.parts.filter(q=>q.m&&q.role!=='Second file');if(!main.length)continue;
+    if(d.r.display)main=main.map(q=>({role:q.role,m:{tris:place0(q.m.tris,d.r.display)}}));
     const mn=[1e9,1e9,1e9],mx=[-1e9,-1e9,-1e9];for(const q of main){const t=q.m.tris;for(let i=0;i<t.length;i+=3)for(let a=0;a<3;a++){if(t[i+a]<mn[a])mn[a]=t[i+a];if(t[i+a]>mx[a])mx[a]=t[i+a]}}
     const sx=mx[0]-mn[0],sy=mx[1]-mn[1],sz=mx[2]-mn[2];let fn;
     if(pk==='back'||pk==='uwall'){const h=pk==='back'?sy:sz;if(wx+sx>X1&&wx>X0){wx=X0;wr=(wr+1)%rows.length}
