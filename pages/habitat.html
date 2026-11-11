@@ -11,6 +11,8 @@
 <script src="habitat-keep.js?v=18"></script>
 <script src="../lib/sdf.js?v=18"></script>
 <script src="habitat-sculpt.js?v=18"></script>
+<script src="habitat-trim.js?v=18"></script>
+<script src="habitat-addons.js?v=18"></script>
 <script src="habitat-sets.js?v=18"></script>
 <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Bricolage+Grotesque:opsz,wght@12..96,600;12..96,750&family=IBM+Plex+Mono:wght@500&family=IBM+Plex+Sans:wght@400;500;600&display=swap">
 <style>
@@ -247,6 +249,8 @@ h3{font:600 15px var(--body);margin:0 0 6px}
           <label class="f">Wall pieces held by<select id="bMount"></select></label>
           <label class="f">Writing<select id="bFont"></select></label>
           <label class="f">Name<input id="bName" type="text" maxlength="24"></label>
+          <label class="f">Frame and trim<select id="bTrim"></select></label>
+          <label class="f">Trim pieces<select id="bTrimWhat"></select></label>
           <button class="btn" id="bShuffle" type="button" style="align-self:end">Shuffle</button>
         </div>
         <p class="hint" id="bThemeHint"></p>
@@ -779,6 +783,18 @@ Object.assign(ITEMS,{
       ['style','Condition',[['broken','Ruined'],['intact','Whole']],{show:vis('kind',['column','arch','tower','tombstone'])}],['pattern','Mosaic',[['rosette','Rosette'],['meander','Greek key'],['waves','Waves'],['checker','Checkerboard']],{show:vis('kind','mosaic')}],
       ['accent','Accent file',[['no','No'],['yes','Yes, for a second colour, glow or UV filament']],{show:vis('kind',['mushroom','cottage','candles','crystals','chest','potions','coffin'])}],['font','Writing',[['caps','Capitals'],['script','Cursive']],{show:vis('kind','tombstone')}]],shuffle:true,mounts:['free','magnet','clip','glue','peg'],
     hint:'Little scenery pieces to turn an enclosure into a scene: a spooky graveyard, a wizard\'s tower, Roman ruins, a temple garden, a library or a fairy wood. Flat pieces (arch, gate, bookshelf, cottage, tombstone) print lying down and stand up or hang on a wall; the others print upright. Mantises on miniature props make great photos for your shop.'},
+  wall:{group:'decor',keep:'wall',name:'Modular backdrop wall',fields:[['w','Tile width',100],['h','Tile height',100],['cols','Tiles across',2],['rows','Tiles down',1],['depth','Texture depth',5]],
+    selects:[['texture','Texture',HabitatAddons.TEXNAMES],['pockets','Planting pockets',[['one','One'],['two','Two'],['none','None']]]],shuffle:true,mounts:['magnet','glue'],
+    hint:'A textured back wall made of tiles that push together with dovetails, the texture running on from one tile into the next: layered rock, bark, a fieldstone wall, tangled roots or moss. Planting pockets are little cups open at the top with a drain hole, for moss or an air plant. Each tile prints flat on its back. Up to 4 tiles across and 3 down; each takes a few seconds to make.'},
+  grid:{group:'addon',keep:'grid',name:'Moult-safe ceiling grid',fields:[['w','Width',180],['h','Depth',180]],selects:[['pattern','Pattern',[['square','Square'],['fine','Fine square'],['hex','Honeycomb']]]],mounts:['magnet','glue'],
+    hint:'Mantises hang upside down from the ceiling to moult, and a smooth or clear lid can make them slip and fall. This lattice, with tiny grip bumps, hangs under the lid with magnets (or tape). Make it a little smaller than the inside of the enclosure.'},
+  stage:{group:'dio',keep:'stage',name:'Photo stage',fields:[['w','Width',140],['d','Depth',90],['h','Backdrop height',110],['card','Card thickness',.8]],mounts:['free'],
+    hint:'A little stage to photograph your mantis on: a strip of card slides into slots in two uprights and curves onto the floor as a seamless backdrop, and a socket in front holds a twig. Great for sale photos.'},
+  trim:{group:'addon',keep:'trim',name:'Frame and trim in a style',fields:[['name','Name on the frame','',{text:true,show:vis('piece',['all','top','frame'])}]],
+    selects:[['style','Style',Object.entries(HabitatTrim.STYLES).map(([k,v])=>[k,v.name])],['piece','Pieces',[['all','Front frame, finials and feet'],['top','Front frame and finials'],['frame','Front frame only'],['finials','Finials only'],['feet','Feet only']]],
+      ['crest','Crest on top',[['yes','Yes'],['no','No']],{show:vis('piece',['all','top','frame'])}],['colour','Colours',[['one','One'],['two','Two: frame and filigree']],{show:vis('piece',['all','top','frame'])}],['font','Writing',[['script','Cursive'],['caps','Capitals']],{show:vis('piece',['all','top','frame'])}]],
+    mounts:['magnet','glue'],
+    hint:'Dresses the enclosure in a style. The front frame sits in front of the clear front, with a shaped window (a pointed gothic arch, a round arch, a moon gate, a stepped deco top and so on), filigree in the corners, a patterned base with the name, and a crest on top. Finials go on the top corners and feet under the bottom corners. Sized from the Enclosure tab (the frame fits rectangular enclosures). The frame prints flat; a tall frame comes in two halves with puzzle joints.'},
   sculpt:{group:'dio',keep:'sculpt',name:'Sculpted piece (lifelike)',fields:[['size','Size: height, or wingspan for the bat and moth',50]],
     selects:[['kind','Piece',Object.entries(HabitatSculpt.SCULPTS)],['print','Printing',[['auto','No supports needed (fills under overhangs)'],['full','Full detail, with tree supports']]],
       ['detail','Detail',[['normal','Normal'],['fine','Fine (slower to make)']]],['age','Bone',[['old','Weathered'],['clean','Smooth']],{show:vis('kind','skull')}]],shuffle:true,mounts:['free','magnet','glue'],
@@ -867,6 +883,13 @@ const MOUNT_HINT={
   stem:'A separate stem pushes into a twig holder, and the flower sits on top of it.',
   panel:'Sized to drop into the openings of your swappable tile panels, in place of a mesh or acrylic tile.'
 };
+/* the enclosure's outside, for the frame and trim (worked out from the preview model, and remembered) */
+let trimMemo={k:'',v:null};
+function trimEnc(){const p=readEnc(),k=JSON.stringify(p);if(trimMemo.k===k)return trimMemo.v;
+  let mn=[1e9,1e9,1e9],mx=[-1e9,-1e9,-1e9];try{for(const it of encModel(p,true).items){const t=it.tris;for(let i=0;i<t.length;i+=3)for(let a=0;a<3;a++){if(t[i+a]<mn[a])mn[a]=t[i+a];if(t[i+a]>mx[a])mx[a]=t[i+a]}}}catch(e){mn=[0,0,0];mx=[p.W,p.D||p.W,p.S+p.H+2.4]}
+  const v={rect:p.shape==='rect',W:Math.round((mx[0]-mn[0])*10)/10,Htot:Math.round((mx[2]-Math.max(0,mn[2]))*10)/10,S:p.S,Hwin:p.S+p.H,Lt:2.4,bed:[p.bx||350,p.by||350],box:[mn,mx]};
+  trimMemo={k,v};return v}
+HabitatKeep.trim=o=>HabitatTrim.piece(Object.assign({},trimEnc(),o));
 function encInfo(){
   const e=Object.assign({},DEF,state.enc||{}),bed=Math.max(e.bx||350,e.by||350),g=e.T+.6,band=g/2+2.4,o={e,bed,band,hatchR:e.hatch!=='none'?(state.encHatchR||Math.min(30,e.hatchD/2)):0};
   if(e.shape==='rect'){const d=rectDims(e);Object.assign(o,{span:e.W+2*band,Eh:d.Eh,corner:e.corners==='rounded'?'rounded':'square',alpha:Math.PI/2});
@@ -899,7 +922,7 @@ function itemDesign1(key,over,mount,seed,sc){
   if(it.shapes){o.shape=it.shapes.includes(A.shape[key])&&!over?A.shape[key]:it.shapes[0];if(o.shape==='round')o.W=o.L}
   for(const [k,,opts] of it.selects||[])o[k]=(!over&&((A.sel||{})[key]||{})[k])||opts[0][0];
   if(over)Object.assign(o,over);
-  if(sc&&sc!==1&&!['ship','turntable','cupRack','divider','chute','airlock'].includes(key))for(const k of SCALE)if(typeof o[k]==='number'&&!(key==='light'))o[k]=Math.round(o[k]*sc*10)/10;
+  if(sc&&sc!==1&&!['ship','turntable','cupRack','divider','chute','airlock','trim','custom'].includes(key))for(const k of SCALE)if(typeof o[k]==='number'&&!(key==='light'))o[k]=Math.round(o[k]*sc*10)/10;
   if(o.shape==='round'&&o.L)o.W=o.L;
   if(key==='ledge'&&o.shape==='sharp')o.shape='square';
   return it.keep?HabitatKeep[it.keep](o,encInfo()):it.more?HabitatMore[it.more](o,encInfo()):HabitatParts[key](o,encInfo());
@@ -910,7 +933,7 @@ function accDesign(){
     const sv=selVals(it),th=SETS[sv.theme]||SETS.orchid,name=((A.v.set||{}).t1)??'Shifty',off=new Set(((A.sel.set||{}).off||{})[sv.theme]||[]),parts=[],notes=[`${th.name}: ${th.note} Suggested colours: ${th.colours}.`];let magnets=0,n=0;
     const sc=({s:.75,m:1,l:1.3}[sv.size]||1)*(th.size&&sv.size==='m'?th.size:1);
     th.pieces.forEach(([key,ov,tier],i)=>{if(tier>+sv.pack||off.has(i))return;n++;const its=ITEMS[key],m=ov.mount||(its.mounts.includes(mount)?mount:its.mounts.includes('free')?'free':its.mounts[0]||'none');
-      const o=Object.assign({font:sv.font},ov,key==='plate'||key==='moult'?{t1:name,t2:key==='moult'?'L1':''}:{});
+      const o=Object.assign({font:sv.font},ov,nameOv(key,ov,name));
       try{const r=itemDesign(key,o,m,seed+i,sc);magnets+=r.magnets||0;r.parts.forEach((p,j)=>parts.push(Object.assign({},p,{file:`${String(n).padStart(2,'0')}-${p.file}`})))}catch(e){notes.push(`${pieceName(key,ov)} could not be made with these settings.`)}});
     if(!n)notes.push('Tick at least one piece.');
     return {parts,notes,magnets,mount,separate:true};
@@ -984,14 +1007,15 @@ $('accDl').onclick=async()=>{
 const MUST=[['dish','A pearl dish'],['pot','A plant pot'],['twig','A twig holder'],['wall','A wall perch'],['deco','A decoration']];
 const INTERIOR=['dish','feeder','twig','ledge','ladder','bridge','flower','bark','pot','planter','moss','mister','label','tile','plate','moult','emblem','diorama','motif','sculpt'];
 const FLOORFIRST=['dish','feeder','twig','pot','moss','moult'];
-const B=Object.assign({theme:'orchid',pack:'2',size:'m',mount:'magnet',font:'script',name:'Shifty',must:{dish:1,pot:1,twig:1,wall:1,deco:1},off:{},extra:[],seed:1},state.build||{});
+const B=Object.assign({trim:'match',trimWhat:'all',theme:'orchid',pack:'2',size:'m',mount:'magnet',font:'script',name:'Shifty',must:{dish:1,pot:1,twig:1,wall:1,deco:1},off:{},extra:[],seed:1},state.build||{});
 for(const k of ['must','off'])B[k]=B[k]||{};B.extra=B.extra||[];
 const saveB=()=>{state.build=B;persist()};
 (()=>{const s=$('bTheme'),gs={};for(const [k,t] of Object.entries(SETS)){const g=t.group||'Other';if(!gs[g]){gs[g]=document.createElement('optgroup');gs[g].label=g;s.append(gs[g])}const o=document.createElement('option');o.value=k;o.textContent=t.name;gs[g].append(o)}})();
 opt($('bPack'),[['1','Essentials'],['2','Full set'],['3','Deluxe']]);opt($('bSize'),[['m','Standard'],['s','Small, for nymphs'],['l','Large, for big species']]);
-opt($('bMount'),[['magnet','Magnets'],['clip','Clip rails'],['glue','Glue or tape']]);opt($('bFont'),[['script','Cursive'],['caps','Capitals']]);
+opt($('bMount'),[['magnet','Magnets'],['clip','Clip rails'],['glue','Glue or tape']]);opt($('bTrim'),[['match','Matching the style'],['none','None'],...Object.entries(HabitatTrim.STYLES).map(([k,v])=>[k,v.name])]);
+opt($('bTrimWhat'),[['all','Front frame, finials and feet'],['top','Front frame and finials'],['frame','Front frame only'],['small','Finials and feet only']]);opt($('bFont'),[['script','Cursive'],['caps','Capitals']]);
 (()=>{const s=$('bAdd');for(const g in GROUPS){const og=document.createElement('optgroup');og.label=GROUPS[g];for(const k of INTERIOR)if(ITEMS[k]&&ITEMS[k].group===g){const o=document.createElement('option');o.value=k;o.textContent=ITEMS[k].name;og.append(o)}if(og.children.length)s.append(og)}})();
-for(const [id,k] of [['bTheme','theme'],['bPack','pack'],['bSize','size'],['bMount','mount'],['bFont','font'],['bName','name']]){const el=$(id);el.value=B[k];el.addEventListener(el.tagName==='SELECT'?'change':'input',()=>{B[k]=el.value;saveB();buildSetup()})}
+for(const [id,k] of [['bTheme','theme'],['bPack','pack'],['bSize','size'],['bMount','mount'],['bFont','font'],['bName','name'],['bTrim','trim'],['bTrimWhat','trimWhat']]){const el=$(id);el.value=B[k];el.addEventListener(el.tagName==='SELECT'?'change':'input',()=>{B[k]=el.value;saveB();buildSetup()})}
 $('bShuffle').onclick=()=>{B.seed=(B.seed||1)+1;saveB();buildCalc()};
 $('bAddGo').onclick=()=>{const k=$('bAdd').value,th=SETS[B.theme]||SETS.orchid,ov={},sh=(ITEMS[k].selects||[]).find(x=>x[0]==='shape');
   const same=th.pieces.find(p=>p[0]===k);if(same)Object.assign(ov,same[1]);
@@ -1003,7 +1027,10 @@ function catOf(key,ov,mount){
   if(key==='ledge'||key==='bark'||(key==='flower'&&!['peg','stem'].includes(mount)))return 'wall';
   if(['diorama','motif','emblem','plate','moult','tile','label','sculpt'].includes(key))return 'deco';return '';
 }
-function pieceMount(key,ov){const its=ITEMS[key],e=readEnc();if(ov.mount&&its.mounts.includes(ov.mount))return ov.mount;
+/* pieces that carry the keeper's name */
+function nameOv(key,ov,name){if(key==='plate')return {t1:name,t2:ov.t2||''};if(key==='moult')return {t1:name,t2:ov.t2??'L1'};
+  if(key==='diorama'&&ov.kind==='tombstone')return {text:name};if(key==='emblem'&&ov.named)return {name};if(key==='trim')return {name};return {}}
+function pieceMount(key,ov){if(key==='trim')return B.mount==='glue'?'glue':'magnet';const its=ITEMS[key],e=readEnc();if(ov.mount&&its.mounts.includes(ov.mount))return ov.mount;
   if(FLOORFIRST.includes(key)){if(e.pegs==='grid'&&its.mounts.includes('peg')&&key!=='moult')return 'peg';if(its.mounts.includes('free'))return 'free'}
   return its.mounts.includes(B.mount)?B.mount:its.mounts.includes('glue')?'glue':its.mounts[0]||'none'}
 function buildPieces(){
@@ -1018,6 +1045,7 @@ function buildPieces(){
     wall:['ledge',ledge?Object.assign({},ledge[1]):{shape:pick(['fungus','lobed','leaf','pebble','moon','cloud','classic'],'fungus'),pattern:'solid',under:'D'}],
     deco:['motif',motifP?Object.assign({},motifP[1]):{motif:'mantis',form:'cutout',mount:'free'}]};
   for(const [c] of MUST)if(B.must[c]&&!has(c))list.push({key:add[c][0],ov:add[c][1],src:'must',id:'m'+c,why:c});
+  if(B.trim!=='none')list.push({key:'trim',ov:{style:B.trim==='match'?HabitatTrim.styleFor(B.theme):B.trim,piece:B.trimWhat||'all',name:B.name,font:B.font,crest:'yes',colour:'one'},src:'trim',id:'trim'});
   return list.filter(p=>ITEMS[p.key]);
 }
 function buildSetup(){
@@ -1029,7 +1057,7 @@ function buildSetup(){
   const box=$('bPieces');box.innerHTML='<legend>In this build</legend>';
   for(const p of buildPieces()){const lab=document.createElement('label'),c=document.createElement('input');c.type='checkbox';c.checked=!B.off[p.id];
     c.onchange=()=>{if(c.checked)delete B.off[p.id];else B.off[p.id]=1;saveB();buildSetup()};
-    const t=pieceName(p.key,p.ov)+(p.src==='must'?' (added so the build has '+MUST.find(m=>m[0]===p.why)[1].toLowerCase()+')':p.src==='extra'?' (added by you)':'');lab.append(c,' '+t);
+    const t=(p.key==='trim'?'Frame and trim: '+HabitatTrim.STYLES[p.ov.style].name:pieceName(p.key,p.ov))+(p.src==='must'?' (added so the build has '+MUST.find(m=>m[0]===p.why)[1].toLowerCase()+')':p.src==='extra'?' (added by you)':'');lab.append(c,' '+t);
     if(p.src==='extra'){const x=document.createElement('button');x.type='button';x.className='btn';x.textContent='Remove';x.style.padding='2px 8px';x.style.marginLeft='auto';x.onclick=ev=>{ev.preventDefault();B.extra.splice(p.i,1);for(const k in B.off)if(k[0]==='x')delete B.off[k];saveB();buildSetup()};lab.append(x)}
     box.append(lab)}
   buildCalc();
@@ -1037,7 +1065,7 @@ function buildSetup(){
 function buildDesign(){
   const sc={s:.75,m:1,l:1.3}[B.size]||1,out=[];let n=0;
   for(const p of buildPieces()){if(B.off[p.id])continue;n++;const m=pieceMount(p.key,p.ov);
-    const o=Object.assign({font:B.font},p.ov,p.key==='plate'||p.key==='moult'?{t1:B.name,t2:p.key==='moult'?'L1':''}:{},p.key==='diorama'&&p.ov.kind==='tombstone'?{text:B.name}:{});
+    const o=Object.assign({font:B.font},p.ov,nameOv(p.key,p.ov,B.name));
     try{const r=itemDesign(p.key,o,m,(B.seed||1)*31+n,sc);out.push({p,r,m,n})}catch(err){console.error(err);out.push({p,err:true,n})}}
   return out;
 }
@@ -1060,7 +1088,15 @@ function buildScene(des){
   if(e.shape==='rect'){X0=e.T+3;X1=e.W-e.T-3;Y0=e.T+3;Y1=e.D-e.T-3;yBack=e.D-e.T/2-.6}
   else{const hw=e.W/2*.6,hd=(e.shape==='oval'?e.D:e.W)/2*.6;X0=-hw;X1=hw;Y0=-hd;Y1=hd;yBack=(e.shape==='oval'?e.D:e.W)/2*(e.shape==='poly'?.97:.9)}
   const items=[],rows=[.62,.34,.84];let wx=X0,wr=0,fx=X0,fy=Y0+4,fdep=0;
-  for(const d of des){if(!d.r)continue;const pk=placeKind(d.p.key,d.p.ov,d.m);if(pk==='loose')continue;
+  for(const d of des){if(!d.r||d.p.key!=='trim')continue;const te=trimEnc(),[mn,mx]=te.box;let lift=0;
+    for(const q of d.r.parts)if(q.at==='bottom'&&q.m){const t=q.m.tris;let z1=0;for(let i=2;i<t.length;i+=3)z1=Math.max(z1,t[i]);lift=Math.max(lift,z1-5)}
+    for(const q of d.r.parts){if(!q.m||q.at==='loose')continue;const col=q.role==='Colour 2'?c2:c1;
+      if(q.at==='front')items.push({tris:place0(q.m.tris,(x,y,z)=>[mn[0]+x,mn[1]-1-z,y]),color:col});
+      else if(q.at==='top'){if(!te.rect)continue;for(const [cx,cy] of [[mn[0]+8,mn[1]+8],[mx[0]-8,mn[1]+8],[mn[0]+8,mx[1]-8],[mx[0]-8,mx[1]-8]])items.push({tris:place0(q.m.tris,(x,y,z)=>[x+cx,y+cy,z+mx[2]]),color:col})}
+      else if(q.at==='bottom'){if(!te.rect)continue;const t=q.m.tris;let z1=0;for(let i=2;i<t.length;i+=3)z1=Math.max(z1,t[i]);const zt=z1-5;
+        for(const [cx,cy,a] of [[mn[0]+15,mn[1]+15,0],[mx[0]-15,mn[1]+15,1],[mx[0]-15,mx[1]-15,2],[mn[0]+15,mx[1]-15,3]]){const c=[1,0,-1,0][a],s_=[0,1,0,-1][a];
+          items.push({tris:place0(q.m.tris,(x,y,z)=>[cx+x*c-y*s_,cy+x*s_+y*c,z-zt]),color:col})}}}}
+  for(const d of des){if(!d.r||d.p.key==='trim')continue;const pk=placeKind(d.p.key,d.p.ov,d.m);if(pk==='loose')continue;
     let main=d.r.parts.filter(q=>q.m&&q.role!=='Second file');if(!main.length)continue;
     if(d.r.display)main=main.map(q=>({role:q.role,m:{tris:place0(q.m.tris,d.r.display)}}));
     const mn=[1e9,1e9,1e9],mx=[-1e9,-1e9,-1e9];for(const q of main){const t=q.m.tris;for(let i=0;i<t.length;i+=3)for(let a=0;a<3;a++){if(t[i+a]<mn[a])mn[a]=t[i+a];if(t[i+a]>mx[a])mx[a]=t[i+a]}}

@@ -138,6 +138,10 @@
       ['flower',{kind:'sunflower'},1],['flower',{kind:'peony',R:22},1],['planter',{shape:'scallop'},1],['motif',{motif:'tulip',form:'plaque',base:'arch'},1],
       ['flower',{kind:'magnolia',R:22},2],['flower',{kind:'gerbera',R:20},2],['pot',{shape:'round'},2],['ledge',{shape:'leaf',pattern:'vine',under:'D'},2],
       ['flower',{kind:'waterlily',R:20},3],['flower',{kind:'camellia',R:18},3],['motif',{motif:'rose',form:'plaque',base:'oval'},3],['tile',{texture:'leaves'},3]]},
+    namekit:{name:'Name kit',group:'Keeper kits',colours:'Any two colours that suit the customer\'s mantis',note:'Everything with the mantis\'s name on it: name plates, a moult display, a badge and a keepsake. Type the name once.',pieces:[
+      ['plate',{shape:'scroll',mode:'raised'},1],['moult',{shape:'round',post:'stake',t2:'L1'},1],['emblem',{shape:'round',named:1},1],
+      ['plate',{shape:'leaf',mode:'raised'},2],['moult',{shape:'leaf',post:'leaf',t2:'Adult'},2],['plate',{shape:'arch',mode:'raised'},2],
+      ['diorama',{kind:'tombstone',style:'intact',mount:'free'},3],['moult',{shape:'square',post:'stake',t2:'Sub-adult'},3]]},
     fanclub:{name:'Mantis fan club',group:'Keeper kits',colours:'Orchid pink and leaf green, or your brand colours',note:'Praying mantis artwork everywhere, plus your Shifty\'s mark.',pieces:[
       ['motif',{motif:'mantis',form:'plaque',base:'oval'},1],['flower',{kind:'orchid'},1],['emblem',{shape:'round'},1],['plate',{shape:'leaf',mode:'raised'},1],
       ['motif',{motif:'mantis',form:'ornament'},2],['motif',{motif:'mantis',form:'stencil',base:'hex'},2],['ledge',{shape:'leaf',pattern:'vine',under:'D'},2],
