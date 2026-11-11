@@ -3,18 +3,18 @@
 <script src="../shim.js"></script>
 <script src="../lib/clipper.js"></script>
 <script src="../lib/earcut.min.js"></script>
-<script src="../lib/geo.js?v=18"></script>
-<script src="habitat-parts.js?v=18"></script>
-<script src="habitat-enclosure.js?v=18"></script>
-<script src="habitat-more.js?v=18"></script>
-<script src="habitat-motifs.js?v=18"></script>
-<script src="habitat-keep.js?v=18"></script>
-<script src="../lib/sdf.js?v=18"></script>
-<script src="habitat-sculpt.js?v=18"></script>
-<script src="habitat-trim.js?v=18"></script>
-<script src="habitat-addons.js?v=18"></script>
-<script src="habitat-forms.js?v=18"></script>
-<script src="habitat-sets.js?v=18"></script>
+<script src="../lib/geo.js?v=19"></script>
+<script src="habitat-parts.js?v=19"></script>
+<script src="habitat-enclosure.js?v=19"></script>
+<script src="habitat-more.js?v=19"></script>
+<script src="habitat-motifs.js?v=19"></script>
+<script src="habitat-keep.js?v=19"></script>
+<script src="../lib/sdf.js?v=19"></script>
+<script src="habitat-sculpt.js?v=19"></script>
+<script src="habitat-trim.js?v=19"></script>
+<script src="habitat-addons.js?v=19"></script>
+<script src="habitat-forms.js?v=19"></script>
+<script src="habitat-sets.js?v=19"></script>
 <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Bricolage+Grotesque:opsz,wght@12..96,600;12..96,750&family=IBM+Plex+Mono:wght@500&family=IBM+Plex+Sans:wght@400;500;600&display=swap">
 <style>
 /* Same layout as the Resin Workshop: inputs on the left, the 3D preview and downloads beside them. */
@@ -400,8 +400,12 @@ function place(tris,fn){
   return o;
 }
 const bbox=t=>{const mn=[1e9,1e9,1e9],mx=[-1e9,-1e9,-1e9];for(let i=0;i<t.length;i+=3)for(let a=0;a<3;a++){if(t[i+a]<mn[a])mn[a]=t[i+a];if(t[i+a]>mx[a])mx[a]=t[i+a]}return mx.map((v,a)=>v-mn[a])};
-function stl(tris){
-  const n=tris.length/9,buf=new ArrayBuffer(84+50*n),dv=new DataView(buf);
+function stl(tris0){
+  /* snap every corner to a 1 µm grid, so corners that are meant to be shared are exactly equal in the file,
+     and drop triangles that collapse to a line */
+  const q=v=>Math.round(v*1000)/1000,keep=[];
+  for(let b=0;b<tris0.length;b+=9){const k=[0,3,6].map(i=>q(tris0[b+i])+','+q(tris0[b+i+1])+','+q(tris0[b+i+2]));if(k[0]===k[1]||k[1]===k[2]||k[0]===k[2])continue;for(let i=0;i<9;i++)keep.push(q(tris0[b+i]))}
+  const tris=keep,n=tris.length/9,buf=new ArrayBuffer(84+50*n),dv=new DataView(buf);
   dv.setUint32(80,n,true);
   for(let t=0;t<n;t++){
     const b=t*9,o=84+t*50;
@@ -1064,7 +1068,7 @@ function catOf(key,ov,mount){
 /* pieces that carry the keeper's name */
 function nameOv(key,ov,name){if(key==='plate')return {t1:name,t2:ov.t2||''};if(key==='moult')return {t1:name,t2:ov.t2??'L1'};
   if(key==='diorama'&&ov.kind==='tombstone')return {text:name};if(key==='emblem'&&ov.named)return {name};if(key==='trim')return {name};return {}}
-function pieceMount(key,ov){if(key==='trim')return B.mount==='glue'?'glue':'magnet';const its=ITEMS[key],e=readEnc();if(ov.mount&&its.mounts.includes(ov.mount))return ov.mount;
+function pieceMount(key,ov){if(key==='trim')return B.mount==='glue'?'glue':'magnet';if(key==='sculpt'&&!['bat','moth'].includes(ov.kind))return 'free';const its=ITEMS[key],e=readEnc();if(ov.mount&&its.mounts.includes(ov.mount))return ov.mount;
   if(FLOORFIRST.includes(key)){if(e.pegs==='grid'&&its.mounts.includes('peg')&&key!=='moult')return 'peg';if(its.mounts.includes('free'))return 'free'}
   return its.mounts.includes(B.mount)?B.mount:its.mounts.includes('glue')?'glue':its.mounts[0]||'none'}
 function buildPieces(){
@@ -1096,11 +1100,15 @@ function buildSetup(){
     box.append(lab)}
   buildCalc();
 }
-function buildDesign(){
-  const sc={s:.75,m:1,l:1.3}[B.size]||1,out=[];let n=0;
+/* pieces already made are kept, so changing one setting only remakes what changed; the preview uses lighter
+   versions of the sculpted pieces and wall tiles */
+const BMEMO=new Map();
+function buildDesign(pv){
+  const sc={s:.75,m:1,l:1.3}[B.size]||1,out=[],enc=JSON.stringify(readEnc());let n=0;
   for(const p of buildPieces()){if(B.off[p.id])continue;n++;const m=pieceMount(p.key,p.ov);
-    const o=Object.assign({font:B.font},p.ov,nameOv(p.key,p.ov,B.name));
-    try{const r=itemDesign(p.key,o,m,(B.seed||1)*31+n,sc);out.push({p,r,m,n})}catch(err){console.error(err);out.push({p,err:true,n})}}
+    const o=Object.assign({font:B.font},p.ov,nameOv(p.key,p.ov,B.name),pv?{preview:1}:{});
+    const key=JSON.stringify([p.key,o,m,(B.seed||1)*31+n,sc,['trim','hanger','carry'].includes(p.key)?enc:'']);
+    try{let r=BMEMO.get(key);if(!r){r=itemDesign(p.key,o,m,(B.seed||1)*31+n,sc);if(BMEMO.size>80)BMEMO.clear();BMEMO.set(key,r)}out.push({p,r,m,n})}catch(err){console.error(err);out.push({p,err:true,n})}}
   return out;
 }
 /* where a piece goes: on the floor, on the back wall, standing up, or on the lid */
@@ -1149,7 +1157,7 @@ function buildScene(des){
 let bT=null;function buildCalc(){clearTimeout(bT);$('bMsg').textContent='Building the preview…';bT=setTimeout(buildCalc1,60)}
 function buildCalc1(){
   const p=readEnc();let m;try{m=encModel(p,true)}catch(e){$('bNote').hidden=false;$('bNote').textContent='The enclosure settings don\'t make a valid enclosure. Check the Enclosure tab.';$('bMsg').textContent='';return}
-  const des=buildDesign(),items=[...m.items,...buildScene(des)];render($('bCv'),items);
+  const des=buildDesign(true),items=[...m.items,...buildScene(des)];render($('bCv'),items);
   const t=$('bParts');t.innerHTML='<tr><th>Piece</th><th class="n">Files</th></tr>';let mags=(p.hatch==='magnet'?4:0)+(p.shape==='rect'&&p.front.startsWith('swing')&&p.doorCatch==='magnet'?2:0),files=0;const notes=[];
   {const r=document.createElement('tr');r.innerHTML=`<td><b>Enclosure</b></td><td class="n">${m.parts.length}</td>`;t.append(r)}
   for(const d of des){const r=document.createElement('tr');const nm=pieceName(d.p.key,d.p.ov);

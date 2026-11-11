@@ -161,8 +161,8 @@
     /* magnets: two at the base corners, two in the top rail held by clips on the lid */
     const mags=[];const glue=o.mount==='glue';
     if(!glue){const md=o.md||10,mh=o.mh||3;for(const [x,y] of [[sw/2+2,bot/2],[W-sw/2-2,bot/2],[sw/2+2,Ht-top/2],[W-sw/2-2,Ht-top/2]])mags.push([x,y]);
-      const rz=max(bt+oh,mh+1.0),ros=U(...mags.map(([x,y])=>st.stile==='stars'?star(x,y,md/2+5,8,.7):st.stile==='quatrefoil'?U(...[0,1,2,3].map(i=>circle(x+cos(i*PI/2)*(md/4+1.5),y+sin(i*PI/2)*(md/4+1.5),md/2+.5,32))):circle(x,y,md/2+3.5,48)));
-      deco=subtract(deco,offset(ros,1));mags.rz=rz;mags.ros=ros}
+      const pd=max(mh+.2,bt+oh),rz=pd+.6,ros=U(...mags.map(([x,y])=>st.stile==='stars'?star(x,y,md/2+5,8,.7):st.stile==='quatrefoil'?U(...[0,1,2,3].map(i=>circle(x+cos(i*PI/2)*(md/4+1.5),y+sin(i*PI/2)*(md/4+1.5),md/2+.5,32))):circle(x,y,md/2+3.5,48)));
+      deco=subtract(deco,offset(ros,1));mags.rz=rz;mags.ros=ros;mags.pd=pd}
     /* split in two when it doesn't fit the bed */
     const bed=o.bed||[350,350],full=B(outer);const tall=full.y1-full.y0,wide=full.x1-full.x0;
     if(wide>bed[0]+.1&&wide>bed[1]+.1)notes.push(`The frame is ${wide.toFixed(0)} mm wide, more than your bed: it needs a bigger printer.`);
@@ -174,9 +174,9 @@
       notes.push('The frame is taller than your print bed, so it comes in two halves with puzzle joints in the sides: glue them together flat on a table.')}
     const parts=[],two=o.colour==='two';
     cuts.forEach((c,i)=>{const cl=r=>c?intersect(r,c):r,f=[prism(0,bt,cl(body))],a=[prism(bt,bt+oh,cl(deco))];
-      if(mags.length){a.push(prism(bt,mags.rz,cl(mags.ros)));for(const [x,y] of mags)f.push(prism(-1,(o.mh||3)+.2,cl(circle(x,y,(o.md||10)/2+.15,40)),'sub'))}
+      if(mags.length){a.push(prism(bt,mags.rz,cl(mags.ros)));for(const [x,y] of mags)f.push(prism(-1,mags.pd,cl(circle(x,y,(o.md||10)/2+.15,40)),'sub'))}
       const sfx=cuts.length>1?(i?'-top':'-bottom'):'';
-      if(two){parts.push({file:`frame${sfx}.stl`,role:i?'Second file':'Colour 1',m:build([...f,...(mags.length?[prism(bt,mags.rz,cl(mags.ros))]:[]),...(mags.length?mags.map(([x,y])=>prism(-1,(o.mh||3)+.2,cl(circle(x,y,(o.md||10)/2+.15,40)),'sub')):[])]),at:'front'},
+      if(two){parts.push({file:`frame${sfx}.stl`,role:i?'Second file':'Colour 1',m:build([...f,...(mags.length?[prism(bt,mags.rz,cl(mags.ros))]:[]),...(mags.length?mags.map(([x,y])=>prism(-1,mags.pd,cl(circle(x,y,(o.md||10)/2+.15,40)),'sub')):[])]),at:'front'},
         {file:`frame${sfx}-filigree.stl`,role:'Colour 2',m:build([prism(bt,bt+oh,cl(deco))]),at:'front'})}
       else parts.push({file:`frame${sfx}.stl`,role:i?'Second file':'Main colour',m:build([...f,...a]),at:'front'})});
     if(two)notes.push('Two colours: add the filigree file to the frame as a part (same origin), for example gold on black.');

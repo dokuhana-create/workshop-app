@@ -56,7 +56,7 @@
         const drain=(x,y,z)=>max(Math.hypot(x-cx,z-(bt+3.5))-1.3,y0-1-y,y-(y0+wl+1));
         f=S.cut(S.union(f,outer),inner,drain)}
       if(mags.length){f=S.cut(f,...mags.map(([x,y])=>S.cylZ(x,y,md/2+.15,-1,mh+.2)));magnets+=2}
-      const m=S.mesh(f,[-8,-8,w+8,h+8,bt+max(dep+1,pk.length?24:0)],.6);
+      const m=S.mesh(f,[-8,-8,w+8,h+8,bt+max(dep+1,pk.length?24:0)],o.preview?1:.6);
       parts.push(part(`wall-tile-r${j+1}-c${i+1}.stl`,m,parts.length?'Second file':'Main colour'));
     }
     notes.push(`${cols*rows} tiles, ${cols} across and ${rows} down: the texture runs on from one tile into the next. They push together with dovetails (right and top tabs into left and bottom slots); a drop of glue makes it permanent.`);

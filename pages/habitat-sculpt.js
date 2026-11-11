@@ -141,10 +141,10 @@
 
   const MAKERS={skull,bat,moth,raven,snake},CACHE=new Map();
   function build(o){
-    const k=MAKERS[o.kind]?o.kind:'skull',key=JSON.stringify([k,o.size,o.seed,o.print,o.detail,o.mount,o.dMagD,o.dMagH,o.age]);
+    const k=MAKERS[o.kind]?o.kind:'skull',key=JSON.stringify([k,o.size,o.seed,o.print,o.detail,o.mount,o.dMagD,o.dMagH,o.age,o.preview]);
     if(CACHE.has(key))return CACHE.get(key);
     const sh=MAKERS[k](o);
-    const h=Math.max(.2,Math.min(.5,o.size/(sh.relief?220:140)))*(o.detail==='fine'?.75:1);
+    const h=Math.max(.2,Math.min(.5,o.size/(sh.relief?220:140)))*(o.detail==='fine'?.75:1)*(o.preview?1.8:1);
     const m=mesh(sh.f,sh.b,h,{print:o.print!=='full',debug:o.debug});
     const notes=[];if(sh.note)notes.push(sh.note);if(sh.relief)notes.push('Prints flat on its back without supports.'+(o.mount==='magnet'?' The magnet pockets are in the back.':''));
     if(o.print==='full')notes.push('Full detail: turn on tree supports in the slicer.');
