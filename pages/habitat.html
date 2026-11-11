@@ -13,6 +13,7 @@
 <script src="habitat-sculpt.js?v=18"></script>
 <script src="habitat-trim.js?v=18"></script>
 <script src="habitat-addons.js?v=18"></script>
+<script src="habitat-forms.js?v=18"></script>
 <script src="habitat-sets.js?v=18"></script>
 <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Bricolage+Grotesque:opsz,wght@12..96,600;12..96,750&family=IBM+Plex+Mono:wght@500&family=IBM+Plex+Sans:wght@400;500;600&display=swap">
 <style>
@@ -109,9 +110,11 @@ h3{font:600 15px var(--body);margin:0 0 6px}
       <section aria-labelledby="h-size">
         <h2 id="h-size">Size</h2>
         <div class="fields">
+          <label class="f" style="grid-column:1/-1">Start from a ready-made form<select id="preset"></select></label>
           <label class="f" style="grid-column:1/-1">Shape<select id="eShape"></select></label>
           <label class="f polyOnly">Number of walls<input id="sides" type="number" min="5" max="8" step="1"></label>
           <label class="f rectOnly">Corners<select id="corners"></select></label>
+          <label class="f rectOnly">Display tower<select id="tiers"></select></label>
           <label class="f"><span id="Wlab">Width (mm)</span><input id="W" type="number" min="60" step="5"></label>
           <label class="f" id="Dwrap">Depth (mm)<input id="D" type="number" min="60" step="5"></label>
           <label class="f">Height above substrate (mm)<input id="H" type="number" min="60" step="5"></label>
@@ -121,6 +124,7 @@ h3{font:600 15px var(--body);margin:0 0 6px}
         </div>
         <p class="hint rectOnly">Width and depth are measured between the panel centres. The base holds the substrate, so the panels start above it and the front panel can slide up without spilling soil.</p>
         <p class="hint polyOnly">Width is measured across the flats, between panel centres. Each wall is a flat panel, clear acrylic or printed mesh, held at the corners by printed spines. The front wall is a sliding door.</p>
+        <p class="hint hexOnly">A hexagonal cell that hangs on the wall with its clear front facing the room. Hang several side by side as a honeycomb. Height is measured between the flat floor and the flat ceiling. The shell prints in one piece standing on its back, the clear front is a hexagon of acrylic or PET in a magnetic frame, and a small wedge at the front holds the substrate.</p>
         <p class="hint roundOnly">The wall is either a clear PET sheet (0.5–1 mm, sold as "PET-Folie" or "PETG-Platte") rolled into grooves in the base and lid, or a printed mesh tube for full ventilation. You open it by lifting the lid, or through a feeding hatch.</p>
         <p class="hint">Floor pegs stand on the base under the substrate, 40 mm apart. Pots, dishes and twig holders made with a floor socket push onto them, so they stay put when the mantis climbs on them.</p>
       </section>
@@ -480,7 +484,7 @@ const SPECIES=[
 ];
 const MATS={petg:{name:'PETG',rho:1.27},asa:{name:'ASA',rho:1.07},pla:{name:'PLA',rho:1.24}};
 const PANEL={clear:'Clear acrylic',mesh:'Printed mesh',tiles:'Swappable tiles (mesh or clear)'};
-const DEF={species:'orchidF',body:65,W:200,D:200,H:300,S:40,T:3,hole:1.6,bar:1.2,front:'clear',back:'clear',left:'mesh',right:'mesh',bx:350,by:350,bz:350,mat:'petg',dMagD:10,dMagH:3,shape:'rect',ts:.75,pegs:'none',rails:'no',lw:'none',lwD:90,lwN:2,sides:6,corners:'square',polyFront:'clear',polyWalls:'frontclear',roundWall:'sheet',doorCatch:'magnet',hatch:'none',hatchD:60,hatchX:0,hatchY:0};
+const DEF={species:'orchidF',body:65,W:200,D:200,H:300,S:40,T:3,hole:1.6,bar:1.2,front:'clear',back:'clear',left:'mesh',right:'mesh',bx:350,by:350,bz:350,mat:'petg',dMagD:10,dMagH:3,shape:'rect',ts:.75,pegs:'none',rails:'no',lw:'none',lwD:90,lwN:2,sides:6,corners:'square',polyFront:'clear',polyWalls:'frontclear',roundWall:'sheet',doorCatch:'magnet',hatch:'none',hatchD:60,hatchX:0,hatchY:0,tiers:'1'};
 const E=Object.assign({},DEF,state.enc||{});
 
 function opt(sel,pairs){for(const [v,l] of pairs){const o=document.createElement('option');o.value=v;o.textContent=l;sel.append(o)}}
@@ -489,7 +493,17 @@ const FRONT={clear:'Sliding, clear acrylic',mesh:'Sliding, printed mesh',swingWi
 opt($('pFront'),Object.entries(FRONT));
 for(const id of ['pBack','pLeft','pRight'])opt($(id),Object.entries(PANEL));
 opt($('mat'),Object.entries(MATS).map(([k,m])=>[k,m.name]));
-opt($('eShape'),[['rect','Rectangular'],['poly','Polygon: 5 to 8 flat walls'],['round','Round'],['oval','Oval']]);
+opt($('eShape'),[['rect','Rectangular'],['poly','Polygon: 5 to 8 flat walls'],['round','Round'],['oval','Oval'],['hexcell','Hexagonal wall cell (honeycomb)']]);
+const PRESETS={keep:['Keep my settings',null],
+  cabinet:['Gothic cabinet: tall, with a swing door',{shape:'rect',W:200,D:200,H:300,S:40,front:'swingWindow',back:'clear',left:'mesh',right:'mesh',corners:'square',tiers:'1'},'Now add Accessories, Frame and trim, Gothic: the pointed-arch front frame, spire finials and claw feet.'],
+  wallframe:['Wall frame: wide and shallow, to hang like a picture',{shape:'rect',W:300,D:100,H:200,S:20,front:'clear',back:'mesh',left:'mesh',right:'mesh',corners:'square',tiers:'1'},'Now add Accessories, Wall hanger to hang it, and Frame and trim for a picture-frame front.'],
+  showcase:['Show case: clear on all sides, for fairs',{shape:'rect',W:250,D:160,H:200,S:30,front:'clear',back:'clear',left:'clear',right:'clear',corners:'rounded',tiers:'1'},'Now add Accessories, Carrying handle, for taking it to fairs and handovers.'],
+  tower:['Display tower: three small enclosures stacked',{shape:'rect',W:150,D:150,H:180,S:30,front:'clear',back:'mesh',left:'mesh',right:'mesh',corners:'square',tiers:'3'},'Lock the units together with Accessories, Stacking feet and links.'],
+  honeycomb:['Honeycomb: hexagonal cells for the wall',{shape:'hexcell',W:180,D:150,S:15,T:2},'Make one cell per mantis and hang them side by side.']};
+opt($('preset'),Object.entries(PRESETS).map(([k,v])=>[k,v[0]]));
+$('preset').onchange=()=>{const pr=PRESETS[$('preset').value];if(!pr||!pr[1])return;for(const [k,v] of Object.entries(pr[1]))if(encIds[k])$(encIds[k]).value=v;
+  encChanged();encCalc()};
+opt($('tiers'),[['1','One'],['2','Two, stacked'],['3','Three, stacked']]);
 opt($('corners'),[['square','Square'],['rounded','Rounded']]);
 opt($('polyFront'),[['clear','Sliding, clear acrylic'],['mesh','Sliding, printed mesh']]);
 opt($('polyWalls'),[['frontclear','Printed mesh'],['clear','Clear acrylic'],['alt','Alternating clear and mesh']]);
@@ -500,7 +514,7 @@ opt($('pegs'),[['none','None'],['grid','Pegs for accessories']]);
 opt($('rails'),[['no','None'],['yes','On printed mesh panels']]);
 opt($('lw'),[['none','None, mesh everywhere'],['insert','Openings for clear discs or fine fabric'],['fine','Finer printed mesh under the lights']]);
 const LW_HINT={none:'',insert:'Each ring light gets a round opening with a flat rim around it. Lay a clear disc (PET or acrylic, up to 1 mm thick) over the opening, which lets about 90 % of the light through, or glue on fine fabric mesh (tulle or insect netting), about 70 %. The ring light seat on top holds the disc in place. Feeders can\'t get through either.',fine:'Under each ring light the mesh has thinner 0.6 mm bars with the same hole size, so feeders stay in and more light gets through.'};
-const encIds={species:'species',body:'body',W:'W',D:'D',H:'H',S:'S',T:'T',hole:'hole',bar:'bar',front:'pFront',back:'pBack',left:'pLeft',right:'pRight',bx:'bx',by:'by',bz:'bz',mat:'mat',dMagD:'dMagD',dMagH:'dMagH',shape:'eShape',ts:'ts',pegs:'pegs',rails:'rails',lw:'lw',lwD:'lwD',lwN:'lwN',sides:'sides',corners:'corners',polyFront:'polyFront',polyWalls:'polyWalls',roundWall:'roundWall',doorCatch:'doorCatch',hatch:'hatch',hatchD:'hatchD',hatchX:'hatchX',hatchY:'hatchY'};
+const encIds={species:'species',body:'body',W:'W',D:'D',H:'H',S:'S',T:'T',hole:'hole',bar:'bar',front:'pFront',back:'pBack',left:'pLeft',right:'pRight',bx:'bx',by:'by',bz:'bz',mat:'mat',dMagD:'dMagD',dMagH:'dMagH',shape:'eShape',tiers:'tiers',ts:'ts',pegs:'pegs',rails:'rails',lw:'lw',lwD:'lwD',lwN:'lwN',sides:'sides',corners:'corners',polyFront:'polyFront',polyWalls:'polyWalls',roundWall:'roundWall',doorCatch:'doorCatch',hatch:'hatch',hatchD:'hatchD',hatchX:'hatchX',hatchY:'hatchY'};
 for(const k in encIds)$(encIds[k]).value=E[k];
 
 function recommend(){
@@ -632,31 +646,46 @@ function roundModel(p,pv){
   rd+=`\nAssembly: fill the substrate, stand the ${r.tube?'mesh tube':'rolled sheet'} in the base groove, then press the lid on so it sits in the lid groove.${r.lid.cover?'':' There is no feeding hatch: open the enclosure by lifting the lid.'}\n`;
   return {parts,items,cut,notes,readme:rd,tag:p.shape==='round'?`d${p.W}x${p.H}`:`${p.W}x${p.D}x${p.H}`,hatch:r.lid.hatch};
 }
-const encModel=(p,pv)=>p.shape==='rect'?rectModel(p,pv):p.shape==='poly'?polyModel(p,pv):roundModel(p,pv);
+const encModel=(p,pv)=>p.shape==='rect'?towerModel(p,pv):p.shape==='poly'?polyModel(p,pv):p.shape==='hexcell'?hexModel(p,pv):roundModel(p,pv);
+/* a display tower: the same enclosure printed two or three times and stacked */
+function towerModel(p,pv){const m=rectModel(p,pv),n=+p.tiers||1;if(n<2)return m;
+  const d=rectDims(p),step=d.S+d.H+d.Lt+10,items=[...m.items];for(let k=1;k<n;k++)for(const it of m.items)items.push(Object.assign({},it,{tris:place0(it.tris,(x,y,z)=>[x,y,z+k*step])}));
+  m.parts.forEach(r=>r.n=(r.n||1)*n);
+  m.notes.push(`Display tower: print every part ${n} times and stack the enclosures. Lock them together with Accessories, Stacking feet and links (a 10 mm air gap keeps the lids breathing).`);
+  m.readme+=`\nDisplay tower: print every part ${n} times. Stack the enclosures with the stacking feet and links from Accessories.\n`;
+  m.cut=m.cut.map(([a,b])=>[`${a} (× ${n})`,b]);m.items=items;m.tag+=`-tower${n}`;return m}
+/* a hexagonal cell for the wall, in a honeycomb */
+function hexModel(p,pv){const c=colours(),m=HabitatForms.hexCell(p,pv);m.items=m.items.map(it=>Object.assign({},it,{color:c[it.color]||it.color}));
+  m.parts.push({name:'Link key, joins two cells at the back',file:'hex-link.stl',tris:m.link.tris});m.hatch=null;return m}
 
 function encChanged(){const p=readEnc();state.enc=p;persist();recommend();clearTimeout(encT);encT=setTimeout(encCalc,150)}
 let encT;
 function shapeUI(p){
   const rect=p.shape==='rect',poly=p.shape==='poly',round=p.shape==='round'||p.shape==='oval';
   const show=(sel,on)=>document.querySelectorAll(sel).forEach(el=>el.hidden=!on);
-  show('.rectOnly',rect);show('.polyOnly',poly);show('.roundOnly',round);show('.notRound',!round);
+  const hex=p.shape==='hexcell';
+  show('.rectOnly',rect);show('.polyOnly',poly);show('.roundOnly',round);show('.notRound',!round&&!hex);show('.hexOnly',hex);
+  for(const id of ['lw','hatch','pegs'])$(id).parentElement.hidden=hex;
+  $('T').parentElement.hidden=round;
   show('.sheetOnly',round&&p.roundWall!=='mesh');
   show('.swingF',rect&&p.front.startsWith('swing'));show('.tileF',rect&&[p.back,p.left,p.right].includes('tiles'));
-  show('.hatchF',p.hatch!=='none');show('.magE',p.hatch==='magnet'||(rect&&p.front.startsWith('swing')&&p.doorCatch==='magnet'));
+  show('.hatchF',!hex&&p.hatch!=='none');show('.magE',hex||p.hatch==='magnet'||(rect&&p.front.startsWith('swing')&&p.doorCatch==='magnet'));
   $('Dwrap').hidden=p.shape==='round'||poly;
-  $('Wlab').textContent=p.shape==='round'?'Diameter (mm)':poly?'Width across the flats (mm)':'Width (mm)';
-  document.querySelectorAll('.lwF').forEach(el=>el.hidden=p.lw==='none');
+  $('Wlab').textContent=p.shape==='round'?'Diameter (mm)':poly?'Width across the flats (mm)':hex?'Height, floor to ceiling (mm)':'Width (mm)';
+  $('Dwrap').firstChild.textContent=hex?'Depth from the wall (mm)':'Depth (mm)';
+  $('H').parentElement.hidden=hex;
+  document.querySelectorAll('.lwF').forEach(el=>el.hidden=hex||p.lw==='none');
   const base=Math.round(100*(p.hole/(p.hole+p.bar))**2),fine=Math.round(100*(p.hole/(p.hole+.6))**2);
   $('lwHint').textContent=(LW_HINT[p.lw]||'')+(p.lw==='fine'?` That's about ${fine} % instead of ${base} %.`:'')+(p.lw==='none'?`Your lid mesh lets about ${base} % of the light through. Light windows let much more reach plants under ring lights.`:' The windows line up with the ring light seats under Accessories, Light holder.');
 }
 function encCalc(){
   const p=readEnc();shapeUI(p);
-  const ok=p.W>=80&&(p.shape==='round'||p.shape==='poly'||p.D>=80)&&p.H>=60&&p.S>=10&&p.T>=1.5&&p.hole>=1&&p.bar>=.8&&(p.shape!=='poly'||(p.sides>=5&&p.sides<=8));
+  const ok=p.W>=80&&(p.shape==='round'||p.shape==='poly'||p.D>=80)&&(p.shape==='hexcell'||p.H>=60)&&p.S>=10&&p.T>=1.5&&p.hole>=1&&p.bar>=.8&&(p.shape!=='poly'||(p.sides>=5&&p.sides<=8));
   if(!ok){$('encNote').hidden=false;$('encNote').textContent='Enter all sizes to see the design. Width and depth start at 80 mm, height at 60 mm.';$('encDl').disabled=true;return}
   $('encDl').disabled=false;
   let m;try{m=encModel(p,true)}catch(e){console.error(e);$('encNote').hidden=false;$('encNote').textContent='These settings don\'t make a valid enclosure. Try other sizes.';return}
   state.encHatchR=m.hatch?m.hatch.R:0;persist();
-  const notes=[...m.notes],{minW,minH}=recommend();
+  const notes=[...m.notes],{minW,minH}=recommend();{const pr=PRESETS[$('preset').value];if(pr&&pr[2])notes.unshift(pr[2])}
   if(Math.min(p.W,p.shape==='rect'||p.shape==='oval'?p.D:p.W)<minW||p.H<minH)notes.push(`This is smaller than the ${fmt(minW)} × ${fmt(minW)} × ${fmt(minH)} mm the size rule suggests for this animal.`);
   if(p.T<2&&p.shape!=='round'&&p.shape!=='oval')notes.push('Printed panels thinner than 2 mm are fragile. Use 3 mm if you can.');
   if(p.hole>2.5)notes.push('Holes over 2.5 mm let many feeder insects escape.');
@@ -691,7 +720,7 @@ $('encDl').onclick=async()=>{
   files.push({name:'read-me.txt',data:new TextEncoder().encode(m.readme)});
   await save(`mantis-enclosure-${m.tag}.zip`,zipStore(files),msg,'Saved. Unzip it, then open the STL files in Creality Print.');
 };
-for(const k in encIds)$(encIds[k]).addEventListener('input',()=>{if(k!=='species')encChanged()});
+for(const k in encIds)$(encIds[k]).addEventListener('input',()=>{if(k!=='species'){$('preset').value='keep';encChanged()}});
 
 /* ---------- accessories ---------- */
 const SHAPES={round:'Round',oval:'Oval',pebble:'Pebble',hex:'Hexagon',square:'Rounded square',cylinder:'Cylinder',rock:'Rock',cone:'Cone',fungus:'Bracket fungus',lobed:'Lobed fungus',tiered:'Tiered fungus, three shelves',leaf:'Leaf',moon:'Half moon',classic:'Rounded rectangle',sharp:'Square corners',cloud:'Cloud'};
@@ -790,6 +819,10 @@ Object.assign(ITEMS,{
     hint:'Mantises hang upside down from the ceiling to moult, and a smooth or clear lid can make them slip and fall. This lattice, with tiny grip bumps, hangs under the lid with magnets (or tape). Make it a little smaller than the inside of the enclosure.'},
   stage:{group:'dio',keep:'stage',name:'Photo stage',fields:[['w','Width',140],['d','Depth',90],['h','Backdrop height',110],['card','Card thickness',.8]],mounts:['free'],
     hint:'A little stage to photograph your mantis on: a strip of card slides into slots in two uprights and curves onto the floor as a seamless backdrop, and a socket in front holds a twig. Great for sale photos.'},
+  hanger:{group:'addon',keep:'hanger',name:'Wall hanger',fields:[],mounts:['free'],
+    hint:'Two brackets that hang a shallow enclosure on the wall like a picture: a hook goes under the back of the base, another over the back of the lid, and the bracket screws to the wall through two keyholes. Sized from the Enclosure tab. Only for shallow enclosures with little substrate.'},
+  carry:{group:'addon',keep:'carry',name:'Carrying handle',fields:[],mounts:['free'],
+    hint:'A handle for taking an enclosure to fairs, the vet or a customer: two side straps reach under the base, and a handle bar pushes onto them above the lid. Sized from the Enclosure tab.'},
   trim:{group:'addon',keep:'trim',name:'Frame and trim in a style',fields:[['name','Name on the frame','',{text:true,show:vis('piece',['all','top','frame'])}]],
     selects:[['style','Style',Object.entries(HabitatTrim.STYLES).map(([k,v])=>[k,v.name])],['piece','Pieces',[['all','Front frame, finials and feet'],['top','Front frame and finials'],['frame','Front frame only'],['finials','Finials only'],['feet','Feet only']]],
       ['crest','Crest on top',[['yes','Yes'],['no','No']],{show:vis('piece',['all','top','frame'])}],['colour','Colours',[['one','One'],['two','Two: frame and filigree']],{show:vis('piece',['all','top','frame'])}],['font','Writing',[['script','Cursive'],['caps','Capitals']],{show:vis('piece',['all','top','frame'])}]],
@@ -890,6 +923,7 @@ function trimEnc(){const p=readEnc(),k=JSON.stringify(p);if(trimMemo.k===k)retur
   const v={rect:p.shape==='rect',W:Math.round((mx[0]-mn[0])*10)/10,Htot:Math.round((mx[2]-Math.max(0,mn[2]))*10)/10,S:p.S,Hwin:p.S+p.H,Lt:2.4,bed:[p.bx||350,p.by||350],box:[mn,mx]};
   trimMemo={k,v};return v}
 HabitatKeep.trim=o=>HabitatTrim.piece(Object.assign({},trimEnc(),o));
+HabitatKeep.hanger=o=>HabitatForms.hanger(Object.assign({},trimEnc(),o));HabitatKeep.carry=o=>HabitatForms.carry(Object.assign({},trimEnc(),o));
 function encInfo(){
   const e=Object.assign({},DEF,state.enc||{}),bed=Math.max(e.bx||350,e.by||350),g=e.T+.6,band=g/2+2.4,o={e,bed,band,hatchR:e.hatch!=='none'?(state.encHatchR||Math.min(30,e.hatchD/2)):0};
   if(e.shape==='rect'){const d=rectDims(e);Object.assign(o,{span:e.W+2*band,Eh:d.Eh,corner:e.corners==='rounded'?'rounded':'square',alpha:Math.PI/2});
@@ -922,7 +956,7 @@ function itemDesign1(key,over,mount,seed,sc){
   if(it.shapes){o.shape=it.shapes.includes(A.shape[key])&&!over?A.shape[key]:it.shapes[0];if(o.shape==='round')o.W=o.L}
   for(const [k,,opts] of it.selects||[])o[k]=(!over&&((A.sel||{})[key]||{})[k])||opts[0][0];
   if(over)Object.assign(o,over);
-  if(sc&&sc!==1&&!['ship','turntable','cupRack','divider','chute','airlock','trim','custom'].includes(key))for(const k of SCALE)if(typeof o[k]==='number'&&!(key==='light'))o[k]=Math.round(o[k]*sc*10)/10;
+  if(sc&&sc!==1&&!['ship','turntable','cupRack','divider','chute','airlock','trim','custom','hanger','carry','wall','grid','stage'].includes(key))for(const k of SCALE)if(typeof o[k]==='number'&&!(key==='light'))o[k]=Math.round(o[k]*sc*10)/10;
   if(o.shape==='round'&&o.L)o.W=o.L;
   if(key==='ledge'&&o.shape==='sharp')o.shape='square';
   return it.keep?HabitatKeep[it.keep](o,encInfo()):it.more?HabitatMore[it.more](o,encInfo()):HabitatParts[key](o,encInfo());
@@ -1050,8 +1084,8 @@ function buildPieces(){
 }
 function buildSetup(){
   const th=SETS[B.theme]||SETS.orchid;$('bThemeHint').textContent=`${th.note} Suggested colours: ${th.colours}.`;
-  const e=readEnc(),shp={rect:'Rectangular',poly:`${e.sides}-sided`,round:'Round',oval:'Oval'}[e.shape];
-  $('bEncSum').textContent=`${shp}, ${e.W}${e.shape==='round'||e.shape==='poly'?'':' × '+e.D} × ${e.H} mm, ${e.S} mm substrate. Feeding hatch: ${e.hatch==='none'?'none':e.hatch}. Floor pegs: ${e.pegs==='grid'?'yes':'no'}. Clip rails: ${e.rails==='yes'?'yes':'no'}.`;
+  const e=readEnc(),shp={rect:(+e.tiers>1?`Display tower of ${e.tiers}, `:'')+'Rectangular',poly:`${e.sides}-sided`,round:'Round',oval:'Oval',hexcell:'Hexagonal wall cell'}[e.shape];
+  if(e.shape==='hexcell'){$('bEncSum').textContent=`${shp}, ${e.W} mm floor to ceiling, ${e.D} mm deep.`}else $('bEncSum').textContent=`${shp}, ${e.W}${e.shape==='round'||e.shape==='poly'?'':' × '+e.D} × ${e.H} mm, ${e.S} mm substrate. Feeding hatch: ${e.hatch==='none'?'none':e.hatch}. Floor pegs: ${e.pegs==='grid'?'yes':'no'}. Clip rails: ${e.rails==='yes'?'yes':'no'}.`;
   const mb=$('bMust');mb.innerHTML='';for(const [k,l] of MUST){const lab=document.createElement('label'),c=document.createElement('input');
     c.type='checkbox';c.checked=!!B.must[k];c.onchange=()=>{B.must[k]=c.checked?1:0;saveB();buildSetup()};lab.append(c,' '+l);mb.append(lab)}
   const box=$('bPieces');box.innerHTML='<legend>In this build</legend>';
@@ -1083,9 +1117,10 @@ function placeKind(key,ov,mount){
   return 'loose';
 }
 function buildScene(des){
-  const e=readEnc(),S=e.S,H=e.H,c=colours(),col=v=>cssColor(getComputedStyle(document.documentElement).getPropertyValue(v).trim()),c1=col('--acc'),c2=col('--acc2');
+  const e=readEnc(),hx=e.shape==='hexcell',S=hx?3:e.S,H=hx?e.W*.75:e.H,c=colours(),col=v=>cssColor(getComputedStyle(document.documentElement).getPropertyValue(v).trim()),c1=col('--acc'),c2=col('--acc2');
   let X0,X1,Y0,Y1,yBack;
-  if(e.shape==='rect'){X0=e.T+3;X1=e.W-e.T-3;Y0=e.T+3;Y1=e.D-e.T-3;yBack=e.D-e.T/2-.6}
+  if(hx){X0=-e.W*.3;X1=e.W*.3;Y0=10;Y1=e.D-12;yBack=e.D-3.2}
+  else if(e.shape==='rect'){X0=e.T+3;X1=e.W-e.T-3;Y0=e.T+3;Y1=e.D-e.T-3;yBack=e.D-e.T/2-.6}
   else{const hw=e.W/2*.6,hd=(e.shape==='oval'?e.D:e.W)/2*.6;X0=-hw;X1=hw;Y0=-hd;Y1=hd;yBack=(e.shape==='oval'?e.D:e.W)/2*(e.shape==='poly'?.97:.9)}
   const items=[],rows=[.62,.34,.84];let wx=X0,wr=0,fx=X0,fy=Y0+4,fdep=0;
   for(const d of des){if(!d.r||d.p.key!=='trim')continue;const te=trimEnc(),[mn,mx]=te.box;let lift=0;
@@ -1103,7 +1138,7 @@ function buildScene(des){
     const sx=mx[0]-mn[0],sy=mx[1]-mn[1],sz=mx[2]-mn[2];let fn;
     if(pk==='back'||pk==='uwall'){const h=pk==='back'?sy:sz;if(wx+sx>X1&&wx>X0){wx=X0;wr=(wr+1)%rows.length}
       const zb=S+Math.max(4,Math.min(H-h-4,rows[wr]*H-h/2)),ox=wx;
-      let yb=yBack;if(e.shape!=='rect'){const rx=e.W/2-e.T-1,ry=(e.shape==='oval'?e.D:e.W)/2-e.T-1,u=Math.min(.99,Math.max(Math.abs(ox),Math.abs(ox+sx))/rx);yb=ry*Math.sqrt(1-u*u)*(e.shape==='poly'?.95:1)-1}
+      let yb=yBack;if(e.shape!=='rect'&&!hx){const rx=e.W/2-e.T-1,ry=(e.shape==='oval'?e.D:e.W)/2-e.T-1,u=Math.min(.99,Math.max(Math.abs(ox),Math.abs(ox+sx))/rx);yb=ry*Math.sqrt(1-u*u)*(e.shape==='poly'?.95:1)-1}
       fn=pk==='back'?(x,y,z)=>[x-mn[0]+ox,yb-(z-mn[2]),y-mn[1]+zb]:(x,y,z)=>[x-mn[0]+ox,yb-(y-mn[1]),z-mn[2]+zb];wx+=sx+8}
     else if(pk==='lid'){const cx=(X0+X1)/2+(X1-X0)*.2,cy=(Y0+Y1)/2,zt=S+H+2.4;fn=(x,y,z)=>[x-(mn[0]+mx[0])/2+cx,y-(mn[1]+mx[1])/2+cy,z-mn[2]+zt]}
     else{const w=sx,dp=pk==='stand'?sz:sy;if(fx+w>X1&&fx>X0){fx=X0;fy+=fdep+8;fdep=0}const ox=fx,oy=fy;
