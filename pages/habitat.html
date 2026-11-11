@@ -835,7 +835,7 @@ Object.assign(ITEMS,{
   sculpt:{group:'dio',keep:'sculpt',name:'Sculpted piece (lifelike)',fields:[['size','Size: height, or wingspan for the bat and moth',50]],
     selects:[['kind','Piece',Object.entries(HabitatSculpt.SCULPTS)],['print','Printing',[['auto','No supports needed (fills under overhangs)'],['full','Full detail, with tree supports']]],
       ['detail','Detail',[['normal','Normal'],['fine','Fine (slower to make)']]],['age','Bone',[['old','Weathered'],['clean','Smooth']],{show:vis('kind','skull')}]],shuffle:true,mounts:['free','magnet','glue'],
-    hint:'Lifelike sculpted pieces, modelled with smooth organic shapes instead of flat outlines: a human skull, a raven on a stone, a coiled snake, and a bat and a death\'s-head moth for the wall. Standing pieces print without supports: anything that hangs out is filled underneath at 45°, out of sight. The bat and moth print flat on their backs; with magnets, the pockets are in the back. Big pieces take a few seconds to make.'},
+    hint:'Lifelike pieces. The anatomical skull comes from a detailed model of a real human skull, with every bone, suture and tooth ("High quality skull" by Mariano Coretti, Wikimedia Commons, CC BY-SA 4.0: you may sell prints, with a credit on the card or listing). The others are sculpted with smooth organic shapes: a human skull, a raven on a stone, a coiled snake, and a bat and a death\'s-head moth for the wall. Standing pieces print without supports: anything that hangs out is filled underneath at 45°, out of sight. The bat and moth print flat on their backs; with magnets, the pockets are in the back. Big pieces take a few seconds to make.'},
   custom:{group:'dio',keep:'custom',file:true,name:'Your own model (STL from Blender)',fields:[['size','Size',50]],
     selects:[['fit','Size sets the',[['height','Height'],['longest','Longest side']]],['turn','Turn it',[['none','As exported'],['x','Stand up (90° about X)'],['xr','Lay down (−90° about X)'],['y','On its side (90° about Y)'],['flip','Upside down']]],
       ['base','Base',[['none','None'],['round','Round plinth'],['rock','Rock']]]],mounts:['free','magnet','peg','glue'],
@@ -927,6 +927,9 @@ function trimEnc(){const p=readEnc(),k=JSON.stringify(p);if(trimMemo.k===k)retur
   const v={rect:p.shape==='rect',W:Math.round((mx[0]-mn[0])*10)/10,Htot:Math.round((mx[2]-Math.max(0,mn[2]))*10)/10,S:p.S,Hwin:p.S+p.H,Lt:2.4,bed:[p.bx||350,p.by||350],box:[mn,mx]};
   trimMemo={k,v};return v}
 HabitatKeep.trim=o=>HabitatTrim.piece(Object.assign({},trimEnc(),o));
+/* the anatomical skull loads in the background; redraw when it arrives */
+HabitatSculpt.SCAN.onready=()=>{if(typeof BMEMO!=='undefined')BMEMO.clear();if(state.tab==='acc'&&A.item==='sculpt')accCalc();else if(state.tab==='build')buildCalc()};
+HabitatSculpt.loadScan('skull-scan.bin?v=19');
 HabitatKeep.hanger=o=>HabitatForms.hanger(Object.assign({},trimEnc(),o));HabitatKeep.carry=o=>HabitatForms.carry(Object.assign({},trimEnc(),o));
 function encInfo(){
   const e=Object.assign({},DEF,state.enc||{}),bed=Math.max(e.bx||350,e.by||350),g=e.T+.6,band=g/2+2.4,o={e,bed,band,hatchR:e.hatch!=='none'?(state.encHatchR||Math.min(30,e.hatchD/2)):0};

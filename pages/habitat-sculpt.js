@@ -137,19 +137,48 @@
     return {f,b:[-.55*D,-.55*D,.55*D,.55*D,.3*D],note:'Prints flat on the bed without supports.'};
   }
 
-  const SCULPTS={skull:'Human skull',bat:'Bat, wings spread (wall)',moth:'Death\'s-head moth (wall)',raven:'Raven on a stone',snake:'Coiled snake'};
+  /* ---------- a real human skull, from a detailed anatomical model ----------
+     "High quality skull" by Mariano Coretti (DrCoretti), Wikimedia Commons, CC BY-SA 4.0. Its 54 separate bones were
+     merged into one solid and stored as a distance field (skull-scan.bin): a small grid that says how far each point
+     is from the bone surface. It loads once when the page opens. */
+  const SCAN={ready:false,credit:'Skull model: "High quality skull" by Mariano Coretti (DrCoretti), Wikimedia Commons, CC BY-SA 4.0.'};
+  async function loadScan(url){
+    try{const r=await fetch(url);if(!r.ok)throw new Error(r.status);let buf;
+      if(typeof DecompressionStream!=='undefined'){buf=await new Response(r.body.pipeThrough(new DecompressionStream('gzip'))).arrayBuffer()}else throw new Error('no gzip');
+      const dv=new DataView(buf);SCAN.nx=dv.getInt32(0,true);SCAN.ny=dv.getInt32(4,true);SCAN.nz=dv.getInt32(8,true);SCAN.qs=dv.getInt32(12,true);SCAN.vf=dv.getFloat32(16,true);
+      SCAN.q=new Int8Array(buf,20,SCAN.nx*SCAN.ny*SCAN.nz);SCAN.ready=true;if(SCAN.onready)SCAN.onready()}catch(e){SCAN.error=String(e)}
+  }
+  /* the scan, as a shape 1 tall, centred across, the face looking along -y, standing on z=0 */
+  function scanShape(){
+    const {nx,ny,nz,qs,vf,q}=SCAN,ox=nx*vf/2,oy=ny*vf/2,oz=3*vf,far=7*vf;
+    const I=(i,j,k)=>q[(k*ny+j)*nx+i];
+    /* the stored grid has the face towards +y: turn it round */
+    return (x,y,z)=>{const u=(ox-x)/vf-.5,v=(oy-y)/vf-.5,w=(z+oz)/vf-.5;
+      if(u<0||v<0||w<0||u>=nx-1||v>=ny-1||w>=nz-1)return far;
+      const i=u|0,j=v|0,k=w|0,a=u-i,b=v-j,c=w-k;
+      const c00=I(i,j,k)*(1-a)+I(i+1,j,k)*a,c10=I(i,j+1,k)*(1-a)+I(i+1,j+1,k)*a,c01=I(i,j,k+1)*(1-a)+I(i+1,j,k+1)*a,c11=I(i,j+1,k+1)*(1-a)+I(i+1,j+1,k+1)*a;
+      return ((c00*(1-b)+c10*b)*(1-c)+(c01*(1-b)+c11*b)*c)/qs*vf}}
+  function realSkull(o){
+    if(!SCAN.ready)return null;
+    const s=o.size,g=scanShape(),L=(SCAN.ny-6)*SCAN.vf,W=(SCAN.nx-6)*SCAN.vf,cy=L/2-.03;
+    /* printed lying on its back, face up, like the sculpted one; the back of the head is cut flat for the bed */
+    const f=sized((X,Y,Z)=>g(X,cy-Z,Y),s);
+    return {f,b:[-s*(W/2+.02),-s*.02,s*(W/2+.02),s*1.02,s*(cy+L/2+.02)],display:(x,y,z)=>[x,-z,y],credit:SCAN.credit,
+      note:'Prints lying on its back, face up, with no supports: hollows that open downwards are filled in at 45°, out of sight. The back of the head is flat where it sat on the bed. The eye sockets have thin bone at the back, as a real skull does.'};
+  }
+  const SCULPTS={real:'Human skull, anatomical (from a real model)',skull:'Human skull, sculpted',bat:'Bat, wings spread (wall)',moth:'Death\'s-head moth (wall)',raven:'Raven on a stone',snake:'Coiled snake'};
 
-  const MAKERS={skull,bat,moth,raven,snake},CACHE=new Map();
+  const MAKERS={real:realSkull,skull,bat,moth,raven,snake},CACHE=new Map();
   function build(o){
     const k=MAKERS[o.kind]?o.kind:'skull',key=JSON.stringify([k,o.size,o.seed,o.print,o.detail,o.mount,o.dMagD,o.dMagH,o.age,o.preview]);
     if(CACHE.has(key))return CACHE.get(key);
-    const sh=MAKERS[k](o);
+    let sh=MAKERS[k](o);const late=!sh;if(!sh)sh=skull(o);
     const h=Math.max(.2,Math.min(.5,o.size/(sh.relief?220:140)))*(o.detail==='fine'?.75:1)*(o.preview?1.8:1);
     const m=mesh(sh.f,sh.b,h,{print:o.print!=='full',debug:o.debug});
-    const notes=[];if(sh.note)notes.push(sh.note);if(sh.relief)notes.push('Prints flat on its back without supports.'+(o.mount==='magnet'?' The magnet pockets are in the back.':''));
+    const notes=[];if(late)notes.push(SCAN.error?'The anatomical skull could not be loaded here, so this is the sculpted one.':'The anatomical skull is still loading: this is the sculpted one for now. Change any setting in a moment to see it.');if(sh.note)notes.push(sh.note);if(sh.credit)notes.push(sh.credit+' You may sell prints; credit it, for example on the card or listing.');if(sh.relief)notes.push('Prints flat on its back without supports.'+(o.mount==='magnet'?' The magnet pockets are in the back.':''));
     if(o.print==='full')notes.push('Full detail: turn on tree supports in the slicer.');
     const res={parts:[part(k+'.stl',m)],notes,magnets:sh.magnets||0,display:sh.display,relief:!!sh.relief};
-    if(CACHE.size>20)CACHE.clear();CACHE.set(key,res);return res;
+    if(!late){if(CACHE.size>20)CACHE.clear();CACHE.set(key,res)}return res;
   }
   /* ---------- your own model (an STL from Blender or a shop), sized and given a base or a mount ---------- */
   function parseSTL(buf){
@@ -199,5 +228,5 @@
     notes.push('Your model is printed as you made it: if it hangs out over air, turn on supports in the slicer.');
     return {parts,notes,magnets};
   }
-  root.HabitatSculpt={SCULPTS,build,skullShape,custom,parseSTL,model:null};
+  root.HabitatSculpt={SCULPTS,build,skullShape,custom,parseSTL,model:null,loadScan,SCAN};
 })(typeof window!=='undefined'?window:globalThis);

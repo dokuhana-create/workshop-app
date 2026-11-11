@@ -108,10 +108,10 @@
       ['moult',{shape:'round',post:'ring'},3],['emblem',{shape:'round'},3]]},
     graveyard:{name:'Vampire graveyard',group:'Gothic',colours:'Black, blood red and bone white',note:'Tombstones, a coffin, candles and bats, for a spooky enclosure or a Halloween sale.',pieces:[
       ['diorama',{kind:'tombstone',style:'intact',mount:'free'},1],['diorama',{kind:'coffin',accent:'yes'},1],['sculpt',{kind:'bat',size:80},1],['ledge',{shape:'moon',pattern:'web',under:'flat'},1],
-      ['sculpt',{kind:'skull',size:32},2],['diorama',{kind:'candles',accent:'yes'},2],['motif',{motif:'gothicWindow',form:'plaque',base:'arch'},2],['flower',{kind:'rose'},2],['tile',{texture:'brick'},2],
+      ['sculpt',{kind:'real',size:32},2],['diorama',{kind:'candles',accent:'yes'},2],['motif',{motif:'gothicWindow',form:'plaque',base:'arch'},2],['flower',{kind:'rose'},2],['tile',{texture:'brick'},2],
       ['sculpt',{kind:'raven',size:45},3],['diorama',{kind:'tombstone',style:'broken',size:24,h:44,mount:'free'},3],['motif',{motif:'roseWindow',form:'stencil',base:'round'},3],['motif',{motif:'bat',form:'ornament'},3]]},
     curio:{name:'Cabinet of curiosities',group:'Gothic',colours:'Bone white or aged ivory, with black and brass',note:'Lifelike sculpted pieces: a skull, a raven, a death\'s-head moth and a coiled snake, with old books and candles, like a Victorian collector\'s cabinet.',pieces:[
-      ['sculpt',{kind:'skull',size:34},1],['sculpt',{kind:'moth',size:70},1],['diorama',{kind:'books',n:4},1],['ledge',{shape:'classic',pattern:'solid',under:'ribs'},1],
+      ['sculpt',{kind:'real',size:34},1],['sculpt',{kind:'moth',size:70},1],['diorama',{kind:'books',n:4},1],['ledge',{shape:'classic',pattern:'solid',under:'ribs'},1],
       ['sculpt',{kind:'raven',size:45},2],['diorama',{kind:'candles',accent:'yes'},2],['tile',{texture:'planks'},2],['plate',{shape:'scroll',mode:'raised'},2],
       ['sculpt',{kind:'snake',size:55},3],['sculpt',{kind:'bat',size:80},3],['diorama',{kind:'openBook'},3]]},
     wizard:{name:"Wizard's tower",group:'Fantasy',colours:'Deep purple, midnight blue and silver; translucent filament for crystals and potions',note:'A tower, crystals, potions and an open spell book.',pieces:[
