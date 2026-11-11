@@ -3,7 +3,7 @@
    Rectangles, polygons, circles and ovals then share the same base, lid, hatch and light-window code. */
 (function(root){
   const G=root.Geo,HP=root.HabitatParts;
-  const {prism,varying,rect,rrect,circle,ellipse,offset,intersect,subtract,unite,yDisc,build}=G;
+  const {prism,varying,rect,rrect,circle,ellipse,polar,offset,intersect,subtract,unite,yDisc,build}=G;
   const RAIL=HP.RAIL,PEG=HP.PEG,TAU=Math.PI*2;
 
   /* ---------- shared pieces ---------- */
@@ -44,11 +44,27 @@
   }
 
   /* ---------- hatch ----------
-     style 'magnet': lift-off cover held by two round magnets. 'plug': a cover with a ring that pushes into the hole. */
+     style 'magnet': lift-off cover held by two round magnets. 'plug': a cover with a ring that pushes into the hole. 'twist': a plug that locks with a quarter-ish turn. */
   function hatchOK(p){return p.hatch&&p.hatch!=='none'}
+  /* twist lock (bayonet): three lugs on the cover's plug drop through three notches in the hatch rim, then the
+     cover turns 40° so the lugs slide under the rim. Lugs and rim meet on matching 45° slopes, so both print without
+     supports. A small bump on the rim makes the cover click into place and holds it there; a stop ends the turn.
+     Angles are measured from a notch centre, in degrees. */
+  const TW={LP:1.6,LH:1.2,lug:22,notch:28,turn:40,c:.15,bump:.35,hold:.2};
+  function twistRamp(u){if(u<-TW.lug/2||u>TW.turn+TW.lug/2+.5)return null;const e=TW.turn-TW.lug/2;if(u<e-11.5)return 0;if(u<e-3.5)return TW.bump*(u-(e-11.5))/8;if(u<e-2)return TW.bump;if(u<e-.5)return TW.bump+(TW.hold-TW.bump)*(u-(e-2))/1.5;return TW.hold}
+  const sectorU=a=>{let d=((a*180/Math.PI)%120+120)%120;return d>60?d-120:d};
   function hatchCut(f,h,p,Lt){
     const R=(p.dMagD||10)/2+.2,pd=(p.dMagH||3)+.2,boss=Math.max(pd+1.6,5);
-    f.push(prism(0,boss,subtract(circle(h.x,h.y,h.R+12),circle(h.x,h.y,h.R))),prism(-1,boss+1,circle(h.x,h.y,h.R),'sub'));
+    f.push(prism(0,boss,subtract(circle(h.x,h.y,h.R+12),circle(h.x,h.y,h.R))));
+    if(p.hatch==='twist'){
+      const deep=TW.LP+.3,top=boss-deep;
+      f.push(varying(-1,boss+1,z=>polar(h.x,h.y,a=>{const r=twistRamp(sectorU(a));if(r==null)return h.R;return h.R+Math.max(0,Math.min(deep-r,z-(top+r)))},360),.2,'sub'));
+      const nr=h.R+TW.LP+.6;for(let k=0;k<3;k++){const a0=(k*120-TW.notch/2)*Math.PI/180,a1=(k*120+TW.notch/2)*Math.PI/180,q=[];
+        for(let i=0;i<=8;i++){const a=a0+(a1-a0)*i/8;q.push([h.x+nr*Math.cos(a),h.y+nr*Math.sin(a)])}for(let i=8;i>=0;i--){const a=a0+(a1-a0)*i/8;q.push([h.x+(h.R-1)*Math.cos(a),h.y+(h.R-1)*Math.sin(a)])}
+        f.push(prism(-1,boss+1,[q],'sub'))}
+      return;
+    }
+    f.push(prism(-1,boss+1,circle(h.x,h.y,h.R),'sub'));
     if(p.hatch==='magnet')for(const dx of [-(h.R+6),h.R+6])f.push(prism(-1,pd,circle(h.x+dx,h.y,R),'sub'));
   }
   function hatchCover(h,p,preview){
@@ -57,6 +73,17 @@
     if(p.hatch==='magnet'){
       const th=pd+1.4;f.push(prism(0,th,circle(0,0,h.R+11)),prism(th-.01,th+8,circle(0,0,6)));
       for(const dx of [-(h.R+6),h.R+6])f.push(prism(-1,pd,circle(dx,0,R),'sub'));
+      const hs=holes(h.R-4);if(hs.length)f.push(prism(-1,th+1,hs,'sub'));
+    }else if(p.hatch==='twist'){
+      /* printed upside down: the disc on the bed, with a ridged edge to grip; the plug ring rises from it and carries
+         three lugs whose undersides slope at 45° to match the slope under the hatch rim */
+      const th=2.4,boss=Math.max(pd+1.6,5),Rp=h.R-.25,deep=TW.LP+.3,ztop=th+boss+TW.LH;
+      f.push(prism(0,th,unite(polar(0,0,a=>h.R+8+.8*Math.max(0,Math.cos(a*36)),288),G.rrect(h.R+4,-6,h.R+18,6,4))));
+      f.push(prism(th,ztop,subtract(circle(0,0,Rp,120),circle(0,0,Rp-2.2,120))));
+      f.push(varying(th+boss-deep,ztop,z=>{const zz=z-th,rl=h.R-TW.c+Math.max(0,Math.min(deep,zz-(boss-deep)));if(rl<Rp+.05)return [];const o=[];
+        for(let k=0;k<3;k++){const a0=(k*120-TW.lug/2)*Math.PI/180,a1=(k*120+TW.lug/2)*Math.PI/180,q=[];
+          for(let i=0;i<=8;i++){const a=a0+(a1-a0)*i/8;q.push([rl*Math.cos(a),rl*Math.sin(a)])}for(let i=8;i>=0;i--){const a=a0+(a1-a0)*i/8;q.push([(Rp-.6)*Math.cos(a),(Rp-.6)*Math.sin(a)])}o.push(q)}
+        return o},.2));
       const hs=holes(h.R-4);if(hs.length)f.push(prism(-1,th+1,hs,'sub'));
     }else{
       /* printed upside down: the cover disc on the bed, the plug ring rising from it, a finger tab at the side */

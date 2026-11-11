@@ -3,11 +3,11 @@
 <script src="../shim.js"></script>
 <script src="../lib/clipper.js"></script>
 <script src="../lib/earcut.min.js"></script>
-<script src="../lib/geo.js?v=12"></script>
-<script src="habitat-parts.js?v=12"></script>
-<script src="habitat-enclosure.js?v=12"></script>
-<script src="habitat-more.js?v=12"></script>
-<script src="habitat-sets.js?v=12"></script>
+<script src="../lib/geo.js?v=13"></script>
+<script src="habitat-parts.js?v=13"></script>
+<script src="habitat-enclosure.js?v=13"></script>
+<script src="habitat-more.js?v=13"></script>
+<script src="habitat-sets.js?v=13"></script>
 <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Bricolage+Grotesque:opsz,wght@12..96,600;12..96,750&family=IBM+Plex+Mono:wght@500&family=IBM+Plex+Sans:wght@400;500;600&display=swap">
 <style>
 /* Same layout as the Resin Workshop: inputs on the left, the 3D preview and downloads beside them. */
@@ -152,7 +152,7 @@ h3{font:600 15px var(--body);margin:0 0 6px}
           <label class="f magE">Magnet height (mm)<input id="dMagH" type="number" min="1" max="6" step="0.5"></label>
         </div>
         <p class="hint" id="lwHint"></p>
-        <p class="hint hatchF">The hatch sits where you put it. If something is in the way, such as a light window, it moves to the nearest free spot. A magnet hatch lifts off; a plug hatch pushes into the opening and needs no magnets.</p>
+        <p class="hint hatchF">The hatch sits where you put it. If something is in the way, such as a light window, it moves to the nearest free spot. A magnet hatch lifts off; a plug hatch pushes into the opening; a twist-lock hatch pushes in and locks with a short turn, so a mantis can't push it open. Plug and twist-lock hatches need no magnets.</p>
       </section>
 
       <section aria-labelledby="h-printer">
@@ -393,7 +393,7 @@ opt($('polyFront'),[['clear','Sliding, clear acrylic'],['mesh','Sliding, printed
 opt($('polyWalls'),[['frontclear','Printed mesh'],['clear','Clear acrylic'],['alt','Alternating clear and mesh']]);
 opt($('roundWall'),[['sheet','Rolled clear sheet'],['mesh','Printed mesh tube']]);
 opt($('doorCatch'),[['magnet','Magnets'],['detent','Printed click catch, no magnets']]);
-opt($('hatch'),[['none','None'],['magnet','Lift-off cover with magnets'],['plug','Push-in plug cover, no magnets']]);
+opt($('hatch'),[['none','None'],['magnet','Lift-off cover with magnets'],['plug','Push-in plug cover, no magnets'],['twist','Twist-lock cover, no magnets']]);
 opt($('pegs'),[['none','None'],['grid','Pegs for accessories']]);
 opt($('rails'),[['no','None'],['yes','On printed mesh panels']]);
 opt($('lw'),[['none','None, mesh everywhere'],['insert','Openings for clear discs or fine fabric'],['fine','Finer printed mesh under the lights']]);
@@ -440,10 +440,10 @@ function panelToWorld(t,side,d,T){
 function place0(t,fn){const o=new Float32Array(t.length);for(let i=0;i<t.length;i+=3){const q=fn(t[i],t[i+1],t[i+2]);o[i]=q[0];o[i+1]=q[1];o[i+2]=q[2]}return o}
 const colours=()=>{const c=v=>cssColor(getComputedStyle(document.documentElement).getPropertyValue(v).trim());return {frame:c('--frame'),mesh:c('--mesh'),clear:{r:120,g:170,b:215}}};
 /* the lid's hatch cover, placed on top of the lid for the preview */
-function coverWorld(L,Ztop,p){if(!L.cover)return null;const h=L.hatch;return p.hatch==='plug'?place0(L.cover.tris,(x,y,z)=>[x+h.x,-y+h.y,Ztop+2.4-z]):place0(L.cover.tris,(x,y,z)=>[x+h.x,y+h.y,Ztop+z])}
+function coverWorld(L,Ztop,p){if(!L.cover)return null;const h=L.hatch;return p.hatch==='plug'||p.hatch==='twist'?place0(L.cover.tris,(x,y,z)=>[x+h.x,-y+h.y,Ztop+2.4-z]):place0(L.cover.tris,(x,y,z)=>[x+h.x,y+h.y,Ztop+z])}
 function lidCut(L,cut){if(L.win&&L.win.mode==='insert'){const dd=2*(L.win.Rw+3)-.4;cut.push([`Light windows: ${L.win.centers.length} × clear disc or fine fabric, up to 1 mm thick`,fmt(dd,1)+' mm across'])}}
 function lidReadme(L,p){let t='';if(L.win&&L.win.mode==='insert')t+=`\nLight windows: ${L.win.centers.length} clear discs or pieces of fine fabric mesh, ${(2*(L.win.Rw+3)-.4).toFixed(1)} mm across, up to 1 mm thick. Lay each on the ledge from above, then put the ring light seat on top.\n`;
-  if(L.hatch)t+=p.hatch==='magnet'?`\nFeeding hatch: 4 round magnets, ${p.dMagD} x ${p.dMagH} mm (2 in the lid beside the hatch, 2 in the cover). Check the poles attract before gluing.\n`:'\nFeeding hatch: the cover pushes into the opening and needs no magnets.\n';
+  if(L.hatch)t+=p.hatch==='magnet'?`\nFeeding hatch: 4 round magnets, ${p.dMagD} x ${p.dMagH} mm (2 in the lid beside the hatch, 2 in the cover). Check the poles attract before gluing.\n`:p.hatch==='twist'?'\nFeeding hatch: line up the three lugs on the cover with the three notches in the rim, push the cover in and turn it about 40 degrees until it clicks. Turn it back to open. If it is too stiff, sand the small bump under the rim a little; if it is loose, the turn has worn the bump and you can print a new cover.\n':'\nFeeding hatch: the cover pushes into the opening and needs no magnets.\n';
   return t}
 
 function rectModel(p,pv){
