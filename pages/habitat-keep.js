@@ -44,13 +44,17 @@
     const bl=W+1;let bar=rrect(-bl/2,-2.6,bl/2,2.6,1.5);for(const x of [-W*.25,0,W*.25])bar=subtract(bar,circle(x,0,1.1,16));
     parts.push(part('incubator-hanger-bar.stl',build([prism(0,3,bar)]),'Second file'));
     /* funnel top: a skirt over the body, a cone up to the opening, and a collar the cup sits over */
-    const so=offset(bo,wl+.4),si=offset(bo,.3),sk=6,rs=o.spout/2,rc=Math.min(o.cup/2-.6,W/2-3),hc=W/2-rs+1;
-    const ft=[prism(0,sk,subtract(so,si)),prism(sk-2,sk,subtract(so,offset(bo,-wl)))];
-    ft.push(varying(sk,sk+hc,z=>{const d=z-sk,ro=Math.max(rs+wl,W/2+wl+.4-d),ri=ro-wl-.6;const sq=k=>k>W/2-r?rrect(-k,-k,k,k,Math.max(1,r-(W/2-k))):circle(0,0,k,96);
-      return subtract(sq(ro),sq(ri))},.3));
-    const zc=sk+(W/2+wl+.4-rc);ft.push(prism(Math.min(zc,sk+hc-1),sk+hc+8,ring(rc-wl,rc)));
+    const so=offset(bo,wl+.4),si=offset(bo,.3),sk=8,rs=o.spout/2,rc=Math.min(o.cup/2,W/2),wc=wl+.6;
+    /* skirt over the body, then a 45° chamfer inwards down to the body wall, so the funnel rests on it */
+    const ft=[prism(0,sk-4,subtract(so,si)),varying(sk-4,sk,z=>subtract(so,offset(bo,Math.max(-wl,.3-(z-(sk-4))))),.25)];
+    /* the cone: a square shrinking into a circle, every edge moving in at 45°, so it prints without supports */
+    const k1=W/2+wl+.4,k2=k1*Math.SQRT2+.5,hc=k1-wc-rs,shape=(d,t)=>intersect(rrect(-(k1-d-t),-(k1-d-t),k1-d-t,k1-d-t,Math.max(.5,r-d-t)),circle(0,0,k2-d-t,128));
+    ft.push(varying(sk,sk+hc,z=>{const d=z-sk;return subtract(shape(d,0),shape(d,wc))},.3));
+    /* four short pegs on the cone, just outside the cup rim, keep the upside-down cup in place */
+    const rp=Math.min(rc+1.2,k1-3),zb=sk+Math.max(0,k1-(rp+2)-.3);
+    for(let k=0;k<4;k++)ft.push(prism(zb,zb+6,rot(rect(rp,-1,rp+2,1),k*Math.PI/2)));
     parts.push(part('incubator-funnel-top.stl',build(ft),'Second file'));
-    notes.push(`Stand the body in the tray on a damp paper towel, hang the egg case from the bar (thread through a hole, or a dot of hot glue on its twig), and put the funnel top on. Turn a clear cup (rim ${o.cup} mm across) upside down over the collar.`);
+    notes.push(`Stand the body in the tray on a damp paper towel, hang the egg case from the bar (thread through a hole, or a dot of hot glue on its twig), and put the funnel top on. Turn a clear cup (rim up to ${o.cup} mm across) upside down over the opening, inside the four pegs.`);
     notes.push('Newly hatched nymphs climb up towards the light and gather in the cup. Slide a card under it, lift it off and close it. Keep the room bright above and darker below so they head the right way.');
     notes.push(`Vent slots are ${sw} mm. Mantis nymphs are thicker than that, but fruit flies get through, so don't put flies in here.`);
     return {parts,notes,magnets:0,separate:true};
@@ -101,7 +105,6 @@
     for(let j=r-1;j>=0;j--)for(let i=0;i<c;i++){const cx=g+R+i*cell,cy=g+strip+R+j*(cell+strip);f.push(prism(bt-3,bt+1,circle(cx,cy,R,72),'sub'));
       const T=HM.text2D([String(n)],6,1.1);txt.push(...move(T.rings,cx,cy-R-strip/2-1));n++}
     if(txt.length)f.push(prism(bt-.8,bt+1,txt,'sub'));
-    f.push(prism(-1,1.2,(()=>{const q=[];for(let x=g;x<W-g;x+=14)q.push(...rect(x,2,x+8,L-2));return q})(),'sub'));
     if(W>340||L>340)notes.push('This rack is bigger than your print bed. Use fewer columns or rows.');
     parts.push(part('nymph-cup-rack.stl',build(f)));
     if(o.tags==='yes'){const tf=[];n=1;const tw=26,th=14;
@@ -121,13 +124,14 @@
   /* the part that sits in the base: a spigot through it, a neck with a sliding shutter, and on top either a funnel
      (drop chute) or a closed chamber with a cap (airlock) */
   function chuteTop(o,sr,kind){
-    const bore=sr-1.6,so=sr-.25,rn=sr+5,f=[],sl=6,neck=12,s0=sl+3,zt=sl+neck;
+    const bore=sr-1.6,so=sr-.25,rn=sr+5,f=[],sl=6,fl=rn-so,neck=10,s0=sl+fl+2,zt=sl+fl+neck;
     f.push(prism(0,sl,ring(bore,so)));
-    f.push(shell(sl,sl+5.5,z=>so+(z-sl),0),prism(sl,zt,circle(0,0,rn,96)),prism(-1,zt+1,circle(0,0,bore,64),'sub'));
+    /* the flange widens at 45° from the spigot to the neck, so nothing hangs out */
+    f.push(varying(sl,sl+fl,z=>circle(0,0,so+(z-sl),96),.25),prism(sl+fl,zt,circle(0,0,rn,96)),prism(-1,zt+1,circle(0,0,bore,64),'sub'));
     /* shutter slot, open on one side */
     f.push(prism(s0,s0+2.6,unite(rect(-rn-1,-bore-1,bore+1.5,bore+1),[]),'sub'));
     let top;
-    if(kind==='chute'){const rt=Math.max(rn+4,o.top/2),hc=rt-bore;f.push(shell(zt,zt+hc,z=>bore+1.8+(z-zt),1.8));f.push(prism(zt+hc,zt+hc+3,ring(rt-1.8+.01,rt+.8)));top=zt+hc+3}
+    if(kind==='chute'){const rt=Math.max(rn+4,o.top/2),hc=rt-bore;f.push(shell(zt,zt+hc,z=>bore+1.8+(z-zt),1.8));f.push(prism(zt+hc,zt+hc+3,ring(bore+hc,bore+hc+1.8)));top=zt+hc+3}
     else{const rc=Math.max(rn,o.cham/2),hw=rc-rn;f.push(shell(zt,zt+hw+1,z=>Math.min(rc,rn+(z-zt)),1.8));f.push(prism(zt+hw+1,zt+hw+1+o.chamH,ring(rc-1.8,rc)));top=zt+hw+1+o.chamH;
       f.push(prism(zt-.6,zt,ring(bore,rn)))}
     const shutter=build([prism(0,2,unite(rrect(-rn-14,-bore-.5,bore+1,bore+.5,1),[]))]);
@@ -192,7 +196,6 @@
     const spokeH=mot?hb-8:hb-2;for(let k=0;k<6;k++)bf.push(prism(0,spokeH,rot(rect(hubR-1,-1.6,Rt-5,1.6),k*TAU/6)));
     bf.push(groove(hb));
     /* rubber feet recesses */
-    for(let k=0;k<4;k++){const a=k*TAU/4+TAU/8;bf.push(prism(-1,1,circle((Rb-12)*Math.cos(a),(Rb-12)*Math.sin(a),5.2,32),'sub'))}
     let pin=null;
     if(mot){/* N20 gear motor standing in a pocket, shaft up, beside the gear ring */
       const cx=Rg+rp+.15,mw=12.3,mt=10.3;
@@ -229,7 +232,7 @@
     if(o.style==='broken'){const top=H;f.push(varying(hb,top,z=>{const t=(z-hb)/(top-hb),k=R*(1.1-2.2*t),q=[[-3*R,-R-2]];
       for(let y=-R-2;y<=R+2;y+=.5)q.push([k+R*.35*cut(y/R*2.5),y]);q.push([-3*R,R+2]);
       return intersect(flute(R*(1-.08*(z-7)/H)),rot([q],ang))},.3))}
-    else{f.push(shell(hb,hb+3,z=>R*.92+(z-hb),0));f.push(prism(hb+3,H,rrect(-R-3.5,-R-3.5,R+3.5,R+3.5,.6)))}
+    else{const fl=R*.08+3;f.push(varying(hb,hb+fl,z=>circle(0,0,R*.92+(z-hb),96),.3));f.push(prism(hb+fl,Math.max(H,hb+fl+2),circle(0,0,R+3.2,96)))}
     return [part(`column-${o.style}.stl`,build(f))];
   }
   function dioAmphora(o){

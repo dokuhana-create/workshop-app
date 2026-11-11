@@ -9,7 +9,8 @@
      closed by a 2 mm lip. An accessory's back plate drops into the slot, and a small bump clicks past the lip.
      In accessory coordinates the body's back is y=0, which sits 4.9 mm out from the panel. */
   const RAIL={pitch:40,slot:2.6,lip:2,floor:1.6,lipH:7.6,tongue:2.2,front:4.9};
-  const CLIP={y0:-(RAIL.front-.2),y1:-(RAIL.front-.2-RAIL.tongue),clearZ:RAIL.lipH-RAIL.floor+.4};
+  /* clips fit between the small ribs that hold up the rail lip every 40 mm, so they are at most 34 mm wide */
+  const CLIP={y0:-(RAIL.front-.2),y1:-(RAIL.front-.2-RAIL.tongue),clearZ:RAIL.lipH-RAIL.floor+.4,maxW:34};
 
   /* ---- plan shapes for bodies: x centred on 0, the back at y=0 ---- */
   function body2D(kind,L,W,seed){
@@ -37,7 +38,7 @@
     return xs.length;
   }
   function clipBack(f,{w,h}){
-    const ph=Math.max(h,CLIP.clearZ+6),wc=Math.max(16,w);
+    const ph=Math.max(h,CLIP.clearZ+6),wc=Math.min(CLIP.maxW,Math.max(16,w));
     f.push(prism(0,ph,rect(-wc/2,CLIP.y0,wc/2,CLIP.y1)));                 /* back plate: its lower part is the tongue */
     f.push(prism(CLIP.clearZ,ph,rect(-wc/2,CLIP.y1-.01,wc/2,.6)));         /* bridge over the lip, joining the body */
     f.push(prism(1,2,rect(-wc/2+2,CLIP.y1-.01,wc/2-2,CLIP.y1+.35)));       /* click bump */
@@ -77,18 +78,16 @@
     const at=z=>scaleAbout(base,1+tp*z/H,b.cx,b.cy);
     const hub=o.mount==='peg'?circle(b.cx,b.cy,PEG.hub):null;
     const inner=z=>{let c=offset(at(z),-o.wall);if(hub&&z<raise+fl+PEG.depth)c=subtract(c,hub);return c};
-    if(tp){f.push(varying(raise,H,at,1));f.push(varying(raise+fl,H+.01,inner,1,'sub'))}
-    else{f.push(prism(raise,H,base));f.push(prism(raise+fl,H+1,offset(base,-o.wall),'sub'))}
+    if(tp){f.push(varying(0,H,at,1));f.push(varying(raise+fl,H+.01,inner,1,'sub'))}
+    else{f.push(prism(0,H,base));f.push(prism(raise+fl,H+1,offset(base,-o.wall),'sub'))}
     if(hub){f.push(prism(0,raise+fl+PEG.depth,hub));f.push(prism(-1,PEG.depth,circle(b.cx,b.cy,PEG.sock),'sub'))}
-    const feet=[];
-    if(raise){
-      const rr=Math.min(b.x1-b.x0,b.y1-b.y0)*.32;
-      for(let i=0;i<3;i++){const a=Math.PI/2+i*Math.PI*2/3,p=[b.cx+rr*Math.cos(a),b.cy+rr*Math.sin(a)];feet.push(p);f.push(prism(0,raise+.01,circle(p[0],p[1],4)))}
-    }
+    /* the pot stands flat on the bed; channels underneath, one under each row of holes, let water run out */
+    const feet=[],rows=[];for(let y=b.y0;y<=b.y1;y+=8)rows.push(y);
+    if(raise){let ch=[];for(const y of rows)ch.push(...rect(b.x0-2,y-1.2,b.x1+2,y+1.2));if(hub)ch=subtract(ch,circle(b.cx,b.cy,PEG.hub+1));f.push(prism(-1,raise,ch,'sub'))}
     if(o.drain){
       const area=offset(base,-o.wall-2.5);let n=0;
-      for(let x=b.x0;x<=b.x1;x+=8)for(let y=b.y0;y<=b.y1;y+=8){
-        const c=circle(x,y,1.5,16);if(intersect(c,area).length!==1||Math.abs(G.area(intersect(c,area))-G.area(c))>.01)continue;
+      for(let x=b.x0;x<=b.x1;x+=8)for(const y of rows){
+        const c=circle(x,y,1.1,16);if(intersect(c,area).length!==1||Math.abs(G.area(intersect(c,area))-G.area(c))>.01)continue;
         if(feet.some(p=>Math.hypot(p[0]-x,p[1]-y)<6.5)||(hub&&Math.hypot(b.cx-x,b.cy-y)<PEG.hub+2.5))continue;
         f.push(prism(-1,raise+fl+.01,c,'sub'));n++;
       }
@@ -189,8 +188,8 @@
     /* back plate outline on the wall: rounded, a little irregular (or square), straight along the bottom for a clip rail */
     const PL=o.L*1.12,wv=wobble(seed+7,o.shape==='classic'||o.shape==='square'?.0:.09,5);
     let plate=o.shape==='square'?rect(-PL/2,0,PL/2,Hb):o.shape==='classic'?rrect(-PL/2,0,PL/2,Hb,6):polar(0,Hb/2,a=>{const c=Math.cos(a),s=Math.sin(a),e=1/Math.sqrt(c*c/(PL*PL/4)+s*s/(Hb*Hb/4));return e*(1+wv(a))},120);
-    plate=unite(plate,rrect(-o.L*.4,Math.max(0,zs0-Hd-4),o.L*.4,zs0+st+4,3));
-    if(clip)plate=unite(intersect(plate,rect(-o.L,0,o.L,Hb*2)),rect(-Math.min(o.L*.4,30),0,Math.min(o.L*.4,30),zs0+st));
+    plate=unite(plate,rrect(-PL/2,Math.max(0,zs0-Hd-4),PL/2,zs0+st+4,3));
+    if(clip){const hw=Math.min(o.L*.4,CLIP.maxW/2);plate=unite(intersect(plate,rect(-o.L,CLIP.clearZ,o.L,Hb*2)),rect(-hw,0,hw,zs0+st))}
     f.push(prism(0,bt,plate));
     const slice=(rings,u)=>G.slice(rings,u);
     for(const t of tiers){
@@ -207,12 +206,12 @@
         const rid=o.shape==='leaf'?intersect(unite(G.stroke([[[t.dx,2],[t.dx,t.D*.92]]],1.4)),offset(top,-1.5)):(()=>{const bands=[];for(let d=4;d<t.D;d+=4.5){const a=offset(top,-d),b=offset(top,-d-1.1);if(!a.length)break;bands.push(...subtract(a,b))}return intersect(unite(bands),rect(-o.L,3,o.L,o.dep*2))})();
         const rim=o.shape==='leaf'?[]:intersect(subtract(offset(top,-.05),offset(top,-1.6)),rect(-o.L,3,o.L,o.dep*2));
         if(rid.length)f.push(varying(zA,zMax,z=>slice(rid,z-bt).map(([a,c])=>[[a,zs+st-.01],[c,zs+st-.01],[c,zs+st+.8],[a,zs+st+.8]]),.3));
-        if(rim.length)f.push(varying(zA,zMax,z=>slice(rim,z-bt).map(([a,c])=>[[a,zs+st-.01],[c,zs+st-.01],[c,zs+st+2.2],[a,zs+st+2.2]]),.3));
+        if(rim.length)f.push(varying(zA,zMax,z=>slice(rim,z-bt).map(([a,c])=>[[a,zs+st-.01],[c,zs+st-.01],[c,zs+st+1.4],[a,zs+st+1.4]]),.3));
       }
     }
     let magnets=0;
     if(mag){const y=Hb-R-4,xs=o.L>=4*R+16?[-o.L/4,o.L/4]:[0];for(const x of xs)f.push(prism(-1,pd,circle(x,y,R),'sub'));magnets=xs.length}
-    if(clip){const wc=Math.min(o.L*.4,30);f.push(prism(bt-.01,bt+.35,rect(-wc+2,1,wc-2,2)))}
+    if(clip){const wc=Math.min(o.L*.4,CLIP.maxW/2);f.push(prism(bt,bt+.35,rect(-wc+2,1,wc-2,2)))}
     if(o.pattern&&o.pattern!=='solid')notes.push('The see-through pattern prints as is, with lines at least '+Math.max(1.6,o.lw||2.2).toFixed(1)+' mm wide. Tap Shuffle shape for a different version.');
     return {parts:[{file:'wall-ledge.stl',role:'Main colour',m:build(f)}],notes,magnets};
   }
@@ -221,15 +220,17 @@
   function label(o){
     const clip=o.mount==='clip',mag=o.mount==='magnet',R=o.md/2+.2,pd=o.mh+.2;
     const sp=4,ov=3,pt=clip?RAIL.tongue:mag?Math.max(2,pd+1.4):2,Lp=o.cw+2*sp,drop=clip?CLIP.clearZ:0,Hp=o.ch+sp-3+drop;
-    const shape=rrect(-Lp/2,0,Lp/2,Hp,4),pf=[prism(0,pt,shape)];let magnets=0;
+    const shape=clip?unite(rrect(-Lp/2,drop,Lp/2,Hp,4),rrect(-CLIP.maxW/2,0,CLIP.maxW/2,drop+4,1)):rrect(-Lp/2,0,Lp/2,Hp,4),pf=[prism(0,pt,shape)];let magnets=0;
     if(mag){const y=drop+(Hp-drop)/2,xs=Lp>=4*R+16?[-Lp/4,Lp/4]:[0];for(const x of xs)pf.push(prism(-1,pd,circle(x,y,R),'sub'));magnets=xs.length;}
-    if(clip)pf.push(prism(pt-.01,pt+.35,rect(-Lp/2+3,1,Lp/2-3,2)));
+    if(clip)pf.push(prism(pt,pt+.35,rect(-CLIP.maxW/2+3,1,CLIP.maxW/2-3,2)));
     const gz=.8,lz=1.2,y0=drop;
     const spacer=intersect(shape,unite(rect(-Lp/2,y0,-Lp/2+sp,Hp),unite(rect(Lp/2-sp,y0,Lp/2,Hp),rect(-Lp/2,y0,Lp/2,y0+sp))));
     const lips=intersect(shape,unite(rect(-Lp/2,y0,-Lp/2+sp+ov,Hp),unite(rect(Lp/2-sp-ov,y0,Lp/2,Hp),rect(-Lp/2,y0,Lp/2,y0+sp+ov))));
-    const ff=[prism(pt,pt+gz,spacer),prism(pt+gz,pt+gz+lz,lips)];
+    /* the frame prints on its own, lips down on the bed, so the lips never hang over the card slot; glue it on */
+    const ff=[prism(0,lz,lips),prism(lz,lz+gz,spacer)];
     const notes=[];if(mag&&o.ch<2*R+2)notes.push('The card is too short for the magnets. Make it taller.');
-    return {parts:[{file:'label-plate.stl',role:'Colour 1',m:build(pf)},{file:'label-frame.stl',role:'Colour 2',m:build(ff),same:true}],notes,magnets};
+    notes.push('The frame prints separately, face down. Glue it onto the plate along the sides and bottom, leaving the top open for the card. Print it in a second colour if you like.');
+    return {parts:[{file:'label-plate.stl',role:'Main colour',m:build(pf)},{file:'label-frame.stl',role:'Second file',m:build(ff)}],notes,magnets};
   }
 
   /* ---------------- light holders ----------------

@@ -288,7 +288,7 @@
     else if(o.mount==='magnet')bt=Math.max(opts.min||2,o.mh+.2+1.4);
     else bt=opts.min||2;
     const ft=move(foot,0,dy),b=bounds(ft);let plate=opts.plate?move(opts.plate,0,dy):ft;
-    if(o.mount==='clip'){const wc=Math.min(40,Math.max(16,(b.x1-b.x0)*.6));plate=unite(plate,rrect(b.cx-wc/2,0,b.cx+wc/2,CLIP.clearZ+4,1));f.push(prism(bt,bt+.35,rect(b.cx-wc/2+2,1,b.cx+wc/2-2,2)))}
+    if(o.mount==='clip'){const wc=Math.min(CLIP.maxW,Math.max(16,(b.x1-b.x0)*.6));plate=unite(plate,rrect(b.cx-wc/2,0,b.cx+wc/2,CLIP.clearZ+4,1));f.push(prism(bt,bt+.35,rect(b.cx-wc/2+2,1,b.cx+wc/2-2,2)))}
     f.push(prism(0,bt,plate));
     if(o.mount==='magnet'){
       const R=o.md/2+.2,pd=o.mh+.2,w=b.x1-b.x0,safe=offset(ft,-R-1.2),xs=opts.xs||(w>=4*R+16?[b.cx-w/4,b.cx+w/4]:[b.cx]),my=opts.my!=null?opts.my+dy:b.cy;
@@ -305,7 +305,9 @@
     dz=dz||.3;const b=bounds(sil),steps=[];let prev=null;
     for(let z=b.y0;z<b.y1-1e-6;z+=dz){
       let iv=G.slice(sil,z+dz/2);
-      if(prev)iv=iv.map(([a,c])=>{const near=prev.filter(([p,q])=>q>=a-dz&&p<=c+dz);if(!near.length)return null;return [Math.max(a,Math.min(...near.map(n=>n[0]))-dz),Math.min(c,Math.max(...near.map(n=>n[1]))+dz)]}).filter(v=>v&&v[1]-v[0]>.2);
+      if(prev)iv=iv.map(([a,c])=>{const near=prev.filter(([p,q])=>q>=a-dz&&p<=c+dz);if(!near.length)return null;const lo=Math.min(...near.map(n=>n[0])),hi=Math.max(...near.map(n=>n[1])),a2=Math.max(a,lo-dz),c2=Math.min(c,hi+dz);
+        /* keep only pieces that overlap the layer below, so nothing ends up joined by a bare edge */
+        return c2-lo<.3||hi-a2<.3?null:[a2,c2]}).filter(v=>v&&v[1]-v[0]>.3);
       steps.push(iv);prev=iv;
     }
     const top=z0+steps.length*dz;
@@ -390,7 +392,7 @@
     let t=o.mount==='clip'?RAIL.tongue:o.mount==='magnet'?Math.max(2.4,o.mh+1.6):2.4,magnets=0;
     if(o.mount==='tie'){shape=subtract(unite(shape,rrect(-W/2,L-2,W/2,L+10,3)),unite(circle(-W/4,L+4.5,1.3,20),circle(W/4,L+4.5,1.3,20)))}
     else if(o.mount==='hook'){const rd=o.dia/2+1.6;shape=unite(shape,stroke([[[0,L-2],[0,L+6],...E_(-rd,L+6,rd,rd,0,180),[-2*rd,L+2]]],3))}
-    else if(o.mount==='clip'){shape=unite(shape,rrect(-W/2,0,W/2,CLIP.clearZ+4,1));f.push(prism(t,t+.35,rect(-W/2+2,1,W/2-2,2)))}
+    else if(o.mount==='clip'){const cw=Math.min(W,CLIP.maxW);shape=unite(subtract(shape,rect(-W,-1,W,CLIP.clearZ)),rrect(-cw/2,0,cw/2,CLIP.clearZ+4,1));f.push(prism(t,t+.35,rect(-cw/2+2,1,cw/2-2,2)))}
     else if(o.mount==='magnet'){shape=unite(shape,rrect(-W/2,L-o.md-6,W/2,L,2));const R=o.md/2+.2;if(W>=2*R+3){f.push(prism(-1,o.mh+.2,circle(0,L-R-3,R),'sub'));magnets=1}else notes.push('Make the ladder wider so a magnet fits.')}
     f.push(prism(0,t,shape));
     if(ridges.length)f.push(prism(t,t+.6,intersect(stroke(ridges,1),offset(shape,-.6))));
@@ -441,7 +443,7 @@
         for(let x=4;x<w;x+=10+r()*10)grow(x,-2,Math.PI/2+(r()-.5)*.5,3.2+r()*1.6,0);
         const layers=[];for(let i=0;i<n;i++){const q=segs.filter(s=>s.wd-i*.6>.6);if(!q.length)break;layers.push(intersect(unite(q.flatMap(s=>stroke([s.q],s.wd-i*.6))),box))}return layers}
       case 'bamboo':{const st=[],nodes=[];for(let x=3+r()*4;x<w;x+=10+r()*4){const sw=6+r()*3;st.push(...rect(x,0,x+sw,h));for(let y=8+r()*10;y<h-2;y+=18+r()*10)nodes.push(...rrect(x-.8,y,x+sw+.8,y+1.6,.6))}
-        const base=unite(st);return [intersect(unite(base,nodes),box),...shrink(base,.5,Math.min(n,3)).slice(1),intersect(nodes,box)].filter(q=>q.length)}
+        const base=unite(st),bn=unite(base,nodes),k=Math.min(n,3),out=[];for(let i=0;i<k;i++){const q=intersect(i?unite(offset(base,-i*.5),intersect(nodes,offset(bn,-i*.5+.01))):bn,box);if(q.length)out.push(q)}if(n>k)out.push(intersect(nodes,offset(out[out.length-1],-.06)));return out.filter(q=>q.length)}
       case 'stars':{const st=[];for(let k=0;k<w*h/90;k++){const x=r()*w,y=r()*h,rr=1.2+r()*2.6,n=r()<.7?5:4;st.push(...polar(x,y,a=>rr*(Math.cos(n*a/2)**2*.62+.38),n*12).map(q=>q.map(([px,py])=>[px,py])))}
         for(let k=0;k<w*h/25;k++)st.push(...circle(r()*w,r()*h,.5+r()*.4,10));return [intersect(unite(st),offset(box,-1))]}
       default:return [box];
@@ -504,7 +506,7 @@
     tiers[0]=unite(tiers[0],circle(0,0,Math.max(R*.24,o.mount==='magnet'?o.md/2+3.6:4),48));
     const wall=o.mount==='magnet'||o.mount==='clip'||o.mount==='glue';
     let z0=0,dy=0,magnets=0;
-    if(wall){const m=backMount(o,offset(tiers[0],1.2),{min:1.6,xs:[0],my:0});f.push(...m.f);z0=m.bt;dy=m.dy;magnets=m.magnets;notes.push(...m.notes)}
+    if(wall){const m=backMount(o,offset(unite(tiers.flat()),1.2),{min:1.6,xs:[0],my:0});f.push(...m.f);z0=m.bt;dy=m.dy;magnets=m.magnets;notes.push(...m.notes)}
     const mv=r=>move(r,0,dy),layers=tiers.map((_,i)=>unite(tiers.slice(i).flat()));
     /* each layer sits strictly inside the one below, so no two layers share an edge that could leave a sliver */
     let prevL=null;layers.forEach((L,i)=>{const q=i?intersect(offset(L,-.2),offset(prevL,-.06)):L;prevL=q;if(q.length)f.push(prism(z0+i*lh,z0+(i+1)*lh,mv(q)))});
@@ -518,6 +520,8 @@
     if(o.mount==='peg'){f.push(prism(0,PEG.depth+1.5,circle(cx,cy,PEG.hub)),prism(-1,PEG.depth,circle(cx,cy,PEG.sock),'sub'));rHub=PEG.hub;zTop=Math.max(zTop,PEG.depth+1.5)}
     if(o.mount==='stem'){if(zTop<5){f.push(prism(0,5,circle(cx,cy,4)));zTop=Math.max(zTop,5)}f.push(prism(-1,3.6,circle(cx,cy,2.1,24),'sub'))}
     const rcc=Math.max(rc,rHub);
+    /* a solid core under the centre, so it never sits over the gap in the middle of the petals */
+    if(style!=='none'&&zTop>z0)f.push(prism(z0,zTop,circle(cx,cy,rcc+1,40)));
     const nc=f.length;
     if(style==='dome'){const hc=rcc*.75;f.push(varying(zTop,zTop+hc,z=>circle(cx,cy,Math.max(.6,rcc*Math.sqrt(Math.max(0,1-((z-zTop)/hc)**2))),40),.3))}
     else if(style==='stamens'){f.push(prism(zTop,zTop+1,circle(cx,cy,rcc*.55,24)));for(let k=0;k<9;k++){const a=k*TAU/9,d=rcc*(.55+(k%2)*.3);f.push(prism(zTop,zTop+2.4+(k%3)*.8,circle(cx+Math.cos(a)*d,cy+Math.sin(a)*d,.7,12)))}}
@@ -556,7 +560,8 @@
       notes.push('Rests on the lid mesh; the mist goes through the cone and the mesh. A dot of clear silicone keeps it in place.');
     }
     f.push(varying(-1,th+1,z=>circle(0,0,rn+Math.max(0,Math.min(th,z))*.6,40),.3,'sub'));
-    const cap=build([prism(0,2,unite(circle(0,0,rn+4,40),rrect(rn+2,-3,rn+9,3,2))),prism(2,4.5,circle(0,0,rn-.15,40))]);
+    /* the cap's plug tapers like the cone, so it seats snugly instead of rattling */
+    const cap=build([prism(0,2,unite(circle(0,0,rn+4,40),rrect(rn+2,-3,rn+9,3,2))),varying(2,4.5,z=>circle(0,0,rn+th*.6-.15-(z-2)*.6,40),.25)]);
     notes.push(`Measure your spray nozzle tip and set it as the nozzle size. The cap pushes into the port between mistings.`);
     return {parts:[part('mister-port.stl',build(f)),part('mister-cap.stl',cap,'Second file')],notes,magnets:0,separate:true};
   }
@@ -612,7 +617,7 @@
   function bark(o){
     const bw=o.bw,bh=o.bh,bk=o.bk,f=[],notes=[],yb=6,yt=yb+3+bh+1,m=8,org=o.style==='organic';
     const foot=org?polar(0,(yt+6)/2,a=>{const rx=bw/2+m+3,ry=(yt+6)/2+3,c=Math.cos(a),s=Math.sin(a);return 1/Math.sqrt(c*c/(rx*rx)+s*s/(ry*ry))*(1+wobble(o.seed,.07,5)(a))},140):rrect(-bw/2-m,0,bw/2+m,yt+6,6);
-    let plate=null;if(o.open==='yes')plate=subtract(foot,holes(offset(foot,-6),'voronoi',9,3.2,o.seed));
+    let plate=null;if(o.open==='yes'){const ym=yb+3+bh*.55,keep=unite(unite(rect(-bw/2-6,yb-4,bw/2+6,yb+9),rect(-bw/2-6,yt-8,bw/2+6,yt+8)),unite(rect(-bw/2-7,ym-9,-bw/2+2,ym+9),rect(bw/2-2,ym-9,bw/2+7,ym+9)));plate=subtract(foot,holes(subtract(offset(foot,-6),keep),'voronoi',9,3.2,o.seed))}
     const mt=backMount(o,foot,{plate,min:2.4});f.push(...mt.f);notes.push(...mt.notes);
     const bt=mt.bt,dy=mt.dy,zl=bt+bk+1,sw=o.style==='cradle'?bw*.9:bw*.8;
     f.push(prism(bt,zl+4,rect(-sw/2,yb+dy,sw/2,yb+3+dy)));

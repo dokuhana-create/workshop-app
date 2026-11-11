@@ -50,7 +50,7 @@
      cover turns 40° so the lugs slide under the rim. Lugs and rim meet on matching 45° slopes, so both print without
      supports. A small bump on the rim makes the cover click into place and holds it there; a stop ends the turn.
      Angles are measured from a notch centre, in degrees. */
-  const TW={LP:1.6,LH:1.2,lug:22,notch:28,turn:40,c:.15,bump:.35,hold:.2};
+  const TW={LP:1.6,LH:1.2,lug:21,notch:27,turn:40,c:.15,bump:.35,hold:.2};
   function twistRamp(u){if(u<-TW.lug/2||u>TW.turn+TW.lug/2+.5)return null;const e=TW.turn-TW.lug/2;if(u<e-11.5)return 0;if(u<e-3.5)return TW.bump*(u-(e-11.5))/8;if(u<e-2)return TW.bump;if(u<e-.5)return TW.bump+(TW.hold-TW.bump)*(u-(e-2))/1.5;return TW.hold}
   const sectorU=a=>{let d=((a*180/Math.PI)%120+120)%120;return d>60?d-120:d};
   function hatchCut(f,h,p,Lt){
@@ -80,11 +80,11 @@
          three lugs whose undersides slope at 45° to match the slope under the hatch rim */
       const th=2.4,boss=Math.max(pd+1.6,5),Rp=h.R-.25,deep=TW.LP+.3,ztop=th+boss+TW.LH;
       f.push(prism(0,th,unite(polar(0,0,a=>h.R+8+.8*Math.max(0,Math.cos(a*36)),288),G.rrect(h.R+4,-6,h.R+18,6,4))));
-      f.push(prism(th,ztop,subtract(circle(0,0,Rp,120),circle(0,0,Rp-2.2,120))));
-      f.push(varying(th+boss-deep,ztop,z=>{const zz=z-th,rl=h.R-TW.c+Math.max(0,Math.min(deep,zz-(boss-deep)));if(rl<Rp+.05)return [];const o=[];
-        for(let k=0;k<3;k++){const a0=(k*120-TW.lug/2)*Math.PI/180,a1=(k*120+TW.lug/2)*Math.PI/180,q=[];
-          for(let i=0;i<=8;i++){const a=a0+(a1-a0)*i/8;q.push([rl*Math.cos(a),rl*Math.sin(a)])}for(let i=8;i>=0;i--){const a=a0+(a1-a0)*i/8;q.push([(Rp-.6)*Math.cos(a),(Rp-.6)*Math.sin(a)])}o.push(q)}
-        return o},.2));
+      /* ring and lugs as one outline per layer, sampled at the same angles every layer, so edges never nearly meet */
+      const inLug=a=>{let d=((a*180/Math.PI)%120+120)%120;if(d>60)d-=120;return Math.abs(d)<=TW.lug/2};
+      const ringAt=rl=>subtract(polar(0,0,a=>rl>Rp&&inLug(a)?rl:Rp,360),circle(0,0,Rp-2.2,120)),z0=th+boss-deep;
+      f.push(prism(th,z0,ringAt(0)));
+      f.push(varying(z0,ztop,z=>{const zz=z-th,rl=h.R-TW.c+Math.max(0,Math.min(deep,zz-(boss-deep)));return ringAt(rl<Rp+.3?0:rl)},.2));
       const hs=holes(h.R-4);if(hs.length)f.push(prism(-1,th+1,hs,'sub'));
     }else{
       /* printed upside down: the cover disc on the bed, the plug ring rising from it, a finger tab at the side */
@@ -120,7 +120,8 @@
     }
     const hs=[];
     if(win)for(const [cx,cy] of win.centers){
-      if(win.mode==='insert'){f.push(prism(-1,o.Lt+1,circle(cx,cy,win.Rw),'sub'),prism(-1,1,circle(cx,cy,win.Rw+3),'sub'))}
+      /* a plain round opening; the clear disc lies over it on the flat rim around it (a recess for it would hang over thin air while printing) */
+      if(win.mode==='insert'){f.push(prism(-1,o.Lt+1,circle(cx,cy,win.Rw),'sub'))}
       else if(!preview){const pitch=p.hole+.6,Rin=win.Rw+3;for(let x=cx-Rin;x<cx+Rin;x+=pitch)for(let y=cy-Rin;y<cy+Rin;y+=pitch){const q=sq(x,y,p.hole);if(q.every(([u,v])=>Math.hypot(u-cx,v-cy)<Rin))hs.push(q)}}
     }
     if(!preview){
@@ -155,6 +156,8 @@
   function rectPost(d,p){
     const {a,g,Hp}=d,r=p.corners==='rounded'?3:0;
     const f=[prism(0,Hp,r?G.rrect(-a,-a,a,a,r):rect(-a,-a,a,a)),prism(-1,Hp+1,rect(g/2,-g/2,a+1,g/2),'sub'),prism(-1,Hp+1,rect(-g/2,g/2,g/2,a+1),'sub')];
+    /* a flat along the outer corner: the post prints lying on it, with both grooves facing up at 45° */
+    f.push(prism(-1,Hp+1,[[[-a-1,-a-1],[-a+4.5,-a-1],[-a-1,-a+4.5]]],'sub'));
     return build(f);
   }
 
