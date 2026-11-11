@@ -3,12 +3,13 @@
 <script src="../shim.js"></script>
 <script src="../lib/clipper.js"></script>
 <script src="../lib/earcut.min.js"></script>
-<script src="../lib/geo.js?v=15"></script>
-<script src="habitat-parts.js?v=15"></script>
-<script src="habitat-enclosure.js?v=15"></script>
-<script src="habitat-more.js?v=15"></script>
-<script src="habitat-keep.js?v=15"></script>
-<script src="habitat-sets.js?v=15"></script>
+<script src="../lib/geo.js?v=17"></script>
+<script src="habitat-parts.js?v=17"></script>
+<script src="habitat-enclosure.js?v=17"></script>
+<script src="habitat-more.js?v=17"></script>
+<script src="habitat-motifs.js?v=17"></script>
+<script src="habitat-keep.js?v=17"></script>
+<script src="habitat-sets.js?v=17"></script>
 <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Bricolage+Grotesque:opsz,wght@12..96,600;12..96,750&family=IBM+Plex+Mono:wght@500&family=IBM+Plex+Sans:wght@400;500;600&display=swap">
 <style>
 /* Same layout as the Resin Workshop: inputs on the left, the 3D preview and downloads beside them. */
@@ -84,6 +85,7 @@ h3{font:600 15px var(--body);margin:0 0 6px}
     <div class="tabs" role="tablist" aria-label="Habitat sections">
       <button type="button" role="tab" id="tabEnc" aria-controls="viewEnc" aria-selected="true">Enclosure</button>
       <button type="button" role="tab" id="tabAcc" aria-controls="viewAcc" aria-selected="false">Accessories</button>
+      <button type="button" role="tab" id="tabBuild" aria-controls="viewBuild" aria-selected="false">Build</button>
       <button type="button" role="tab" id="tabPrice" aria-controls="viewPrice" aria-selected="false">Price</button>
     </div>
   </header>
@@ -223,6 +225,52 @@ h3{font:600 15px var(--body);margin:0 0 6px}
       <div class="note" id="accNote" hidden></div>
       <button class="btn solid" id="accDl" type="button">Download STL</button>
       <span class="saved" id="accMsg" role="status"></span>
+    </aside>
+  </div>
+
+  <!-- ===== Build ===== -->
+  <div class="grid" id="viewBuild" role="tabpanel" aria-labelledby="tabBuild" hidden>
+    <div class="inputs">
+      <section aria-labelledby="h-benc">
+        <h2 id="h-benc">Enclosure</h2>
+        <p class="hint" id="bEncSum"></p>
+        <button class="btn" id="bEncGo" type="button">Change it on the Enclosure tab</button>
+      </section>
+      <section aria-labelledby="h-bstyle">
+        <h2 id="h-bstyle">Style package</h2>
+        <div class="fields">
+          <label class="f" style="grid-column:1/-1">Style<select id="bTheme"></select></label>
+          <label class="f">Pack<select id="bPack"></select></label>
+          <label class="f">Size of the pieces<select id="bSize"></select></label>
+          <label class="f">Wall pieces held by<select id="bMount"></select></label>
+          <label class="f">Writing<select id="bFont"></select></label>
+          <label class="f">Name<input id="bName" type="text" maxlength="24"></label>
+          <button class="btn" id="bShuffle" type="button" style="align-self:end">Shuffle</button>
+        </div>
+        <p class="hint" id="bThemeHint"></p>
+      </section>
+      <section aria-labelledby="h-bmust">
+        <h2 id="h-bmust">Always include</h2>
+        <div class="pieces" id="bMust"></div>
+        <p class="hint">If the style has none of these, a matching one is added.</p>
+      </section>
+      <section aria-labelledby="h-bpieces">
+        <h2 id="h-bpieces">Pieces</h2>
+        <fieldset class="pieces" id="bPieces"><legend>In this build</legend></fieldset>
+        <div class="fields" style="margin-top:10px">
+          <label class="f" style="grid-column:1/-1">Add a piece<select id="bAdd"></select></label>
+          <button class="btn" id="bAddGo" type="button">Add</button>
+        </div>
+        <p class="hint">Added pieces use the item's standard settings, in the style's shape where it fits. Untick anything you don't want.</p>
+      </section>
+    </div>
+    <aside class="result" aria-label="Build">
+      <canvas id="bCv" width="800" height="600" role="img" aria-label="3D preview of the enclosure with its interior"></canvas>
+      <p class="cap">The finished build, with the interior placed roughly where it could go.</p>
+      <table id="bParts"></table>
+      <div class="note" id="bNote" hidden></div>
+      <button class="btn solid" id="bDl" type="button">Download the full build</button>
+      <span class="saved" id="bMsg" role="status"></span>
     </aside>
   </div>
 
@@ -640,7 +688,7 @@ $('encDl').onclick=async()=>{
 for(const k in encIds)$(encIds[k]).addEventListener('input',()=>{if(k!=='species')encChanged()});
 
 /* ---------- accessories ---------- */
-const SHAPES={round:'Round',oval:'Oval',pebble:'Pebble',hex:'Hexagon',square:'Rounded square',cylinder:'Cylinder',rock:'Rock',cone:'Cone',fungus:'Bracket fungus',lobed:'Lobed fungus',tiered:'Tiered fungus, three shelves',leaf:'Leaf',moon:'Half moon',classic:'Rounded rectangle',sharp:'Square corners'};
+const SHAPES={round:'Round',oval:'Oval',pebble:'Pebble',hex:'Hexagon',square:'Rounded square',cylinder:'Cylinder',rock:'Rock',cone:'Cone',fungus:'Bracket fungus',lobed:'Lobed fungus',tiered:'Tiered fungus, three shelves',leaf:'Leaf',moon:'Half moon',classic:'Rounded rectangle',sharp:'Square corners',cloud:'Cloud'};
 const RANDOM=['pebble','rock','fungus','lobed','tiered'];
 const MOUNT={free:'Stands on its own',peg:'Floor peg',magnet:'Magnets',clip:'Clip rail',glue:'Glue or tape',tie:'Tied to the lid mesh',hook:'Hook over a branch',stem:'Stem for a twig holder',panel:'In a tile panel'};
 const LIGHT_LINK='<a href="https://insektenliebe.com/en/?p=158875" target="_blank" rel="noopener">Repto Compact LED</a>';
@@ -651,7 +699,7 @@ const ITEMS={
     hint:'A pot with small feet and drainage holes. Turn the holes off if it shouldn\'t drip onto the substrate. For live plants, print in PETG so the pot stays watertight.'},
   twig:{group:'climb',name:'Twig holder',fields:[['dia','Twig thickness',6],['H','Height',30]],shapes:['cylinder','rock','cone','hex'],mounts:['free','peg','magnet','clip'],
     hint:'Holds a branch upright. Standing or pegged versions have a wide base for the floor, and wall versions sit against a panel. Measure the thickest part of the twig end. The socket adds a little play.'},
-  ledge:{group:'climb',name:'Wall ledge',fields:[['L','Length',70],['dep','Depth',45],['Hh','Back height',35],['underH','Underside depth',25],['lw','Pattern line width',2.2]],shapes:['fungus','lobed','tiered','leaf','pebble','moon','classic','sharp'],mounts:['magnet','clip','glue'],
+  ledge:{group:'climb',name:'Wall ledge',fields:[['L','Length',70],['dep','Depth',45],['Hh','Back height',35],['underH','Underside depth',25],['lw','Pattern line width',2.2]],shapes:['fungus','lobed','tiered','leaf','pebble','moon','cloud','classic','sharp'],mounts:['magnet','clip','glue'],
     selects:[['pattern','Surface',[['solid','Solid, with grip ridges'],['rings','See-through growth rings'],['web','See-through spider web'],['vine','Filigree vine'],['scroll','Filigree scrolls'],['nouveau','Filigree whiplash']]],['under','Underside',[['flat','Flat shelf (T)'],['D','Rounded, filled in (D)'],['wedge','Sloped wedge'],['ribs','Ribs']]]],
     hint:'A perch shelf with irregular natural edges: bracket fungus, lobed or tiered fungus, leaf, pebble or half moon, or a rounded or square-cornered shelf. The surface can be solid with grip ridges, or see-through filigree after the Resin Workshop pendants. The underside can stay flat or be filled in for a sturdier D shape. It prints lying on its back, with no supports.'},
   label:{group:'decor',name:'Label holder',fields:[['cw','Card width',70],['ch','Card height',30]],mounts:['magnet','clip','glue'],
@@ -721,9 +769,18 @@ Object.assign(ITEMS,{
     hint:'Sits in the feeding hatch in place of the cover. Tip crickets, roaches or flies into the funnel with the shutter closed, then pull the shutter so they drop in, without ever opening the enclosure. It fits the hatch type you chose under Enclosure.'},
   airlock:{group:'food',keep:'airlock',name:'Feeding airlock',fields:[['cham','Chamber width',50],['chamH','Chamber height',60],['hatchD','Hatch diameter (if none yet)',60]],mounts:[],
     hint:'A small closed chamber on the feeding hatch, with a shutter underneath and a cap on top. Put flying feeders in, close the cap, then open the shutter: the flies go in and none get out.'},
-  diorama:{group:'dio',keep:'diorama',name:'Diorama piece',fields:[['size','Size',30],['h','Height',60,{show:vis('kind',['column','amphora','arch','pagoda','torii','shelf','cottage'])}],['n','How many',3,{show:vis('kind',['books','mushroom'])}],['tiers','Roof tiers',3,{show:vis('kind','pagoda')}]],
-    selects:[['kind','Piece',Object.entries(HabitatKeep.DIORAMA)],['style','Condition',[['broken','Ruined'],['intact','Whole']],{show:vis('kind',['column','arch'])}],['pattern','Mosaic',[['rosette','Rosette'],['meander','Greek key'],['waves','Waves'],['checker','Checkerboard']],{show:vis('kind','mosaic')}],['accent','Accent file',[['no','No'],['yes','Yes, for glow or UV filament']],{show:vis('kind',['mushroom','cottage'])}]],shuffle:true,mounts:['free','magnet','clip','glue','peg'],
-    hint:'Little scenery pieces to turn an enclosure into a scene: Roman ruins, a temple garden, a library or a fairy wood. Flat pieces (arch, gate, bookshelf, cottage) print lying down and stand up or hang on a wall; the others print upright. Mantises on miniature props make great photos for your shop.'},
+  diorama:{group:'dio',keep:'diorama',name:'Diorama piece',fields:[['size','Size',30],['h','Height',60,{show:vis('kind',['column','amphora','arch','pagoda','torii','shelf','cottage','tower','tombstone'])}],['n','How many',3,{show:vis('kind',['books','mushroom'])}],['tiers','Roof tiers',3,{show:vis('kind','pagoda')}],['text','Name on it','RIP',{text:true,show:vis('kind','tombstone')}]],
+    selects:[['kind','Piece',[['skull','Skull','Gothic and spooky'],['candles','Candles','Gothic and spooky'],['tombstone','Tombstone with a name','Gothic and spooky'],['coffin','Coffin','Gothic and spooky'],
+      ['crystals','Crystal cluster','Fantasy and D&D'],['tower','Castle tower','Fantasy and D&D'],['chest','Treasure chest','Fantasy and D&D'],['sword','Sword in the stone','Fantasy and D&D'],['potions','Potion bottles','Fantasy and D&D'],['dice','Dice (D6 and D20)','Fantasy and D&D'],
+      ['column','Roman column','Ancient Greece and Rome'],['amphora','Amphora','Ancient Greece and Rome'],['arch','Ruined arch','Ancient Greece and Rome'],['mosaic','Mosaic floor tile','Ancient Greece and Rome'],
+      ['pagoda','Pagoda','East Asian garden'],['torii','Torii gate','East Asian garden'],['books','Stack of books','Library'],['shelf','Bookshelf','Library'],['openBook','Open book','Library'],['cottage','Fairy cottage','Fairy wood'],['mushroom','Mushroom cluster','Fairy wood']]],
+      ['style','Condition',[['broken','Ruined'],['intact','Whole']],{show:vis('kind',['column','arch','tower','tombstone'])}],['pattern','Mosaic',[['rosette','Rosette'],['meander','Greek key'],['waves','Waves'],['checker','Checkerboard']],{show:vis('kind','mosaic')}],
+      ['accent','Accent file',[['no','No'],['yes','Yes, for a second colour, glow or UV filament']],{show:vis('kind',['mushroom','cottage','candles','crystals','chest','potions','coffin'])}],['font','Writing',[['caps','Capitals'],['script','Cursive']],{show:vis('kind','tombstone')}]],shuffle:true,mounts:['free','magnet','clip','glue','peg'],
+    hint:'Little scenery pieces to turn an enclosure into a scene: a spooky graveyard, a wizard\'s tower, Roman ruins, a temple garden, a library or a fairy wood. Flat pieces (arch, gate, bookshelf, cottage, tombstone) print lying down and stand up or hang on a wall; the others print upright. Mantises on miniature props make great photos for your shop.'},
+  motif:{group:'dio',keep:'motif',name:'Motif: plaque, cut-out or stencil',fields:[['size','Height',60]],
+    selects:[['motif','Motif',HabitatMotifs.MOTIFS],['form','Made as',[['plaque','Raised plaque'],['cutout','Stand-up cut-out'],['stencil','Cut-through stencil plate'],['ornament','Hanging ornament']]],
+      ['base','Plaque shape',[['round','Round'],['oval','Oval'],['shield','Shield'],['arch','Arch'],['hex','Hexagon'],['square','Rounded square']],{show:vis('form',['plaque','stencil'])}],['border','Border',[['yes','Yes'],['no','No']],{show:vis('form','plaque')}],['colour','Colours',[['two','Two colours'],['one','One colour']],{show:vis('form',['plaque','cutout','ornament'])}]],mounts:['magnet','clip','glue','free'],
+    hint:'Artwork in 60 motifs: gothic and vampire (bats, skulls, coffins, rose windows, ravens), Greek and Roman (laurel, helmet, temple, owl, lyre), all twelve zodiac signs and a zodiac wheel, fantasy (dragon, castle, crystals, wizard hat), dungeons and dragons (D20, sword and shield, treasure chest), flowers, clouds, books and a praying mantis. Make it a raised two-colour plaque, a cut-out that stands in a little base, a stencil, or an ornament to hang.'},
   turntable:{group:'dio',keep:'turntable',name:'Turntable display stand',fields:[['D','Platter diameter',220],['mLen','Motor length (motor and gearbox)',24,{show:vis('drive','motor')}]],selects:[['drive','Turning',[['manual','By hand (lazy Susan)'],['motor','Slow USB motor']]]],mounts:[],
     hint:'A turntable to show an enclosure from every side, at a market stall or in photos. It runs on a skateboard bearing and a ring of airsoft BBs, so it carries a full enclosure. With the motor option, a tiny USB gear motor turns it about once a minute.'},
   ship:{group:'addon',keep:'shipInsert',name:'Shipping box insert',fields:[['L','Box inside length',150],['W','Box inside width',110],['cupB','Cup bottom diameter',70],['cupT','Cup top diameter',90],['cupH','Cup height',80],['n','Cups',1],['text','Name on the insert','Shifty\'s',{text:true}]],selects:[['both','Top and bottom',[['yes','Yes, print 2'],['no','Bottom only']]],['font','Writing',[['script','Cursive'],['caps','Capitals']]]],mounts:[],
@@ -808,7 +865,7 @@ function encInfo(){
 }
 function pieceName(key,ov){
   const it=ITEMS[key];let d='';
-  for(const k of ['kind','texture','style','shape','pattern']){if(ov[k]==null)continue;const sel=(it.selects||[]).find(x=>x[0]===k);const lab=sel?(sel[2].find(o=>o[0]===ov[k])||[])[1]:SHAPES[ov[k]];if(lab){d=lab;break}}
+  for(const k of ['motif','kind','texture','style','shape','pattern']){if(ov[k]==null)continue;const sel=(it.selects||[]).find(x=>x[0]===k);const lab=sel?(sel[2].find(o=>o[0]===ov[k])||[])[1]:SHAPES[ov[k]];if(lab){d=lab;break}}
   if(key==='stack')d=ov.kind==='foot'?`${({bun:'Bun',ball:'Ball',turned:'Turned',cone:'Tapered',hex:'Hexagon',block:'Block'})[ov.style]||''} feet`:d;
   return it.name+(d?` – ${d}`:'');
 }
@@ -910,10 +967,135 @@ $('accDl').onclick=async()=>{
 };
 
 
+/* ---------- build: a whole enclosure with a styled interior ---------- */
+const MUST=[['dish','A pearl dish'],['pot','A plant pot'],['twig','A twig holder'],['wall','A wall perch'],['deco','A decoration']];
+const INTERIOR=['dish','feeder','twig','ledge','ladder','bridge','flower','bark','pot','planter','moss','mister','label','tile','plate','moult','emblem','diorama','motif'];
+const FLOORFIRST=['dish','feeder','twig','pot','moss','moult'];
+const B=Object.assign({theme:'orchid',pack:'2',size:'m',mount:'magnet',font:'script',name:'Shifty',must:{dish:1,pot:1,twig:1,wall:1,deco:1},off:{},extra:[],seed:1},state.build||{});
+for(const k of ['must','off'])B[k]=B[k]||{};B.extra=B.extra||[];
+const saveB=()=>{state.build=B;persist()};
+(()=>{const s=$('bTheme'),gs={};for(const [k,t] of Object.entries(SETS)){const g=t.group||'Other';if(!gs[g]){gs[g]=document.createElement('optgroup');gs[g].label=g;s.append(gs[g])}const o=document.createElement('option');o.value=k;o.textContent=t.name;gs[g].append(o)}})();
+opt($('bPack'),[['1','Essentials'],['2','Full set'],['3','Deluxe']]);opt($('bSize'),[['m','Standard'],['s','Small, for nymphs'],['l','Large, for big species']]);
+opt($('bMount'),[['magnet','Magnets'],['clip','Clip rails'],['glue','Glue or tape']]);opt($('bFont'),[['script','Cursive'],['caps','Capitals']]);
+(()=>{const s=$('bAdd');for(const g in GROUPS){const og=document.createElement('optgroup');og.label=GROUPS[g];for(const k of INTERIOR)if(ITEMS[k]&&ITEMS[k].group===g){const o=document.createElement('option');o.value=k;o.textContent=ITEMS[k].name;og.append(o)}if(og.children.length)s.append(og)}})();
+for(const [id,k] of [['bTheme','theme'],['bPack','pack'],['bSize','size'],['bMount','mount'],['bFont','font'],['bName','name']]){const el=$(id);el.value=B[k];el.addEventListener(el.tagName==='SELECT'?'change':'input',()=>{B[k]=el.value;saveB();buildSetup()})}
+$('bShuffle').onclick=()=>{B.seed=(B.seed||1)+1;saveB();buildCalc()};
+$('bAddGo').onclick=()=>{const k=$('bAdd').value,th=SETS[B.theme]||SETS.orchid,ov={},sh=(ITEMS[k].selects||[]).find(x=>x[0]==='shape');
+  const same=th.pieces.find(p=>p[0]===k);if(same)Object.assign(ov,same[1]);
+  else if(sh){const ok=sh[2].map(o=>o[0]),hit=th.pieces.map(p=>p[1].shape).find(x=>ok.includes(x));if(hit)ov.shape=hit}
+  B.extra.push([k,ov]);saveB();buildSetup()};
+$('bEncGo').onclick=()=>view('enc');
+function catOf(key,ov,mount){
+  if(key==='dish')return 'dish';if(key==='pot'||key==='planter')return 'pot';if(key==='twig')return 'twig';
+  if(key==='ledge'||key==='bark'||(key==='flower'&&!['peg','stem'].includes(mount)))return 'wall';
+  if(['diorama','motif','emblem','plate','moult','tile','label'].includes(key))return 'deco';return '';
+}
+function pieceMount(key,ov){const its=ITEMS[key],e=readEnc();if(ov.mount&&its.mounts.includes(ov.mount))return ov.mount;
+  if(FLOORFIRST.includes(key)){if(e.pegs==='grid'&&its.mounts.includes('peg')&&key!=='moult')return 'peg';if(its.mounts.includes('free'))return 'free'}
+  return its.mounts.includes(B.mount)?B.mount:its.mounts.includes('glue')?'glue':its.mounts[0]||'none'}
+function buildPieces(){
+  const th=SETS[B.theme]||SETS.orchid,list=[];
+  th.pieces.forEach(([key,ov,tier],i)=>{if(tier<=+B.pack)list.push({key,ov,src:'theme',id:'t'+i})});
+  B.extra.forEach(([key,ov],i)=>list.push({key,ov,src:'extra',id:'x'+i,i}));
+  const on=p=>!B.off[p.id],has=c=>list.some(p=>on(p)&&catOf(p.key,p.ov,pieceMount(p.key,p.ov))===c);
+  const shapes=th.pieces.map(p=>p[1].shape).filter(Boolean),pick=(ok,d)=>shapes.find(s=>ok.includes(s))||d;
+  const ledge=th.pieces.find(p=>p[0]==='ledge'),motifP=th.pieces.find(p=>p[0]==='motif');
+  const add={dish:['dish',{shape:pick(['round','oval','pebble','hex'],'round')}],pot:['pot',{shape:pick(['round','oval','hex','square','pebble'],'round')}],
+    twig:['twig',{shape:pick(['hex'],'')||(pick(['pebble','rock','fungus','tiered'],'')?'rock':'cylinder')}],
+    wall:['ledge',ledge?Object.assign({},ledge[1]):{shape:pick(['fungus','lobed','leaf','pebble','moon','cloud','classic'],'fungus'),pattern:'solid',under:'D'}],
+    deco:['motif',motifP?Object.assign({},motifP[1]):{motif:'mantis',form:'cutout',mount:'free'}]};
+  for(const [c] of MUST)if(B.must[c]&&!has(c))list.push({key:add[c][0],ov:add[c][1],src:'must',id:'m'+c,why:c});
+  return list.filter(p=>ITEMS[p.key]);
+}
+function buildSetup(){
+  const th=SETS[B.theme]||SETS.orchid;$('bThemeHint').textContent=`${th.note} Suggested colours: ${th.colours}.`;
+  const e=readEnc(),shp={rect:'Rectangular',poly:`${e.sides}-sided`,round:'Round',oval:'Oval'}[e.shape];
+  $('bEncSum').textContent=`${shp}, ${e.W}${e.shape==='round'||e.shape==='poly'?'':' × '+e.D} × ${e.H} mm, ${e.S} mm substrate. Feeding hatch: ${e.hatch==='none'?'none':e.hatch}. Floor pegs: ${e.pegs==='grid'?'yes':'no'}. Clip rails: ${e.rails==='yes'?'yes':'no'}.`;
+  const mb=$('bMust');mb.innerHTML='';for(const [k,l] of MUST){const lab=document.createElement('label'),c=document.createElement('input');
+    c.type='checkbox';c.checked=!!B.must[k];c.onchange=()=>{B.must[k]=c.checked?1:0;saveB();buildSetup()};lab.append(c,' '+l);mb.append(lab)}
+  const box=$('bPieces');box.innerHTML='<legend>In this build</legend>';
+  for(const p of buildPieces()){const lab=document.createElement('label'),c=document.createElement('input');c.type='checkbox';c.checked=!B.off[p.id];
+    c.onchange=()=>{if(c.checked)delete B.off[p.id];else B.off[p.id]=1;saveB();buildSetup()};
+    const t=pieceName(p.key,p.ov)+(p.src==='must'?' (added so the build has '+MUST.find(m=>m[0]===p.why)[1].toLowerCase()+')':p.src==='extra'?' (added by you)':'');lab.append(c,' '+t);
+    if(p.src==='extra'){const x=document.createElement('button');x.type='button';x.className='btn';x.textContent='Remove';x.style.padding='2px 8px';x.style.marginLeft='auto';x.onclick=ev=>{ev.preventDefault();B.extra.splice(p.i,1);for(const k in B.off)if(k[0]==='x')delete B.off[k];saveB();buildSetup()};lab.append(x)}
+    box.append(lab)}
+  buildCalc();
+}
+function buildDesign(){
+  const sc={s:.75,m:1,l:1.3}[B.size]||1,out=[];let n=0;
+  for(const p of buildPieces()){if(B.off[p.id])continue;n++;const m=pieceMount(p.key,p.ov);
+    const o=Object.assign({font:B.font},p.ov,p.key==='plate'||p.key==='moult'?{t1:B.name,t2:p.key==='moult'?'L1':''}:{},p.key==='diorama'&&p.ov.kind==='tombstone'?{text:B.name}:{});
+    try{const r=itemDesign(p.key,o,m,(B.seed||1)*31+n,sc);out.push({p,r,m,n})}catch(err){console.error(err);out.push({p,err:true,n})}}
+  return out;
+}
+/* where a piece goes: on the floor, on the back wall, standing up, or on the lid */
+function placeKind(key,ov,mount){
+  const wall=['magnet','clip','glue'].includes(mount);
+  if(['dish','pot','feeder','twig'].includes(key))return wall?'uwall':'floor';
+  if(key==='planter')return 'uwall';if(key==='mister')return 'lid';
+  if(['moss','moult'].includes(key))return 'floor';
+  if(key==='flower')return wall?'back':'floor';
+  if(key==='diorama'){const flat=['arch','torii','shelf','cottage','tombstone'].includes(ov.kind);return flat?(mount==='free'?'stand':'back'):'floor'}
+  if(key==='motif'){if(ov.form==='cutout'&&mount==='free')return 'stand';return 'back'}
+  if(['ledge','label','tile','plate','bark','emblem','ladder','bridge'].includes(key))return 'back';
+  return 'loose';
+}
+function buildScene(des){
+  const e=readEnc(),S=e.S,H=e.H,c=colours(),col=v=>cssColor(getComputedStyle(document.documentElement).getPropertyValue(v).trim()),c1=col('--acc'),c2=col('--acc2');
+  let X0,X1,Y0,Y1,yBack;
+  if(e.shape==='rect'){X0=e.T+3;X1=e.W-e.T-3;Y0=e.T+3;Y1=e.D-e.T-3;yBack=e.D-e.T/2-.6}
+  else{const hw=e.W/2*.6,hd=(e.shape==='oval'?e.D:e.W)/2*.6;X0=-hw;X1=hw;Y0=-hd;Y1=hd;yBack=(e.shape==='oval'?e.D:e.W)/2*(e.shape==='poly'?.97:.9)}
+  const items=[],rows=[.62,.34,.84];let wx=X0,wr=0,fx=X0,fy=Y0+4,fdep=0;
+  for(const d of des){if(!d.r)continue;const pk=placeKind(d.p.key,d.p.ov,d.m);if(pk==='loose')continue;
+    const main=d.r.parts.filter(q=>q.m&&q.role!=='Second file');if(!main.length)continue;
+    const mn=[1e9,1e9,1e9],mx=[-1e9,-1e9,-1e9];for(const q of main){const t=q.m.tris;for(let i=0;i<t.length;i+=3)for(let a=0;a<3;a++){if(t[i+a]<mn[a])mn[a]=t[i+a];if(t[i+a]>mx[a])mx[a]=t[i+a]}}
+    const sx=mx[0]-mn[0],sy=mx[1]-mn[1],sz=mx[2]-mn[2];let fn;
+    if(pk==='back'||pk==='uwall'){const h=pk==='back'?sy:sz;if(wx+sx>X1&&wx>X0){wx=X0;wr=(wr+1)%rows.length}
+      const zb=S+Math.max(4,Math.min(H-h-4,rows[wr]*H-h/2)),ox=wx;
+      let yb=yBack;if(e.shape!=='rect'){const rx=e.W/2-e.T-1,ry=(e.shape==='oval'?e.D:e.W)/2-e.T-1,u=Math.min(.99,Math.max(Math.abs(ox),Math.abs(ox+sx))/rx);yb=ry*Math.sqrt(1-u*u)*(e.shape==='poly'?.95:1)-1}
+      fn=pk==='back'?(x,y,z)=>[x-mn[0]+ox,yb-(z-mn[2]),y-mn[1]+zb]:(x,y,z)=>[x-mn[0]+ox,yb-(y-mn[1]),z-mn[2]+zb];wx+=sx+8}
+    else if(pk==='lid'){const cx=(X0+X1)/2+(X1-X0)*.2,cy=(Y0+Y1)/2,zt=S+H+2.4;fn=(x,y,z)=>[x-(mn[0]+mx[0])/2+cx,y-(mn[1]+mx[1])/2+cy,z-mn[2]+zt]}
+    else{const w=sx,dp=pk==='stand'?sz:sy;if(fx+w>X1&&fx>X0){fx=X0;fy+=fdep+8;fdep=0}const ox=fx,oy=fy;
+      fn=pk==='stand'?(x,y,z)=>[x-mn[0]+ox,oy+(z-mn[2]),y-mn[1]+S]:(x,y,z)=>[x-mn[0]+ox,y-mn[1]+oy,z-mn[2]+S];fx+=w+8;fdep=Math.max(fdep,dp)}
+    for(const q of main)items.push({tris:place0(q.m.tris,fn),color:q.role==='Colour 2'?c2:c1})}
+  return items;
+}
+let bT=null;function buildCalc(){clearTimeout(bT);$('bMsg').textContent='Building the preview…';bT=setTimeout(buildCalc1,60)}
+function buildCalc1(){
+  const p=readEnc();let m;try{m=encModel(p,true)}catch(e){$('bNote').hidden=false;$('bNote').textContent='The enclosure settings don\'t make a valid enclosure. Check the Enclosure tab.';$('bMsg').textContent='';return}
+  const des=buildDesign(),items=[...m.items,...buildScene(des)];render($('bCv'),items);
+  const t=$('bParts');t.innerHTML='<tr><th>Piece</th><th class="n">Files</th></tr>';let mags=(p.hatch==='magnet'?4:0)+(p.shape==='rect'&&p.front.startsWith('swing')&&p.doorCatch==='magnet'?2:0),files=0;const notes=[];
+  {const r=document.createElement('tr');r.innerHTML=`<td><b>Enclosure</b></td><td class="n">${m.parts.length}</td>`;t.append(r)}
+  for(const d of des){const r=document.createElement('tr');const nm=pieceName(d.p.key,d.p.ov);
+    if(!d.r){r.innerHTML=`<td></td><td class="n">–</td>`;r.children[0].textContent=nm+' (could not be made)';t.append(r);continue}
+    r.innerHTML=`<td></td><td class="n">${d.r.parts.length}</td>`;r.children[0].textContent=nm;t.append(r);files+=d.r.parts.length;mags+=d.r.magnets||0}
+  if(mags)notes.push(`Magnets: ${mags} in the printed parts and the same number on the outside of the panels (${p.dMagD} × ${p.dMagH} mm round magnets).`);
+  if(m.cut.length)notes.push('Acrylic or sheet to cut: '+m.cut.map(([a,b])=>`${a}, ${b} mm`).join('; ')+'.');
+  if(des.some(d=>d.m==='peg')&&p.pegs!=='grid')notes.push('Some pieces use floor pegs: turn them on under Enclosure.');
+  if(des.some(d=>d.m==='clip')&&(p.shape!=='rect'||p.rails!=='yes'))notes.push('Clip-rail pieces need clip rails on the mesh panels: turn them on under Enclosure, or choose magnets.');
+  notes.push(`${des.length} interior pieces in ${files} files, plus ${m.parts.length} enclosure files. The download has them in two folders, with a read-me for the whole build.`);
+  const n=$('bNote');n.hidden=false;n.innerHTML='';for(const x of notes){const dv=document.createElement('div');dv.textContent=x;n.append(dv)}
+  $('bMsg').textContent='';
+}
+$('bDl').onclick=async()=>{
+  const p=readEnc(),msg=$('bMsg');msg.textContent='Building all the files. This can take a minute…';await new Promise(r=>setTimeout(r,50));
+  let m;try{m=encModel(p,false)}catch(e){msg.textContent='These enclosure settings don\'t make a valid enclosure.';return}
+  const files=m.parts.map(r=>({name:'enclosure/'+r.file,data:stl(r.tris)}));const des=buildDesign(),enc=new TextEncoder();
+  const th=SETS[B.theme]||SETS.orchid;let rd=`FULL BUILD: ${th.name}\n${'='.repeat(12+th.name.length)}\n\nSuggested colours: ${th.colours}.\n\n--- Enclosure ---\n${m.readme}\n\n--- Interior ---\n`;let mags=0;
+  for(const d of des){if(!d.r)continue;const pre=String(d.n).padStart(2,'0')+'-',nm=pieceName(d.p.key,d.p.ov);mags+=d.r.magnets||0;
+    const groups=layout(d.r);for(const g of groups){const mn=[1e9,1e9,1e9];for(const q of g){const t=q.m.tris;for(let i=0;i<t.length;i+=3)for(let a=0;a<3;a++)if(t[i+a]<mn[a])mn[a]=t[i+a]}
+      for(const q of g)files.push({name:'interior/'+pre+q.file,data:stl(groups.length>1||g.length===1?place0(q.m.tris,(x,y,z)=>[x-mn[0],y-mn[1],z-mn[2]]):q.m.tris)})}
+    for(const q of d.r.parts)if(q.text)files.push({name:'interior/'+pre+q.file,data:enc.encode(typeof q.text==='function'?q.text():q.text)});
+    rd+=`\n${pre}${nm} (${MOUNT[d.m]||'no mount'})\n`+d.r.parts.map(q=>`  file: ${pre}${q.file}`).join('\n')+'\n'+d.r.notes.map(x=>'  - '+x).join('\n')+'\n'}
+  if(mags)rd+=`\nMagnets for the interior: ${mags} in the pieces, and ${mags} more outside the panels.\n`;
+  files.push({name:'read-me.txt',data:enc.encode(rd)});
+  await save(`mantis-build-${B.theme}-${m.tag}.zip`,zipStore(files),msg,'Saved. Unzip it: the enclosure and the interior are in two folders, with a read-me for the whole build.');
+};
+
 /* ---------- price ---------- */
 const PR_DEF={src:'enc',g:0,hrs:0,mag:0,ac:0,other:0,work:1,cur:'CHF',kg:25,rate:18,w:350,kwh:.3,wear:.4,fail:10,magP:.2,acP:70,hour:30,pack:4,fee:9,profit:25};
 const PR_IDS={src:'prSrc',g:'prG',hrs:'prHrs',mag:'prMag',ac:'prAc',other:'prOther',work:'prWork',cur:'prCur',kg:'prKg',rate:'prRate',w:'prW',kwh:'prKwh',wear:'prWear',fail:'prFail',magP:'prMagP',acP:'prAcP',hour:'prHour',pack:'prPack',fee:'prFee',profit:'prProfit'};
-opt($('prSrc'),[['enc','The enclosure'],['acc','The current accessory'],['both','Both together']]);
+opt($('prSrc'),[['enc','The enclosure'],['acc','The current accessory'],['both','Enclosure and accessory'],['build','The full build (Build tab)']]);
 const PR=Object.assign({},PR_DEF,state.price||{});
 for(const k in PR_IDS){const el=$(PR_IDS[k]);el.value=PR[k];el.addEventListener('input',()=>{PR[k]=el.type==='number'?+el.value:el.value;state.price=PR;persist();priceCalc()})}
 const volOf=t=>{let v=0;for(let i=0;i<t.length;i+=9){const [ax,ay,az,bx,by,bz,cx,cy,cz]=t.subarray?t.subarray(i,i+9):t.slice(i,i+9);v+=(ax*(by*cz-bz*cy)-ay*(bx*cz-bz*cx)+az*(bx*cy-by*cx))/6}return Math.abs(v)};
@@ -925,7 +1107,8 @@ $('prFill').onclick=()=>{
       for(const r of m.parts)g+=volOf(r.tris)/1000*rho*(r.n||1);
       mag+=(p.hatch==='magnet'?4:0)+(p.shape==='rect'&&p.front.startsWith('swing')&&p.doorCatch==='magnet'?2:0);
       for(const [a,b] of m.cut){const n=(b.match(/[\d.,]+/g)||[]).map(x=>+x.replace(/,/g,''));if(/acrylic|PET/i.test(a)&&!/as many/.test(a)&&n.length>=2)ac+=n[0]*n[1]/1e6}}
-    if(src!=='enc'){const d=accDesign(),rho=(MATS[$('mat').value]||MATS.petg).rho;for(const q of d.parts)if(q.m)g+=q.m.vol/1000*rho;mag+=d.magnets||0}
+    if(src==='acc'||src==='both'){const d=accDesign(),rho=(MATS[$('mat').value]||MATS.petg).rho;for(const q of d.parts)if(q.m)g+=q.m.vol/1000*rho;mag+=d.magnets||0}
+    if(src==='build'){const rho=(MATS[$('mat').value]||MATS.petg).rho;for(const d of buildDesign())if(d.r){for(const q of d.r.parts)if(q.m)g+=q.m.vol/1000*rho;mag+=d.r.magnets||0}}
     g*=1.08; /* walls are printed solid here; real prints with infill come out lighter, supports and purge come out heavier */
     PR.g=Math.round(g);PR.mag=mag;PR.ac=Math.round(ac*1000)/1000;PR.hrs=Math.round(g/PR.rate*2)/2;
     for(const k of ['g','mag','ac','hrs'])$(PR_IDS[k]).value=PR[k];state.price=PR;persist();
@@ -952,13 +1135,13 @@ function priceCalc(){
 
 /* ---------- tabs ---------- */
 function view(k){
-  for(const [v,t,key] of [['viewEnc','tabEnc','enc'],['viewAcc','tabAcc','acc'],['viewPrice','tabPrice','price']]){$(v).hidden=k!==key;$(t).setAttribute('aria-selected',k===key)}
+  for(const [v,t,key] of [['viewEnc','tabEnc','enc'],['viewAcc','tabAcc','acc'],['viewBuild','tabBuild','build'],['viewPrice','tabPrice','price']]){$(v).hidden=k!==key;$(t).setAttribute('aria-selected',k===key)}
   state.tab=k;persist();
-  if(k==='enc')encCalc();else if(k==='acc')accSetup();else priceCalc();
+  if(k==='enc')encCalc();else if(k==='acc')accSetup();else if(k==='build')buildSetup();else priceCalc();
 }
-$('tabEnc').onclick=()=>view('enc');$('tabAcc').onclick=()=>view('acc');$('tabPrice').onclick=()=>view('price');
-let rz;const redraw=()=>state.tab==='acc'?accCalc():state.tab==='enc'?encCalc():null;addEventListener('resize',()=>{clearTimeout(rz);rz=setTimeout(redraw,150)});
+$('tabEnc').onclick=()=>view('enc');$('tabAcc').onclick=()=>view('acc');$('tabPrice').onclick=()=>view('price');$('tabBuild').onclick=()=>view('build');
+let rz;const redraw=()=>state.tab==='acc'?accCalc():state.tab==='enc'?encCalc():state.tab==='build'?buildCalc():null;addEventListener('resize',()=>{clearTimeout(rz);rz=setTimeout(redraw,150)});
 matchMedia('(prefers-color-scheme:dark)').addEventListener?.('change',redraw);
-recommend();view(['acc','price'].includes(state.tab)?state.tab:'enc');
+recommend();view(['acc','price','build'].includes(state.tab)?state.tab:'enc');
 </script>
 </body></html>

@@ -106,6 +106,38 @@
       ['tile',{texture:'stars',accent:'yes'},1],['flower',{kind:'star',accent:'yes'},1],['diorama',{kind:'mushroom',accent:'yes',n:3},1],['plate',{shape:'arch',mode:'raised'},1],
       ['ledge',{shape:'moon',pattern:'rings',under:'D'},2],['flower',{kind:'lily',R:20,accent:'yes'},2],['diorama',{kind:'cottage',accent:'yes',mount:'free'},2],
       ['moult',{shape:'round',post:'ring'},3],['emblem',{shape:'round'},3]]},
+    graveyard:{name:'Vampire graveyard',group:'Gothic',colours:'Black, blood red and bone white',note:'Tombstones, a coffin, candles and bats, for a spooky enclosure or a Halloween sale.',pieces:[
+      ['diorama',{kind:'tombstone',style:'intact',mount:'free'},1],['diorama',{kind:'coffin',accent:'yes'},1],['motif',{motif:'bat',form:'cutout',mount:'free'},1],['ledge',{shape:'moon',pattern:'web',under:'flat'},1],
+      ['diorama',{kind:'skull'},2],['diorama',{kind:'candles',accent:'yes'},2],['motif',{motif:'gothicWindow',form:'plaque',base:'arch'},2],['flower',{kind:'rose'},2],['tile',{texture:'brick'},2],
+      ['motif',{motif:'raven',form:'plaque',base:'oval'},3],['diorama',{kind:'tombstone',style:'broken',size:24,h:44,mount:'free'},3],['motif',{motif:'roseWindow',form:'stencil',base:'round'},3],['motif',{motif:'bat',form:'ornament'},3]]},
+    wizard:{name:"Wizard's tower",group:'Fantasy',colours:'Deep purple, midnight blue and silver; translucent filament for crystals and potions',note:'A tower, crystals, potions and an open spell book.',pieces:[
+      ['diorama',{kind:'tower',style:'intact'},1],['diorama',{kind:'crystals',accent:'yes'},1],['diorama',{kind:'potions',accent:'yes'},1],['motif',{motif:'moon',form:'plaque',base:'round'},1],
+      ['diorama',{kind:'openBook'},2],['motif',{motif:'wizardHat',form:'cutout',mount:'free'},2],['tile',{texture:'stars',accent:'yes'},2],['ledge',{shape:'tiered',pattern:'solid',under:'D'},2],
+      ['diorama',{kind:'mushroom',accent:'yes',n:2},3],['motif',{motif:'potion',form:'ornament'},3],['diorama',{kind:'books',n:4},3]]},
+    hoard:{name:"Dragon's hoard",group:'Fantasy',colours:'Dragon green or red, with gold',note:'A treasure chest, dice, a sword in the stone and a dragon on the wall, for D&D fans.',pieces:[
+      ['diorama',{kind:'chest',accent:'yes'},1],['motif',{motif:'dragon',form:'plaque',base:'shield'},1],['diorama',{kind:'dice'},1],['ledge',{shape:'fungus',pattern:'solid',under:'D'},1],
+      ['diorama',{kind:'sword'},2],['motif',{motif:'d20',form:'plaque',base:'hex'},2],['motif',{motif:'swordShield',form:'cutout',mount:'free'},2],['tile',{texture:'stone'},2],
+      ['motif',{motif:'castle',form:'plaque',base:'arch'},3],['diorama',{kind:'tower',style:'broken',h:50},3],['motif',{motif:'scroll',form:'plaque',base:'square'},3]]},
+    astral:{name:'Astral zodiac',group:'Fantasy',colours:'Midnight blue with gold or glow-in-the-dark',note:'A zodiac wheel, sun and moon, stars and crystals.',pieces:[
+      ['motif',{motif:'zodiacWheel',form:'plaque',base:'round'},1],['tile',{texture:'stars',accent:'yes'},1],['ledge',{shape:'moon',pattern:'rings',under:'D'},1],['flower',{kind:'star',accent:'yes'},1],
+      ['motif',{motif:'sun',form:'plaque',base:'round'},2],['motif',{motif:'moon',form:'plaque',base:'round'},2],['diorama',{kind:'crystals',accent:'yes'},2],
+      ['motif',{motif:'zodiac-leo',form:'ornament'},3],['motif',{motif:'zodiac-pisces',form:'ornament'},3],['moult',{shape:'round',post:'ring'},3]]},
+    olympus:{name:'Mount Olympus',group:'Diorama',colours:'Marble white with gold or terracotta',note:'Greek temples, laurels, an owl of Athena and a Corinthian helmet.',pieces:[
+      ['motif',{motif:'temple',form:'plaque',base:'square'},1],['diorama',{kind:'column',style:'intact'},1],['diorama',{kind:'amphora'},1],['motif',{motif:'laurel',form:'plaque',base:'round'},1],
+      ['motif',{motif:'owl',form:'cutout',mount:'free'},2],['motif',{motif:'helmet',form:'plaque',base:'shield'},2],['diorama',{kind:'mosaic',pattern:'meander'},2],['ledge',{shape:'classic',pattern:'solid',under:'ribs'},2],
+      ['motif',{motif:'ionic',form:'plaque',base:'arch'},3],['motif',{motif:'lyre',form:'ornament'},3],['diorama',{kind:'column',style:'broken',size:22,h:40},3],['plate',{shape:'scroll',mode:'engraved',font:'caps'},3]]},
+    sky:{name:'Cloud kingdom',group:'Fantasy',colours:'Sky blue and white, with sunny yellow',note:'Cloud shelves, a sun and rain clouds.',pieces:[
+      ['ledge',{shape:'cloud',pattern:'solid',under:'D'},1],['motif',{motif:'sun',form:'plaque',base:'round'},1],['motif',{motif:'cloud',form:'cutout',mount:'free'},1],['dish',{shape:'round'},1],
+      ['ledge',{shape:'cloud',pattern:'rings',under:'flat',L:55},2],['motif',{motif:'rainCloud',form:'ornament'},2],['tile',{texture:'waves'},2],['flower',{kind:'sakura',R:18},2],
+      ['plate',{shape:'cloud',mode:'raised'},3],['mister',{shape:'flower'},3],['motif',{motif:'moon',form:'ornament'},3]]},
+    botanical:{name:'Botanical garden',group:'Flowers',colours:'Fresh greens with bright petals',note:'A garden of big blooms: sunflower, peony, magnolia, gerbera and water lily.',pieces:[
+      ['flower',{kind:'sunflower'},1],['flower',{kind:'peony',R:22},1],['planter',{shape:'scallop'},1],['motif',{motif:'tulip',form:'plaque',base:'arch'},1],
+      ['flower',{kind:'magnolia',R:22},2],['flower',{kind:'gerbera',R:20},2],['pot',{shape:'round'},2],['ledge',{shape:'leaf',pattern:'vine',under:'D'},2],
+      ['flower',{kind:'waterlily',R:20},3],['flower',{kind:'camellia',R:18},3],['motif',{motif:'rose',form:'plaque',base:'oval'},3],['tile',{texture:'leaves'},3]]},
+    fanclub:{name:'Mantis fan club',group:'Keeper kits',colours:'Orchid pink and leaf green, or your brand colours',note:'Praying mantis artwork everywhere, plus your Shifty\'s mark.',pieces:[
+      ['motif',{motif:'mantis',form:'plaque',base:'oval'},1],['flower',{kind:'orchid'},1],['emblem',{shape:'round'},1],['plate',{shape:'leaf',mode:'raised'},1],
+      ['motif',{motif:'mantis',form:'ornament'},2],['motif',{motif:'mantis',form:'stencil',base:'hex'},2],['ledge',{shape:'leaf',pattern:'vine',under:'D'},2],
+      ['moult',{shape:'leaf',post:'leaf'},3],['motif',{motif:'mantis',form:'cutout',mount:'free',size:80},3]]},
     honey:{name:'Honeycomb',group:'Modern',colours:'Honey yellow and black',note:'Hexagons everywhere.',pieces:[
       ['dish',{shape:'hex'},1],['tile',{texture:'hex'},1],['pot',{shape:'hex'},1],['plate',{shape:'hex',mode:'stencil'},1],
       ['feeder',{shape:'hex'},2],['twig',{shape:'hex',mount:'free'},2],['mister',{shape:'hex'},2],['moss',{shape:'hex'},2],

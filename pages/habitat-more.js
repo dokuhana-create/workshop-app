@@ -496,10 +496,17 @@
       case 'anemone':return [ring(n||6,R,R*.62,'round',P/2),ring(n||6,R*.62,R*.38,'round',P/2+P/(n||6))];
       case 'protea':{const t=[];for(let k=0;k<3;k++)t.push(ring(10,R*(1-k*.22),R*.2,'pointed',k*P/10));return t}
       case 'star':return [ring(n||6,R,R*.38,'pointed',P/2),ring(n||6,R*.6,R*.28,'pointed',P/2+P/(n||6))];
+      case 'sunflower':return [ring(n||18,R,R*.2,'pointed',0),ring(n||18,R*.88,R*.19,'pointed',P/(n||18))];
+      case 'chrysanthemum':{const t=[],c=n||20;for(let k=0;k<5;k++)t.push(ring(c,R*(1-k*.17),R*(.13-k*.012),'lance',k*P/c));return t}
+      case 'peony':{const t=[];for(let k=0;k<4;k++)t.push(ring(6+k,R*(1-k*.2),R*(.8-k*.12),'ruffled',k*.5));return t}
+      case 'magnolia':return [ring(6,R,R*.5,'pointed',P/2),ring(3,R*.75,R*.48,'pointed',P/2+P/3)];
+      case 'camellia':{const t=[];for(let k=0;k<3;k++)t.push(ring(7,R*(1-k*.25),R*(.62-k*.12),'round',k*P/7));return t}
+      case 'gerbera':return [ring(n||24,R,R*.14,'spatula',0),ring(n||24,R*.82,R*.13,'spatula',P/(n||24)),ring(n||24,R*.55,R*.1,'lance',0)];
+      case 'waterlily':return [ring(8,R,R*.3,'pointed',0),ring(8,R*.82,R*.28,'pointed',P/8),ring(8,R*.6,R*.24,'pointed',0)];
       default:return [ring(6,R,R*.5,'round',P/2)];
     }
   }
-  const CENTRE_FOR={orchid:'column',moth:'column',dendrobium:'column',sakura:'stamens',daisy:'dome',cosmos:'stamens',lily:'stamens',lotus:'seedpod',rose:'spiral',dahlia:'dome',hibiscus:'pistil',plumeria:'none',poppy:'seedpod',anemone:'dome',protea:'dome',star:'dome'};
+  const CENTRE_FOR={sunflower:'seedpod',chrysanthemum:'dome',peony:'stamens',magnolia:'column',camellia:'stamens',gerbera:'dome',waterlily:'stamens',orchid:'column',moth:'column',dendrobium:'column',sakura:'stamens',daisy:'dome',cosmos:'stamens',lily:'stamens',lotus:'seedpod',rose:'spiral',dahlia:'dome',hibiscus:'pistil',plumeria:'none',poppy:'seedpod',anemone:'dome',protea:'dome',star:'dome'};
   function flower(o){
     const R=o.R,lh=o.lh||1.2,tiersSpec=flowerTiers(o.kind,R,o.n,o.seed),notes=[],f=[];
     const tiers=tiersSpec.map(t=>unite(t.flatMap(p=>rot(move(petal(p.len,p.wid,p.style),0,p.dy||0),p.a))));
@@ -538,7 +545,7 @@
     if(o.kind==='orchid'||o.kind==='moth')notes.push('Orchid mantises sit on flowers like this in the wild to wait for pollinators. Pink, white or pale purple filament suits them best.');
     return {parts,notes,magnets};
   }
-  const FLOWERS=[['orchid','Moth orchid (Phalaenopsis)'],['moth','Ruffled orchid'],['dendrobium','Dendrobium orchid'],['sakura','Cherry blossom'],['daisy','Daisy'],['cosmos','Cosmos'],['lily','Lily'],['lotus','Lotus'],['rose','Rose'],['dahlia','Dahlia'],['hibiscus','Hibiscus'],['plumeria','Frangipani'],['poppy','Poppy'],['anemone','Anemone'],['protea','Protea'],['star','Star flower']];
+  const FLOWERS=[['orchid','Moth orchid (Phalaenopsis)'],['moth','Ruffled orchid'],['dendrobium','Dendrobium orchid'],['sakura','Cherry blossom'],['daisy','Daisy'],['cosmos','Cosmos'],['lily','Lily'],['lotus','Lotus'],['rose','Rose'],['dahlia','Dahlia'],['hibiscus','Hibiscus'],['plumeria','Frangipani'],['poppy','Poppy'],['anemone','Anemone'],['protea','Protea'],['star','Star flower'],['sunflower','Sunflower'],['chrysanthemum','Chrysanthemum'],['peony','Peony'],['magnolia','Magnolia'],['camellia','Camellia'],['gerbera','Gerbera daisy'],['waterlily','Water lily']];
 
   /* ---------------- mister port ---------------- */
   function plateShape(kind,D,seed){

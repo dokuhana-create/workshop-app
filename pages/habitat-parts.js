@@ -157,6 +157,8 @@
       return [[...o2,...o2.slice(0,-1).reverse().map(([x,u])=>[-x,u])]];
     }
     if(shape==='square')return rect(-L/2,0,L/2,D);
+    /* a cloud: puffs along the front edge */
+    if(shape==='cloud'){let c=rect(-L/2+D*.3,0,L/2-D*.3,D*.5);const n=Math.max(3,Math.round(L/(D*.55)));for(let i=0;i<n;i++){const t=i/(n-1),x=-L/2+D*.32+t*(L-D*.64),r=D*(.3+.12*Math.sin(i*2.1+seed));c=unite(c,circle(x,D-r,r,48))}return unite(c,rect(-L*.35,0,L*.35,Math.min(6,D/3)))}
     if(shape==='classic')return rrect(-L/2,0,L/2,D,Math.min(8,D/3));
     if(shape==='moon'){const o=[],n=90;for(let i=0;i<=n;i++){const a=i/n*Math.PI;o.push([(L/2)*Math.cos(a),D*Math.sin(a)])}const inner=[];for(let i=0;i<=n;i++){const a=i/n*Math.PI;inner.push([(L/2)*.55*Math.cos(a),D*.42*Math.sin(a)])}return subtract([o],[inner.concat([[L*.3,-1],[-L*.3,-1]])])}
     const lobed=shape==='lobed',amp=shape==='pebble'?.16:lobed?.04:.08,w=wobble(seed,amp,shape==='pebble'?4:7),pts=[],n=120,lobes=3+((seed*7)%3);

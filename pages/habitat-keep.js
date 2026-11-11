@@ -351,7 +351,136 @@
     if(o.mount==='free')notes.push('Prints lying flat; stand it up in the substrate, or glue it to a wall.');
     return {parts,notes,magnets};
   }
-  const DIORAMA={column:'Roman column',amphora:'Amphora',arch:'Ruined arch',mosaic:'Mosaic floor tile',pagoda:'Pagoda',torii:'Torii gate',books:'Stack of books',shelf:'Bookshelf',cottage:'Fairy cottage',mushroom:'Mushroom cluster'};
+  /* ---------- more 3D pieces ---------- */
+  /* radius steps clamped to 45°, for round or oval shapes printed upright */
+  function clampR(z0,z1,rf,dz){const n=Math.max(1,Math.ceil((z1-z0)/dz)),rs=[];let p=null;for(let i=0;i<n;i++){let r=rf(z0+(i+.5)*(z1-z0)/n);if(p!=null)r=Math.max(p-dz*3,Math.min(p+(z1-z0)/n,r));rs.push(Math.max(.4,r));p=rs[i]}return {n,rs,at:z=>rs[Math.min(n-1,Math.max(0,Math.floor((z-z0)/(z1-z0)*n)))]}}
+  function dioSkull(o){
+    const S=o.size,jaw=S*.3,zc=S*.62,rz=S*.42,top=zc+rz*.98,dz=.3,f=[];
+    const prof=z=>z<jaw?S*.3:S*.5*Math.sqrt(Math.max(.02,1-((z-zc)/rz)**2));
+    const c=clampR(0,top,prof,dz);
+    f.push(varying(0,top,z=>ellipse(0,z<jaw?-S*.05:0,c.at(z),c.at(z)*1.15,72),dz));
+    const yF=-c.at(zc)*1.15;
+    for(const s of [-1,1])f.push(G.yDisc(s*S*.19,zc-S*.04,S*.115,yF-2,yF+S*.22,'sub'));
+    f.push(varying(zc-S*.24,zc-S*.1,z=>{const w=S*.07*(1-(z-(zc-S*.24))/(S*.14));return w<.3?[]:[[[-w,yF-3],[w,yF-3],[w,yF+S*.16],[-w,yF+S*.16]]]},.25,'sub'));
+    const yJ=-S*.3*1.15-S*.05;for(let x=-S*.16;x<=S*.161;x+=S*.08)f.push(G.prism(S*.06,jaw-S*.04,rect(x-.45,yJ-1,x+.45,yJ+1.2),'sub'));
+    f.push(G.prism(jaw*.55,jaw*.55+.8,rect(-S*.22,yJ-1,S*.22,yJ+1),'sub'));
+    return [part('skull.stl',build(f))];
+  }
+  function dioCandles(o,r){
+    const S=o.size,f=[],acc=[],cs=[[0,0,S*.13,S*1.1],[-S*.3,-S*.05,S*.11,S*.75],[S*.28,S*.08,S*.1,S*.55]];
+    f.push(G.prism(0,2,unite(cs.flatMap(([x,y,rc])=>circle(x,y,rc+4,48)),[])));
+    for(const [x,y,rc,h] of cs){f.push(G.prism(2,h,circle(x,y,rc,48)));
+      for(let k=0;k<4;k++){const a=r()*TAU,L=3+r()*h*.25,dx=x+rc*Math.cos(a),dy=y+rc*Math.sin(a),z0=h-L;f.push(varying(z0,h,z=>circle(dx,dy,Math.min(1.3,(z-z0)+.2),16),.25))}
+      f.push(G.prism(h,h+2,circle(x,y,.7,12)));
+      const fl=clampR(h+1.5,h+1.5+rc*1.5,z=>{const t=(z-(h+1.5))/(rc*1.5);return rc*.55*Math.sin(Math.PI*Math.min(1,t*1.4))+.4},.25);
+      acc.push(varying(h+1.5,h+1.5+rc*1.5,z=>circle(x,y,fl.at(z),24),.25))}
+    if(o.accent==='yes')return [part('candles.stl',build(f),'Colour 1'),part('candles-flames.stl',build(acc),'Colour 2')];
+    return [part('candles.stl',build([...f,...acc]))];
+  }
+  function dioCrystals(o,r){
+    const S=o.size,f=[],cr=[],w=wobble(Math.round(r()*99)+3,.15,4);
+    const rock=clampR(0,S*.28,z=>S*.5*Math.sqrt(Math.max(.05,1-(z/(S*.3))**2)),.3);
+    const rockF=varying(0,S*.28,z=>polar(0,0,a=>rock.at(z)*(1+w(a)),72),.3);
+    const list=[[0,0,S*.13,S*1.2]];for(let i=0;i<6;i++){const a=i*TAU/6+r(),d=S*(.18+r()*.14);list.push([d*Math.cos(a),d*Math.sin(a),S*(.06+r()*.05),S*(.45+r()*.5)])}
+    for(const [x,y,rc,h] of list){const tip=rc*1.5,rot0=r()*Math.PI;cr.push(G.prism(1,h-tip,ngon(x,y,rc,6,rot0)),varying(h-tip,h,z=>ngon(x,y,Math.max(.3,rc*(1-(z-(h-tip))/tip)),6,rot0),.25))}
+    if(o.accent==='yes'){const holes=list.map(([x,y,rc])=>G.prism(1,S,circle(x,y,rc*1.2,24),'sub'));return [part('crystal-rock.stl',build([rockF,...holes]),'Colour 1'),part('crystals.stl',build(cr),'Colour 2')]}
+    return [part('crystals.stl',build([rockF,...cr]))];
+  }
+  function dioTower(o,r){
+    const R=o.size/2,H=o.h,f=[G.prism(0,H,circle(0,0,R,96))],ruin=o.style==='broken';
+    const merl=[];const nm=Math.max(6,Math.round(TAU*R/9))*2;for(let k=0;k<nm;k+=2)merl.push(...sector(R-4.5,R,k*TAU/nm,(k+1)*TAU/nm,6));
+    f.push(G.prism(H,H+6,unite(merl,[])));
+    const win=(a,zb,h,w)=>varying(zb,zb+h,z=>{const t=(z-zb)/h,ww=t<.7?w:w*(1-(t-.7)/.3);if(ww<.3)return [];return rot([[[R-2.5,-ww],[R+1,-ww],[R+1,ww],[R-2.5,ww]]],a)},.25,'sub');
+    f.push(win(-Math.PI/2,0,H*.22,R*.22));for(let i=1;i<4;i++)for(const a of [-Math.PI/2,0,Math.PI/2,Math.PI])f.push(win(a+i*.4,H*(.2+i*.2),H*.1,R*.08));
+    if(ruin){for(let k=0;k<4;k++){const a=r()*TAU;f.push(G.prism(H-r()*H*.18,H+6,rot(rect(0,-R*.4,R+2,R*.4),a),'sub'))}}
+    else f.push(varying(H,H+R*1.6,z=>circle(0,0,Math.max(.4,(R-4.5)*(1-(z-H)/(R*1.6))),72),.3));
+    return [part(ruin?'ruined-tower.stl':'tower.stl',build(f))];
+  }
+  function dioChest(o){
+    const S=o.size,L=S*1.4,W=S*.9,hb=S*.5,R=W/2,f=[],acc=[];
+    const lid=z=>{const t=(z-hb)/R,w=R*Math.sqrt(Math.max(0,1-t*t));return w<.5?[]:rect(-L/2,-w,L/2,w)};
+    f.push(G.prism(0,hb,rect(-L/2,-W/2,L/2,W/2)),varying(hb,hb+R*.97,lid,.3),G.prism(hb-.4,hb+.4,subtract(rect(-L/2-1,-W/2-1,L/2+1,W/2+1),rect(-L/2+.6,-W/2+.6,L/2-.6,W/2-.6)),'sub'));
+    const band=x=>rect(x-S*.05,-W,x+S*.05,W);
+    for(const x of [-L*.3,L*.3]){acc.push(G.prism(0,hb,intersect(subtract(rect(-L/2,-W/2-.7,L/2,W/2+.7),rect(-L/2,-W/2,L/2,W/2)),band(x))),varying(hb,hb+R*.97,z=>{const l=lid(z);if(!l.length)return [];return intersect(subtract(offset(l,.7,'miter'),l),band(x))},.3))}
+    acc.push(G.prism(hb-S*.12,hb+S*.06,rect(-S*.08,-W/2-1.2,S*.08,-W/2)));
+    if(o.accent==='yes')return [part('treasure-chest.stl',build(f),'Colour 1'),part('treasure-chest-metal.stl',build(acc),'Colour 2')];
+    return [part('treasure-chest.stl',build([...f,...acc]))];
+  }
+  function dioSword(o,r){
+    const S=o.size,f=[],w=wobble(Math.round(r()*99)+5,.18,5),hr=S*.35;
+    const rock=clampR(0,hr,z=>S*.5*Math.sqrt(Math.max(.05,1-(z/(hr*1.05))**2)),.3);
+    f.push(varying(0,hr,z=>polar(0,0,a=>rock.at(z)*(1+w(a)),72),.3));
+    const bw=S*.06,zg=hr+S*.55;f.push(G.prism(hr*.5,zg,rect(-bw,-1.3,bw,1.3)));
+    /* the cross-guard sweeps up at 45° on both sides */
+    const gl=S*.2;f.push(varying(zg,zg+gl,z=>{const d=z-zg;return unite(rect(-bw-d-2.5,-1.6,-bw-d,1.6),rect(bw+d,-1.6,bw+d+2.5,1.6))},.25),G.prism(zg-1.5,zg+2.5,rect(-bw-2.5,-1.6,bw+2.5,1.6)));
+    const zp=zg+2.5,gh=S*.18;f.push(G.prism(zp,zp+gh,circle(0,0,S*.035+.6,20)));
+    const pr=S*.06;const pc=clampR(zp+gh,zp+gh+2*pr,z=>pr*Math.sqrt(Math.max(.05,1-((z-(zp+gh+pr))/pr)**2)),.25);
+    f.push(varying(zp+gh,zp+gh+2*pr,z=>circle(0,0,pc.at(z),24),.25));
+    return [part('sword-in-stone.stl',build(f))];
+  }
+  function dioPotions(o){
+    const S=o.size,f=[],acc=[];
+    const bottle=(x,kind)=>{let top;
+      if(kind===0){const r=S*.22,c=clampR(0,2*r,z=>r*Math.sqrt(Math.max(.25,1-((z-r)/r)**2)),.25);f.push(varying(0,2*r*.95,z=>circle(x,0,c.at(z),48),.25));top=2*r*.95;
+        f.push(G.prism(top-1,top+S*.18,circle(x,0,r*.3,24)));top+=S*.18}
+      else if(kind===1){const r=S*.14,h=S*.55;f.push(G.prism(0,h,circle(x,0,r,40)),varying(h,h+r*.7,z=>circle(x,0,Math.max(r*.35,r-(z-h)),40),.25));top=h+r*.7;f.push(G.prism(top-1,top+S*.1,circle(x,0,r*.35,24)));top+=S*.1}
+      else{const r=S*.22,h=S*.42;f.push(varying(0,h,z=>circle(x,0,Math.max(r*.28,r-(z/h)*r*.72),48),.25));top=h;f.push(G.prism(h-1,h+S*.14,circle(x,0,r*.28,24)));top+=S*.14}
+      acc.push(G.prism(top,top+S*.08,circle(x,0,(kind===1?S*.14*.35:kind===0?S*.22*.3:S*.22*.28)+.4,24)))};
+    bottle(-S*.5,0);bottle(0,1);bottle(S*.46,2);
+    if(o.accent==='yes')return [part('potions.stl',build(f),'Colour 1'),part('potions-corks.stl',build(acc),'Colour 2')];
+    return [part('potions.stl',build([...f,...acc]))];
+  }
+  function dioOpenBook(o){
+    const S=o.size,L=S*1.5,Tp=S*.14,n=60,top=[];
+    for(let i=0;i<=n;i++){const x=-L/2+L*i/n,t=Math.abs(x)/(L/2);top.push([x,1.6+Tp*(.35+.65*Math.pow(Math.sin(Math.PI*Math.min(1,t*1.05)),.55))])}
+    const prof=unite([[...top,[L/2,0],[-L/2,0]]],rect(-L/2-1.5,0,L/2+1.5,1.6));
+    const lines=[];for(let k=1;k<4;k++)lines.push(top.map(([x,y])=>[x*(1-k*.03),y-k*Tp*.18]));
+    const D=S;return [part('open-book.stl',build([G.prism(0,D,prof),G.prism(D-.5,D+1,intersect(stroke(lines,.6),offset(prof,-.6)),'sub')]))];
+  }
+  function dioTombstone(o,r){
+    const W=o.size,H=o.h,a=unite(rect(-W/2,0,W/2,H-W/2),circle(0,H-W/2,W/2,96));
+    const txt=HM.text2D([o.text||'RIP'],Math.min(W*.18,9),Math.max(1,W*.03),o.font==='caps'?null:'script');
+    let detail=move(txt.rings,0,H*.48);if(txt.w>W*.86)detail=move(txt.rings.map(q=>q.map(([x,y])=>[x*W*.86/txt.w,y*W*.86/txt.w])),0,H*.48);
+    const cross=stroke([[[0,H*.66],[0,H*.86]],[[-W*.1,H*.79],[W*.1,H*.79]]],Math.max(1,W*.035));
+    let outline=a;if(o.style==='broken'){const k=r();outline=subtract(a,[[[W*(.1+k*.2),H+2],[W,H+2],[W,H*(.55+k*.2)]]])}
+    return {outline,detail:intersect(unite(detail,cross),offset(outline,-1)),th:Math.max(6,W*.18)};
+  }
+  function dioCoffin(o){
+    const S=o.size,L=S*1.6,hh=S*.38,top=HabitatMotifs.motif('coffin',L).fill.map(q=>q.map(([x,y])=>[x,y-L/2]));
+    const lidOut=offset(top,-.01),cross=stroke([[[0,-L*.25],[0,L*.25]],[[-L*.12,L*.1],[L*.12,L*.1]]],Math.max(1.2,S*.05));
+    const f=[G.prism(0,hh,top),G.prism(hh*.68-.4,hh*.68+.4,subtract(offset(top,1),offset(top,-.6)),'sub')],acc=[G.prism(hh,hh+.8,intersect(cross,offset(lidOut,-2)))];
+    if(o.accent==='yes')return [part('coffin.stl',build(f),'Colour 1'),part('coffin-cross.stl',build(acc),'Colour 2')];
+    return [part('coffin.stl',build([...f,...acc]))];
+  }
+  function icosaSlices(a){
+    const p=(1+Math.sqrt(5))/2,V=[[-1,p,0],[1,p,0],[-1,-p,0],[1,-p,0],[0,-1,p],[0,1,p],[0,-1,-p],[0,1,-p],[p,0,-1],[p,0,1],[-p,0,-1],[-p,0,1]];
+    const F=[[0,11,5],[0,5,1],[0,1,7],[0,7,10],[0,10,11],[1,5,9],[5,11,4],[11,10,2],[10,7,6],[7,1,8],[3,9,4],[3,4,2],[3,2,6],[3,6,8],[3,8,9],[4,9,5],[2,4,11],[6,2,10],[8,6,7],[9,8,1]];
+    const sub=(u,v)=>u.map((x,i)=>x-v[i]),cr=(u,v)=>[u[1]*v[2]-u[2]*v[1],u[2]*v[0]-u[0]*v[2],u[0]*v[1]-u[1]*v[0]],nrm=u=>{const l=Math.hypot(...u);return u.map(x=>x/l)},dot=(u,v)=>u[0]*v[0]+u[1]*v[1]+u[2]*v[2];
+    const N=F.map(f=>{let n=nrm(cr(sub(V[f[1]],V[f[0]]),sub(V[f[2]],V[f[0]])));if(dot(n,V[f[0]])<0)n=n.map(x=>-x);return n});
+    /* rotate so face 0 points straight down */
+    const n0=N[0],t=[0,0,-1],ax=nrm(cr(n0,t)),ang=Math.acos(dot(n0,t)),c=Math.cos(ang),s=Math.sin(ang);
+    const rotv=v=>{const k=ax,d=dot(k,v),x=cr(k,v);return v.map((vi,i)=>vi*c+x[i]*s+k[i]*d*(1-c))};
+    const NR=N.map(rotv),d=dot(N[0],V[F[0][0]]),sc=a/(2*d);
+    return {NR,h:2*d*sc,at:z=>{const zz=z/sc-d;let poly=rect(-10*a,-10*a,10*a,10*a);
+      for(const n of NR){/* n.x x + n.y y <= d - n.z zz */const rhs=(d-n[2]*zz)*sc,L=Math.hypot(n[0],n[1]);if(L<1e-6){if(rhs<0)return [];continue}
+        const ux=n[0]/L,uy=n[1]/L,off=rhs/L,big=20*a;poly=intersect(poly,[[[ux*off-uy*big,uy*off+ux*big],[ux*off-ux*big-uy*big,uy*off-uy*big+ux*big],[ux*off-ux*big+uy*big,uy*off-uy*big-ux*big],[ux*off+uy*big,uy*off-ux*big]]]);if(!poly.length)return []}
+      return poly}};
+  }
+  function dioDice(o){
+    const a=o.size*.5,f=[],pip=a*.09,dp=a*.06;
+    /* a six-sided die: pips on the top and the four sides */
+    const x0=-a*1.3;f.push(G.prism(0,a,rrect(x0-a/2,-a/2,x0+a/2,a/2,a*.12)));
+    for(const [u,v] of [[-.25,-.25],[.25,-.25],[0,0],[-.25,.25],[.25,.25]])f.push(G.prism(a-dp,a+1,circle(x0+u*a,v*a,pip,16),'sub'));
+    for(const [u,w] of [[0,0]])f.push(G.yDisc(x0+u*a,a/2+w*a,pip,-a/2-1,-a/2+dp,'sub'));
+    for(const [u,w] of [[-.25,-.25],[.25,.25]])f.push(G.yDisc(x0+u*a,a/2+w*a,pip,a/2-dp,a/2+1,'sub'));
+    for(const [u,w] of [[-.25,-.25],[0,0],[.25,.25]])f.push(G.xDisc(u*a,a/2+w*a,pip,x0-a/2-1,x0-a/2+dp,'sub'));
+    for(const [u,w] of [[-.25,-.25],[.25,-.25],[-.25,.25],[.25,.25]])f.push(G.xDisc(u*a,a/2+w*a,pip,x0+a/2-dp,x0+a/2+1,'sub'));
+    /* a twenty-sided die, standing on one face, with 20 on the top face */
+    const ic=icosaSlices(a*1.15),h=ic.h,x1=a*.9;f.push(varying(0,h,z=>move(ic.at(z),x1,0),.25));
+    const T=HM.text2D(['20'],a*.3,Math.max(.9,a*.05));f.push(G.prism(h-.6,h+1,move(T.rings,x1,0),'sub'));
+    return [part('dice.stl',build(f))];
+  }
+  const DIORAMA={skull:'Skull',candles:'Candles',crystals:'Crystal cluster',tower:'Castle tower',chest:'Treasure chest',sword:'Sword in the stone',potions:'Potion bottles',openBook:'Open book',tombstone:'Tombstone',coffin:'Coffin',dice:'Dice (D6 and D20)',column:'Roman column',amphora:'Amphora',arch:'Ruined arch',mosaic:'Mosaic floor tile',pagoda:'Pagoda',torii:'Torii gate',books:'Stack of books',shelf:'Bookshelf',cottage:'Fairy cottage',mushroom:'Mushroom cluster'};
   function diorama(o){
     const r=rnd(o.seed||1),k=o.kind,notes=[];let res;
     if(k==='column')res={parts:dioColumn(o,r),notes:[],magnets:0};
@@ -360,10 +489,21 @@
     else if(k==='pagoda')res={parts:dioPagoda(o),notes:[],magnets:0};
     else if(k==='books')res={parts:dioBooks(o,r),notes:[],magnets:0};
     else if(k==='mushroom')res={parts:dioMushroom(o,r),notes:[],magnets:0};
+    else if(k==='skull')res={parts:dioSkull(o),notes:[],magnets:0};
+    else if(k==='candles')res={parts:dioCandles(o,r),notes:o.accent==='yes'?['The flames are a separate file: yellow, orange or glow-in-the-dark filament.']:[],magnets:0};
+    else if(k==='crystals')res={parts:dioCrystals(o,r),notes:o.accent==='yes'?['The crystals are a separate file: clear, translucent or glow filament looks best.']:[],magnets:0};
+    else if(k==='tower')res={parts:dioTower(o,r),notes:[],magnets:0};
+    else if(k==='chest')res={parts:dioChest(o),notes:o.accent==='yes'?['The straps and lock are a separate file, for a gold or silver filament.']:[],magnets:0};
+    else if(k==='sword')res={parts:dioSword(o,r),notes:[],magnets:0};
+    else if(k==='potions')res={parts:dioPotions(o),notes:['Translucent filament makes the bottles look filled.'],magnets:0};
+    else if(k==='openBook')res={parts:dioOpenBook(o),notes:['Prints standing on its edge; lay it down open in the enclosure.'],magnets:0};
+    else if(k==='coffin')res={parts:dioCoffin(o),notes:[],magnets:0};
+    else if(k==='dice')res={parts:dioDice(o),notes:[],magnets:0};
+    else if(k==='tombstone')res=flatPiece(o,'tombstone',dioTombstone(o,r));
     else{const pc=k==='arch'?dioArch(o,r):k==='torii'?dioTorii(o):k==='shelf'?dioShelf(o,r):dioCottage(o,r);res=flatPiece(o,k,pc)}
     if(o.accent==='yes'&&(k==='mushroom'||k==='cottage'))res.notes.push('The accent file is for glow-in-the-dark or UV-reactive filament: glowing spots, or windows lit up at night.');
     return res;
   }
 
-  root.HabitatKeep={incubator,oothClip,divider,cupRack,chute,airlock,shipInsert,turntable,gear,diorama,DIORAMA};
+  root.HabitatKeep={motif:o=>root.HabitatMotifs.piece(o),incubator,oothClip,divider,cupRack,chute,airlock,shipInsert,turntable,gear,diorama,DIORAMA};
 })(typeof window!=='undefined'?window:globalThis);
