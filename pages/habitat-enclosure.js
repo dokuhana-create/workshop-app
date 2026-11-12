@@ -12,6 +12,26 @@
   /* mirror a finished mesh in y and keep its faces pointing out: turns a part built top-down into a proper rotation */
   function mirrorY(m){const t=m.tris,o=new Float32Array(t.length);for(let i=0;i<t.length;i+=9){for(const [v,w] of [[0,0],[1,2],[2,1]]){o[i+w*3]=t[i+v*3];o[i+w*3+1]=-t[i+v*3+1];o[i+w*3+2]=t[i+v*3+2]}}return Object.assign({},m,{tris:o})}
 
+  /* ---------- printed screws ----------
+     A coarse thread with 45° flanks: the screw prints standing on its head, and the threaded hole prints lying in a
+     corner post; both work without supports. The same profile function makes the screw and the hole, offset by a
+     small clearance, so they always match. */
+  const SCREW={cl:.22,len:12,head:12,headH:3};
+  const screwSpec=slim=>slim?{d:6,P:2,c:2}:{d:7,P:2.5,c:2.5};
+  function threadR(sp,a,z,cl){const h=.4*sp.P,ph=((z/sp.P-a/TAU)%1+1)%1*sp.P,f=ph<h?ph/h:ph<sp.P/2?1:ph<sp.P/2+h?1-(ph-sp.P/2)/h:0;return sp.d/2-h+h*f+cl}
+  /* threaded hole along z, open at z1, with a small lead-in at the mouth */
+  function screwHole(cx,cy,z0,z1,sp){return varying(z0,z1+1,z=>polar(cx,cy,a=>Math.max(threadR(sp,a,z,SCREW.cl),sp.d/2+SCREW.cl+.6-(z1-z)),48),.2,'sub')}
+  /* the screw, printed head down: a slot for a coin or screwdriver in the head, a 45° chamfer round its top edge */
+  function lidScrew(sp,Lt){
+    const H=SCREW.headH,L=Lt+SCREW.len-1,h=.4*sp.P,R0=sp.d/2-h-SCREW.cl;
+    return build([varying(0,H,z=>circle(0,0,SCREW.head/2-Math.max(0,.8-z),64),.2),prism(-1,1.4,rect(-4.5,-.8,4.5,.8),'sub'),
+      varying(H-.01,H+L,z=>polar(0,0,a=>Math.min(threadR(sp,a,z-H,-SCREW.cl),R0+h+.2,R0+.2+(H+L-z)),48),.17)]);
+  }
+  /* small turn button: a flat arm on a peg that pushes stiffly into a 3 mm hole. The hub lifts the arm clear of
+     what it holds. Printed arm down. */
+  function turnButton(hub,peg,arm){arm=arm||8;const [a0,a1]=Array.isArray(arm)?arm:[arm,arm],f=[prism(0,2,unite(G.rrect(-a0,-3.5,a1,3.5,3.5),circle(0,0,3.5)))];
+    if(hub>0)f.push(prism(1.99,2+hub,circle(0,0,3.5,32)));f.push(prism(1.99+hub,2+hub+(peg||4.5),circle(0,0,1.6,20)),prism(1.99+hub,2.6+hub,circle(0,0,2.4,20)));return build(f)}
+
   /* ring lights over the lid: same layout as the ring light seats */
   const SEAT_GAP=4;
   function lightWindows(p,cx,cy,alongY){
@@ -33,6 +53,7 @@
       const ox=(b.x0+b.x1-nx*RAIL.pitch)/2,oy=(b.y0+b.y1-ny*RAIL.pitch)/2;
       for(let i=0;i<=nx;i++)for(let j=0;j<=ny;j++){const x=ox+i*RAIL.pitch,y=oy+j*RAIL.pitch;if([[x-PEG.r,y],[x+PEG.r,y],[x,y-PEG.r],[x,y+PEG.r]].every(([u,v])=>G.inside(lim,u,v))){pegs.push([x,y]);f.push(prism(o.f-.01,o.f+PEG.h,circle(x,y,PEG.r,24)))}}
     }
+    for(const x of o.subs||[])f.push(x);
     if(o.rounded)f.push(prism(-1,o.S+o.s+2,roundClip(outer,o.corners),'sub'));
     const m=build(f);m.pegs=pegs;return m;
   }
@@ -102,6 +123,7 @@
     const f=[prism(0,o.Lt,outer),prism(o.Lt-.01,o.Lt+o.s,subtract(outer,oG)),prism(o.Lt-.01,o.Lt+o.s,subtract(iG,inner))],notes=[];
     for(const c of o.corners||[]){f.push(prism(0,o.Lt+o.s,c.block));f.push(prism(o.Lt,o.Lt+o.s+1,c.pocket,'sub'))}
     if(o.slot)f.push(prism(-1,o.Lt+o.s+1,o.slot,'sub'));
+    if(o.screws&&o.screws.length)f.push(prism(-1,o.Lt+1,o.screws.map(([x,y,r])=>circle(x,y,r,40)[0]),'sub'));
     const mesh=offset(C,-ob-1.5),fits=(x,y,r)=>[[x-r,y],[x+r,y],[x,y-r],[x,y+r],[x-r*.7,y-r*.7],[x+r*.7,y-r*.7],[x-r*.7,y+r*.7],[x+r*.7,y+r*.7]].every(([u,v])=>G.inside(mesh,u,v));
     /* light windows */
     let win=lightWindows(p,o.centre[0],o.centre[1],o.alongY);
@@ -124,7 +146,17 @@
       if(win.mode==='insert'){f.push(prism(-1,o.Lt+1,circle(cx,cy,win.Rw),'sub'))}
       else if(!preview){const pitch=p.hole+.6,Rin=win.Rw+3;for(let x=cx-Rin;x<cx+Rin;x+=pitch)for(let y=cy-Rin;y<cy+Rin;y+=pitch){const q=sq(x,y,p.hole);if(q.every(([u,v])=>Math.hypot(u-cx,v-cy)<Rin))hs.push(q)}}
     }
-    if(!preview){
+    if(p.lidVent==='rings'){
+      /* rings and spokes: concentric slots round the lamp (or the lid's middle), split by six spokes; the corners stay solid */
+      const one=win&&win.centers.length===1,[cx,cy]=one?win.centers[0]:o.centre,pitch=p.hole+p.bar,sw=1.6;
+      let Rmax=0;for(let r=4;r<2000;r+=.5){if([...Array(48)].every((_,k)=>G.inside(mesh,cx+r*Math.cos(k*TAU/48),cy+r*Math.sin(k*TAU/48))))Rmax=r;else break}
+      const Rmin=one?win.Rw+5.5:6,slots=[];
+      for(let r0=Rmin;r0+p.hole<=Rmax-2;r0+=pitch){const r1=r0+p.hole;
+        for(let j=0;j<6;j++){const b0=j*TAU/6,b1=b0+TAU/6,q=[],arc=(r,s)=>{const d=Math.asin(Math.min(.9,sw/r));const a0=b0+d,a1=b1-d,n=Math.max(3,Math.ceil((a1-a0)*r/1.5));for(let i=0;i<=n;i++){const t=s?a0+(a1-a0)*i/n:a1-(a1-a0)*i/n;q.push([cx+r*Math.cos(t),cy+r*Math.sin(t)])}};
+          arc(r1,true);arc(r0,false);slots.push(q)}}
+      const keep=[];if(hatch)keep.push(circle(hatch.x,hatch.y,hatch.R+13,48)[0]);if(win&&!one)for(const [x,y] of win.centers)keep.push(circle(x,y,win.Rw+4.5,48)[0]);
+      const cut=keep.length?subtract(slots,keep):slots;if(cut.length)f.push(prism(-1,o.Lt+1,cut,'sub'));
+    }else if(!preview){
       const b=bbox(mesh),pitch=p.hole+p.bar;
       for(let x=b.x0;x<b.x1;x+=pitch)for(let y=b.y0;y<b.y1;y+=pitch){
         const q=sq(x,y,p.hole);
@@ -147,19 +179,34 @@
     return o;
   }
   const rectC=d=>[[[0,0],[d.W,0],[d.W,d.D],[0,d.D]]];
-  function rectBase(d,p){return base(rectC(d),{gw:d.g,wall:2.4,S:d.S,s:d.s,f:d.f,join:'miter',corners:rectCorners(d,p.corners==='rounded'),rounded:p.corners==='rounded'},p)}
+  /* air slots low in the front of the base, so fresh air comes in at the bottom and leaves through the lid */
+  function frontVents(d,p){
+    if(p.frontVent!=='slots'||d.S<20)return null;
+    const ob=d.g/2+2.4,z1=d.S-3,z0=Math.max(d.f+3,d.S-14),w=p.hole,pitch=Math.max(w+1.6,p.hole+p.bar),xs=[],x0=d.Eh+6,x1=d.W-d.Eh-6;
+    const n=Math.floor((x1-x0-w)/pitch),o0=(x0+x1-(n*pitch+w))/2;for(let i=0;i<=n;i++){const x=o0+i*pitch;xs.push(rect(x,-ob-1,x+w,ob+1)[0])}
+    return {sub:prism(z0,z1,xs,'sub'),z0,z1,n:n+1};
+  }
+  function rectBase(d,p){const v=frontVents(d,p);const m=base(rectC(d),{gw:d.g,wall:2.4,S:d.S,s:d.s,f:d.f,join:'miter',corners:rectCorners(d,p.corners==='rounded'),rounded:p.corners==='rounded',subs:v?[v.sub]:[]},p);m.vents=v;return m}
+  /* where each corner's lid screw goes: in the outer quarter of the post, clear of both panel slots */
+  function screwSpots(d,p){if(p.lidScrews!=='screws')return [];const c=screwSpec(d.slim).c;return [[0,0],[d.W,0],[d.W,d.D],[0,d.D]].map(([x,y],i)=>{const a=i*Math.PI/2,co=Math.round(Math.cos(a)),si=Math.round(Math.sin(a));return [x+co*-c-si*-c,y+si*-c+co*-c]})}
   function rectLid(d,p,preview){
-    const g=d.g,slot=d.swing?null:rect(g/2,-g/2,d.W-g/2,g/2);
-    return lid(rectC(d),{gw:g,wall:2.4,s:d.s,Lt:d.Lt,join:'miter',corners:rectCorners(d,p.corners==='rounded'),slot,centre:[d.W/2,d.D/2],alongY:d.D>d.W,rounded:p.corners==='rounded'},p,preview);
+    const g=d.g,slot=d.swing?null:rect(g/2,-g/2,d.W-g/2,g/2),sp=screwSpec(d.slim);
+    const m=lid(rectC(d),{gw:g,wall:2.4,s:d.s,Lt:d.Lt,join:'miter',corners:rectCorners(d,p.corners==='rounded'),slot,screws:screwSpots(d,p).map(([x,y])=>[x,y,sp.d/2+.4]),centre:[d.W/2,d.D/2],alongY:d.D>d.W,rounded:p.corners==='rounded'},p,preview);
+    m.screw=p.lidScrews==='screws'?lidScrew(sp,d.Lt):null;return m;
   }
   /* corner post: two slots for the panels; printed lying on a flat side */
   function rectPost(d,p){
-    const {a,g,Hp}=d,r=p.corners==='rounded'?3:0;
+    const {a,g,Hp}=d,r=p.corners==='rounded'?3:0,ch=d.slim?3:4.5;
     const f=[prism(0,Hp,r?G.rrect(-a,-a,a,a,r):rect(-a,-a,a,a)),prism(-1,Hp+1,rect(g/2,-g/2,a+1,g/2),'sub'),prism(-1,Hp+1,rect(-g/2,g/2,g/2,a+1),'sub')];
     /* a flat along the outer corner: the post prints lying on it, with both grooves facing up at 45° */
-    f.push(prism(-1,Hp+1,[[[-a-1,-a-1],[-a+4.5,-a-1],[-a-1,-a+4.5]]],'sub'));
+    f.push(prism(-1,Hp+1,[[[-a-1,-a-1],[-a+ch,-a-1],[-a-1,-a+ch]]],'sub'));
+    /* threaded hole at the top for the lid screw */
+    if(p.lidScrews==='screws'){const sp=screwSpec(d.slim);f.push(screwHole(-sp.c,-sp.c,Hp-SCREW.len-1,Hp,sp))}
+    /* holes in both outer faces for the door's turn latch (every post gets them, so any post fits any corner) */
+    if(d.latch){const dep=latchDepth(d),z=d.latchZ;f.push(G.yDisc(3,z,1.5,-a-1,-a+dep,'sub'),G.xDisc(3,z,1.5,-a-1,-a+dep,'sub'))}
     return build(f);
   }
+  const latchDepth=d=>Math.min(5,d.a-d.g/2-.8);
 
   /* ---------- polygon enclosure: 5 to 8 flat walls ----------
      W is the width across the flats, measured between panel centres. One flat faces the front. */
@@ -264,9 +311,12 @@
      catch 'magnet': two round magnets in the rim and door. 'detent': a printed rib on the rim clicks into a
      groove in the door. */
   function swingDoor(o,p,preview){
-    const {fbW,pH,T,postX,s}=o,catchM=p.doorCatch!=='detent';
-    const md=p.dMagD||10,mh=p.dMagH||3,pd=mh+.2,Rm=md/2+.2;
-    const off=catchM?mh+1.6:3.2,dt=catchM?Math.max(T,mh+1.6):Math.max(T,3.2),rr=3,cR=rr+2.6,cl=.3;
+    const {fbW,pH,T,postX,s}=o,catchM=p.doorCatch!=='detent',mag=p.doorCatch==='magnet'||!p.doorCatch,turn=p.doorCatch==='turn';
+    const md=p.dMagD||10,mh=p.dMagH||3,pd=mh+.2,Rm=md/2+.2,recess=p.front==='swingWindow'&&p.doorWin!=='glue';
+    const off=catchM?mh+1.6:3.2,dt0=catchM?Math.max(T,mh+1.6):Math.max(T,3.2),rr=3,cR=rr+2.6,cl=.3;
+    /* with the window in a recess the door is thicker: the pane sits flush in its outer face, behind it stays a 1.6 mm
+       back, and the magnet pockets in the inner face stay clear of the recess */
+    const dt=recess?Math.max(dt0,T+.3+1.6,mag?pd+.6+T+.3:0):dt0;
     const xh=postX+.8+cR,yh=off+rr,zd0=s+1,zd1=pH-s-1,Lh=zd1-zd0,xd1=fbW-postX-1.5;
     const rwR=catchM?2*Rm+4:8,xr0=xh+cR+1.2,xo0=xr0+4,xo1=xd1-1-rwR,zo0=zd0+5,zo1=zd1-5;
     if(xo1-xo0<40||zo1-zo0<60)return {ok:false};
@@ -276,21 +326,33 @@
     ff.push(prism(-1,pH+1,rect(xo0,-T-1,xo1,1),'sub'));
     const clip=subtract(unite(circle(xh,yh,cR,48),rect(xh-cR*.8,-.01,xh+cR*.8,yh)),unite(circle(xh,yh,rr+cl,48),rect(xh-rr*.85,yh,xh+rr*.85,yh+cR+1)));
     for(const i of [0,2,4]){const [z0,z1]=zone(i);ff.push(prism(z0,z1,clip))}
-    if(catchM)for(const z of zm)ff.push(yDisc(xm,z,Rm,off-pd,off+1,'sub'));
-    else for(const z of zm)ff.push(prism(z-12,z+12,G.rrect(xm-.6,off-.01,xm+.6,off+.6,.3)));
+    if(mag)for(const z of zm)ff.push(yDisc(xm,z,Rm,off-pd,off+1,'sub'));
+    else if(!turn)for(const z of zm)ff.push(prism(z-12,z+12,G.rrect(xm-.6,off-.01,xm+.6,off+.6,.3)));
     /* door */
     const leaf=rect(xh,off,xd1,off+dt),df=[prism(zd0,zd1,leaf),prism(zd0,zd1,circle(xh,yh,rr,40))];
     df.push(prism((zd0+zd1)/2-15,(zd0+zd1)/2+15,rect(xd1-10,off+dt-.01,xd1,off+dt+8)));
     for(const i of [0,2,4]){const [z0,z1]=zone(i);df.push(prism(z0-gp,z1+gp,subtract(rect(xh-cR-2,off-1,xh+cR+1.2,off+dt+1),circle(xh,yh,rr+.01,40)),'sub'))}
-    if(catchM)for(const z of zm)df.push(yDisc(xm,z,Rm,off-1,off+pd,'sub'));
-    else for(const z of zm)df.push(prism(z-13,z+13,rect(xm-.9,off-1,xm+.9,off+.9),'sub'));
-    if(p.front==='swingWindow')df.push(prism(zo0+3,zo1-3,rect(xo0+3,off-1,xo1-3,off+dt+1),'sub'));
+    if(mag)for(const z of zm)df.push(yDisc(xm,z,Rm,off-1,off+pd,'sub'));
+    else if(!turn)for(const z of zm)df.push(prism(z-13,z+13,rect(xm-.9,off-1,xm+.9,off+.9),'sub'));
+    let buttons=0;
+    if(recess){
+      /* window opening with rounded corners, which also keeps cracks from starting there */
+      const wx0=xo0+3,wx1=xo1-3,wz0=zo0+3,wz1=zo1-3,rc=6;
+      df.push(varying(wz0,wz1,z=>{const e=Math.min(z-wz0,wz1-z),i=e<rc?rc-Math.sqrt(Math.max(0,rc*rc-(rc-e)**2)):0;return rect(wx0+i,off-1,wx1-i,off+dt+1)},.25,'sub'));
+      /* the recess for the pane: 3 mm over the opening on the hinge side, under a sloped lip it tucks behind, and
+         9 mm on the free side, where turn buttons hold it. Top and bottom 6 mm. */
+      const PL=xo0,PR=xo1+6,yR=off+dt-T-.3,zR0=zo0-3.3,zR1=zo1+3.3;
+      df.push(prism(zR0,zR1,[[[PL-.3,yR],[PR+.3,yR],[PR+.3,off+dt+1],[PL+1.2,off+dt+1],[PL+1.2,off+dt]]],'sub'));
+      const bx=PR+.3+3.3;
+      if(bx+2.6<=xd1){const zs=[zR0+14,zR1-14];for(const z of zs)df.push(yDisc(bx,z,1.5,off+dt-5,off+dt+1,'sub'));buttons=zs.length}
+    }else if(p.front==='swingWindow')df.push(prism(zo0+3,zo1-3,rect(xo0+3,off-1,xo1-3,off+dt+1),'sub'));
     else if(!preview){
       const cols=[];for(let x=xo0+3;x+p.hole<=xo1-3;x+=p.hole+p.bar)cols.push(rect(x,off-1,x+p.hole,off+dt+1)[0]);
       for(let z=zo0+3;z+p.hole<=zo1-3;z+=p.hole+p.bar)df.push(prism(z,z+p.hole,cols,'sub'));
     }
-    return {ok:true,frameM:build(ff),doorM:build(df),pinLen:0,win:p.front==='swingWindow'?[xo1-xo0-6+12,zo1-zo0-6+12]:null,mesh:p.front==='swingMesh',catchM};
+    return {ok:true,frameM:build(ff),doorM:build(df),pinLen:0,win:p.front==='swingWindow'?[xo1-xo0-6+12,zo1-zo0-6+12]:null,mesh:p.front==='swingMesh',catchM:mag,turn,recess,buttons,
+      button:buttons?turnButton(0,4.5):null,front:off+dt,edge:xd1,midZ:(zd0+zd1)/2};
   }
 
-  root.HabitatEnclosure={hatchCover,TW,base,lid,rectBase,rectLid,rectPost,polyGeom,polyEnclosure,spineToWorld,roundEnclosure,perimeter,tilePanel,TILE,swingDoor,lightWindows,mirrorY};
+  root.HabitatEnclosure={screwSpec,lidScrew,turnButton,latchDepth,frontVents,hatchCover,TW,base,lid,rectBase,rectLid,rectPost,polyGeom,polyEnclosure,spineToWorld,roundEnclosure,perimeter,tilePanel,TILE,swingDoor,lightWindows,mirrorY};
 })(typeof window!=='undefined'?window:globalThis);
