@@ -86,7 +86,7 @@
     const span=e.W-e.T,dt=2.4,ds=dt+.7,lip=1.6,dep=5,bt=o.mount==='magnet'?o.mh+.2+1.4:2,Lc=e.H-20,parts=[],notes=[];
     const cw=ds+2*lip,cf=[prism(0,bt,rrect(0,0,Lc,cw,1)),prism(bt,bt+dep,unite(rect(0,0,Lc,lip),rect(0,cw-lip,Lc,cw)))];
     let mags=0;if(o.mount==='magnet'){const R=o.md/2+.2;if(cw<2*R+2){cf[0]=prism(0,bt,rrect(0,-(2*R+3-cw)/2,Lc,cw+(2*R+3-cw)/2,1))}
-      for(let x=25;x<Lc-10;x+=Math.max(40,(Lc-50)/3)){cf.push(prism(-1,o.mh+.2,circle(x,cw/2,R,40),'sub'));mags++}}
+      for(let x=25;x<Lc-10;x+=Math.max(40,(Lc-50)/3)){cf.push(prism(-1,o.mh+.2,G.mag(x,cw/2,o.md),'sub'));mags++}}
     parts.push(part('divider-channel-print-2.stl',build(cf)));
     const pw=span-2*bt-1.2,ph=e.H-12,fr=8,hole=e.hole||1.6,bar=e.bar||1.2;
     const pf=[prism(0,dt,rrect(0,0,pw,ph,2))],hs=[];

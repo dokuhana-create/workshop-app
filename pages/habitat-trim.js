@@ -160,7 +160,9 @@
     let deco=intersect(U(...art),offset(body,-1.2));
     /* magnets: two at the base corners, two in the top rail held by clips on the lid */
     const mags=[];const glue=o.mount==='glue';
-    if(!glue){const md=o.md||10,mh=o.mh||3;for(const [x,y] of [[sw/2+2,bot/2],[W-sw/2-2,bot/2],[sw/2+2,Ht-top/2],[W-sw/2-2,Ht-top/2]])mags.push([x,y]);
+    /* the bottom pair sits in front of the base's front corner blocks, which have matching pockets */
+    const bx=o.cornerX||[sw/2+2,W-sw/2-2],by=o.cornerX?o.S/2:bot/2;
+    if(!glue){const md=o.md||10,mh=o.mh||3;for(const [x,y] of [[bx[0],by],[bx[1],by],[sw/2+2,Ht-top/2],[W-sw/2-2,Ht-top/2]])mags.push([x,y]);
       const pd=max(mh+.2,bt+oh),rz=pd+.6,ros=U(...mags.map(([x,y])=>st.stile==='stars'?star(x,y,md/2+5,8,.7):st.stile==='quatrefoil'?U(...[0,1,2,3].map(i=>circle(x+cos(i*PI/2)*(md/4+1.5),y+sin(i*PI/2)*(md/4+1.5),md/2+.5,32))):circle(x,y,md/2+3.5,48)));
       deco=subtract(deco,offset(ros,1));mags.rz=rz;mags.ros=ros;mags.pd=pd}
     /* split in two when it doesn't fit the bed */
@@ -170,17 +172,17 @@
     if(tall>max(bed[0],bed[1])+.1||(tall>bed[1]+.1&&wide>bed[0]+.1)){
       const ys=Ht*.5,tab=(cx)=>[[cx-4,ys],[cx-4,ys+3],[cx-7,ys+9],[cx+7,ys+9],[cx+4,ys+3],[cx+4,ys]];
       const lowP=[[[-50,-50],[W+50,-50],[W+50,ys],...tab(W-sw/2).reverse(),...tab(sw/2).reverse(),[-50,ys]]];
-      cuts=[lowP,subtract(rect(-50,-50,W+50,full.y1+50),offset(lowP,.15))];
-      notes.push('The frame is taller than your print bed, so it comes in two halves with puzzle joints in the sides: glue them together flat on a table.')}
+      cuts=[lowP,subtract(rect(-50,-50,W+50,full.y1+50),offset(lowP,.05))];
+      notes.push('The frame is taller than your print bed, so it comes in two halves with puzzle joints in the sides. Press them together flat on a table; once the frame hangs on its magnets the joints stay closed.')}
     const parts=[],two=o.colour==='two';
     cuts.forEach((c,i)=>{const cl=r=>c?intersect(r,c):r,f=[prism(0,bt,cl(body))],a=[prism(bt,bt+oh,cl(deco))];
-      if(mags.length){a.push(prism(bt,mags.rz,cl(mags.ros)));for(const [x,y] of mags)f.push(prism(-1,mags.pd,cl(circle(x,y,(o.md||10)/2+.15,40)),'sub'))}
+      if(mags.length){a.push(prism(bt,mags.rz,cl(mags.ros)));for(const [x,y] of mags)f.push(prism(-1,mags.pd,cl(G.mag(x,y,o.md||10)),'sub'))}
       const sfx=cuts.length>1?(i?'-top':'-bottom'):'';
-      if(two){parts.push({file:`frame${sfx}.stl`,role:i?'Second file':'Colour 1',m:build([...f,...(mags.length?[prism(bt,mags.rz,cl(mags.ros))]:[]),...(mags.length?mags.map(([x,y])=>prism(-1,mags.pd,cl(circle(x,y,(o.md||10)/2+.15,40)),'sub')):[])]),at:'front'},
+      if(two){parts.push({file:`frame${sfx}.stl`,role:i?'Second file':'Colour 1',m:build([...f,...(mags.length?[prism(bt,mags.rz,cl(mags.ros))]:[]),...(mags.length?mags.map(([x,y])=>prism(-1,mags.pd,cl(G.mag(x,y,o.md||10)),'sub')):[])]),at:'front'},
         {file:`frame${sfx}-filigree.stl`,role:'Colour 2',m:build([prism(bt,bt+oh,cl(deco))]),at:'front'})}
       else parts.push({file:`frame${sfx}.stl`,role:i?'Second file':'Main colour',m:build([...f,...a]),at:'front'})});
     if(two)notes.push('Two colours: add the filigree file to the frame as a part (same origin), for example gold on black.');
-    if(!glue){notes.push(`Magnets: 4 in the frame. Glue 2 more onto the front of the base, behind the bottom pockets, and push the 2 lid clips onto the front edge of the lid; the top of the frame sticks to them.`);
+    if(!glue){notes.push(`Magnets: 8 in all, pressed into their pockets. 4 go in the frame; 2 in the pockets in the front corners of the base${o.frameMags?'':' (turn on Enclosure, Size, Magnets for a front frame, so the base gets them)'}; and 2 in the lid clips, which push onto the front edge of the lid. The frame sticks to them.`);
       parts.push({file:'lid-clip.stl',role:'Second file',m:lidClip(o),at:'loose',count:2})}
     else notes.push('Glue: fix the frame to the front of the base and the corner posts with double-sided foam tape (it comes off again).');
     notes.push('The frame prints flat on its back, with the pattern facing up.');
@@ -191,12 +193,16 @@
     /* printed lying down: the profile (x forward, y up) stands on the bed and is w tall */
     const L=o.Lt||2.4,md=o.md||10,mh=o.mh||3,w=md+6,g=L+.35,d=10,f=mh+1,y0=min(-2,g/2-md/2-2),y1=max(g+2,g/2+md/2+2);
     const prof=U(rect(-d,g,0,g+2),rect(-d,-2,0,0),rect(0,y0,f,y1));
-    return build([prism(0,w,prof),prism(w/2-md/2-.15,w/2+md/2+.15,rect(f-mh-.2,g/2-md/2-.15,f+1,g/2+md/2+.15),'sub')]);
+    return build([prism(0,w,prof),prism(w/2-md/2-.02,w/2+md/2+.02,rect(f-mh-.2,g/2-md/2-.02,f+1,g/2+md/2+.02),'sub')]);
   }
 
   /* ---------- finials for the top corners ---------- */
   function finial(o){
-    const st=STYLES[o.style]||STYLES.baroque,k=o.finial||st.finial,h=o.h||28,b=12,pl=3,f=[prism(0,pl,rrect(-b/2,-b/2,b/2,b/2,1.2))];
+    /* the finial stands on a small plinth with a threaded hole underneath: it screws onto a stud in the corner post,
+       which also holds the lid down */
+    const sp=o.screw||(root.HabitatEnclosure&&root.HabitatEnclosure.screwSpec(false)),thr=!!sp&&o.rect!==false;
+    const st=STYLES[o.style]||STYLES.baroque,k=o.finial||st.finial,h=(o.h||28)+(thr?6:0),b=12,pl=thr?9:3,f=[prism(0,pl,rrect(-b/2,-b/2,b/2,b/2,1.2))];
+    if(thr)f.push(root.HabitatEnclosure.screwHoleUp(0,0,8,sp));
     const sq=r=>rrect(-r,-r,r,r,.6),hex=r=>ngon(0,0,r,6),oct=r=>ngon(0,0,r,8,PI/8),c=r=>circle(0,0,r,48);
     const L=(prof,shape,r0)=>HM.lathe(pl,h-pl,prof,shape,r0??b/2-.6,.3);
     const P={
@@ -211,7 +217,10 @@
       stepped:[t=>t<.25?4.6:t<.45?3.6:t<.62?2.7:t<.78?1.9:max(.4,1.9*(1-(t-.78)/.22)),sq]
     }[k]||[t=>4,c];
     f.push(L(P[0],P[1]));
-    return {parts:[{file:`finial-${k}.stl`,role:'Main colour',m:build(f),at:'top',count:4}],notes:[`Finials: print 4. Glue one onto each top corner of the lid.`],magnets:0};
+    if(!thr)return {parts:[{file:`finial-${k}.stl`,role:'Main colour',m:build(f),at:'top',count:4}],notes:['Finials: print 4 and stand one on each top corner of the lid.'],magnets:0};
+    const sl=(o.Lt||2.4)+11+7;
+    return {parts:[{file:`finial-${k}.stl`,role:'Main colour',m:build(f),at:'top',count:4},{file:'finial-stud-print-4.stl',role:'Second file',m:root.HabitatEnclosure.stud(sp,sl),at:'loose',count:4}],
+      notes:[`Finials: print 4 finials and 4 studs. Turn a stud into each corner post through the hole in the lid, with a screwdriver in its slot, until about 7 mm stands above the lid; then screw a finial onto it. The finials hold the lid down, so you don't need the lid screws as well.${o.lidScrews?'':' Turn on Enclosure, Size, Lid fixing: Printed screws in the corners, so the posts and the lid get their threads and holes.'}`],magnets:0};
   }
 
   /* ---------- feet for the bottom corners: the base sits in a little corner lip ---------- */

@@ -134,7 +134,7 @@
     ff.push(varying(5,5+(rd-rin),z=>circle(0,0,rin+(z-5),40),.3));
     const zk=5+(rd-rin);ff.push(prism(zk-.01,zk+2,circle(0,0,rd,40)));
     ff.push(varying(zk+2,zk+14,z=>{const u=(z-zk-2)/12,r=3+(rd-3)*(1-u)*(.75+.5*sin(u*PI));return circle(0,0,min(rd,max(3,r)),40)},.3));
-    ff.push(prism(zk+8,zk+14.1,rect(-3.2,-1.7,3.2,1.7),'sub'));
+    ff.push(prism(zk+8,zk+14.1,rect(-3,-1.5,3,1.5),'sub'));
     const fin=build(ff);
     const eye=build([prism(0,3,subtract(U(circle(0,0,9,48),rect(-3,-15,3,-5)),circle(0,0,5.5,40)))]);
     notes.push(`The cage prints in one piece, standing up, ${round(top[1])} mm tall: the bell never leans in more than 45°, so it needs no supports. Use a brim.`);

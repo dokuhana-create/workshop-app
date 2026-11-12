@@ -38,12 +38,12 @@
     const seats=[0,3,4,5].map(k=>V(k));
     for(const [x,y] of seats){const c=[x*(1-(md/2+3.4)/R),y*(1-(md/2+3.4)/R)];
       f.push(varying(D-md-14,D,z=>intersect(outer,circle(c[0],c[1],max(.1,min(md/2+4.5,(z-(D-md-14))*1)),40)),.3));
-      f.push(prism(D-mh-.2,D+1,circle(c[0],c[1],md/2+.15,40),'sub'))}
+      f.push(prism(D-mh-.2,D+1,G.mag(c[0],c[1],md),'sub'))}
     const shell=build(f);
     /* the front frame: a hexagon ring, with a recess at the back for the clear sheet and four magnets */
     const fw=9,open=hex(R-fw/cos(PI/6)),sheet=hex(R-(fw-4.5)/cos(PI/6)),T=p.T||2,ft=T+2.2;
     const ff=[prism(0,ft,subtract(outer,open)),prism(ft-T-.2,ft+1,sheet,'sub')];
-    for(const [x,y] of seats){const c=[x*(1-(md/2+3.4)/R),y*(1-(md/2+3.4)/R)];ff.push(prism(ft-mh-.2-T-.2,ft+1,circle(c[0],c[1],md/2+.15,40),'sub'),prism(ft-T-.2,ft,intersect(circle(c[0],c[1],md/2+3,40),outer)))}
+    for(const [x,y] of seats){const c=[x*(1-(md/2+3.4)/R),y*(1-(md/2+3.4)/R)];ff.push(prism(ft-mh-.2-T-.2,ft+1,G.mag(c[0],c[1],md),'sub'),prism(ft-T-.2,ft,intersect(circle(c[0],c[1],md/2+3,40),outer)))}
     for(let x=-R*.42;x<=R*.42;x+=hole+bar)ff.push(prism(-1,ft+1,rect(x,W/2-fw+1.2,x+hole,W/2-1.8),'sub'));
     const frame=build(ff);
     /* a link: a bow-tie key that joins two cells at the back */
@@ -62,7 +62,7 @@
       items.push({tris:place0(shell.tris,(x,y,z)=>toW(x,y,z,dx,dz)),color:'frame'});
       items.push({tris:place0(frame.tris,(x,y,z)=>toW(x,y,D+ft-z,dx,dz)),color:'frame'});
       items.push({tris:build([prism(0,1,sheet)]).tris.map((v,i)=>v).length?place0(build([prism(0,1,sheet)]).tris,(x,y,z)=>toW(x,y,D+.5+z,dx,dz)):[],color:'clear',alpha:.3})}
-    const readme=`Hexagonal wall cell, ${W} mm across the flats, ${D} mm deep\n\nTo cut:\n- ${cut[0][0]}: ${cut[0][1]} mm\n\nMagnets: 8 per cell (${md} × ${mh} mm), 4 in the shell and 4 in the front frame. Check the poles before gluing.\n\n`+notes.map(n=>'- '+n).join('\n')+'\n';
+    const readme=`Hexagonal wall cell, ${W} mm across the flats, ${D} mm deep\n\nTo cut:\n- ${cut[0][0]}: ${cut[0][1]} mm\n\nMagnets: 8 per cell (${md} × ${mh} mm), 4 in the shell and 4 in the front frame. Check the poles attract, then press each magnet into its pocket with a flat tool or a small vice: the little ribs hold it, no glue.\n\n`+notes.map(n=>'- '+n).join('\n')+'\n';
     return {parts,items,cut,notes,readme,tag:`hex-cell-${W}x${D}`,link};
   }
   function place0(t,fn){const o=new Float32Array(t.length);for(let i=0;i<t.length;i+=3){const p=fn(t[i],t[i+1],t[i+2]);o[i]=p[0];o[i+1]=p[1];o[i+2]=p[2]}return o}

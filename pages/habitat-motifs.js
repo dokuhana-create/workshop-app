@@ -208,8 +208,8 @@
     if(acc.length&&two)parts.push({file:`${form}-${o.motif}.stl`,role:'Colour 1',m:G.build(f)},{file:`${form}-${o.motif}-accent.stl`,role:'Colour 2',m:G.build(acc)});
     else parts.push({file:`${form}-${o.motif}.stl`,role:'Main colour',m:G.build([...f,...acc])});
     if(free){const sw=Math.max(30,tw*2+16),sd=Math.max(16,th+12);
-      parts.push({file:`${form}-${o.motif}-stand.stl`,role:'Second file',m:G.build([P_(0,6,rrect(-sw/2,-sd/2,sw/2,sd/2,3)),P_(2,7,rect(-tw-.3,-th/2-.2,tw+.3,th/2+.2),'sub')])});
-      notes.push('Prints lying flat. The tab at the bottom pushes into the stand; a drop of glue makes it permanent.')}
+      parts.push({file:`${form}-${o.motif}-stand.stl`,role:'Second file',m:G.build([P_(0,6,rrect(-sw/2,-sd/2,sw/2,sd/2,3)),P_(2,7,rect(-tw-.05,-th/2-.05,tw+.05,th/2+.05),'sub')])});
+      notes.push('Prints lying flat. The tab at the bottom presses into the stand, a tight fit that holds without glue.')}
     if(form==='ornament')notes.push('Hang it from the lid mesh or a twig with thread through the loop.');
     if(a.thin&&h<50)notes.push('This line motif gets thin at small sizes. Make it at least 50 mm tall.');
     return {parts,notes,magnets,separate:free};

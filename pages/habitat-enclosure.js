@@ -21,6 +21,14 @@
   function threadR(sp,a,z,cl){const h=.4*sp.P,ph=((z/sp.P-a/TAU)%1+1)%1*sp.P,f=ph<h?ph/h:ph<sp.P/2?1:ph<sp.P/2+h?1-(ph-sp.P/2)/h:0;return sp.d/2-h+h*f+cl}
   /* threaded hole along z, open at z1, with a small lead-in at the mouth */
   function screwHole(cx,cy,z0,z1,sp){return varying(z0,z1+1,z=>polar(cx,cy,a=>Math.max(threadR(sp,a,z,SCREW.cl),sp.d/2+SCREW.cl+.6-(z1-z)),48),.2,'sub')}
+  /* the same, open at the bottom (z=0, on the bed) and closed at depth */
+  function screwHoleUp(cx,cy,depth,sp){return varying(-1,depth,z=>polar(cx,cy,a=>Math.max(threadR(sp,a,z,SCREW.cl),sp.d/2+SCREW.cl+.6-Math.max(0,z)),48),.17,'sub')}
+  /* a threaded stud with a screwdriver slot in its top: turned into a corner post through the lid, it carries a finial */
+  function stud(sp,len){const h=.4*sp.P,R0=sp.d/2-h-SCREW.cl;
+    return build([varying(0,len,z=>polar(0,0,a=>Math.min(threadR(sp,a,z,-SCREW.cl),R0+.2+z,R0+.2+(len-z)),48),.17),prism(len-1.6,len+1,rect(-sp.d/2-1,-.7,sp.d/2+1,.7),'sub')])}
+  /* door lock hasp, standing on edge to print: a plate with two pegs that press into holes, and a tab with a hole
+     for a padlock. Local x along the plate, y forward from the face it sits on, z up (0..18). */
+  function hasp(L,peg,F,hy){return build([prism(0,18,unite(rect(-4,0,L,2.4),rect(L-2.4,0,L,F))),G.yDisc(0,3,1.6,-peg,.01),G.yDisc(0,15,1.6,-peg,.01),G.xDisc(hy,9,2.6,L-3.4,L+1,'sub')])}
   /* the screw, printed head down: a slot for a coin or screwdriver in the head, a 45° chamfer round its top edge */
   function lidScrew(sp,Lt){
     const H=SCREW.headH,L=Lt+SCREW.len-1,h=.4*sp.P,R0=sp.d/2-h-SCREW.cl;
@@ -86,7 +94,7 @@
       return;
     }
     f.push(prism(-1,boss+1,circle(h.x,h.y,h.R),'sub'));
-    if(p.hatch==='magnet')for(const dx of [-(h.R+6),h.R+6])f.push(prism(-1,pd,circle(h.x+dx,h.y,R),'sub'));
+    if(p.hatch==='magnet')for(const dx of [-(h.R+6),h.R+6])f.push(prism(-1,pd,G.mag(h.x+dx,h.y,p.dMagD||10),'sub'));
   }
   /* opt.hole: a round opening through the middle instead of vent holes, for a chute or airlock that sits in it */
   function hatchCover(h,p,preview,opt){
@@ -94,7 +102,7 @@
     const holes=r=>{if(preview||opt.hole)return [];const o=[];for(let x=-r;x<r;x+=p.hole+p.bar)for(let y=-r;y<r;y+=p.hole+p.bar){const q=sq(x,y,p.hole);if(q.every(([u,v])=>Math.hypot(u,v)<r)&&Math.hypot(x+p.hole/2,y+p.hole/2)>8)o.push(q)}return o};
     if(p.hatch==='magnet'){
       const th=pd+1.4;f.push(prism(0,th,circle(0,0,h.R+11)));if(!opt.hole)f.push(prism(th,th+8,circle(0,0,6)));
-      for(const dx of [-(h.R+6),h.R+6])f.push(prism(-1,pd,circle(dx,0,R),'sub'));
+      for(const dx of [-(h.R+6),h.R+6])f.push(prism(-1,pd,G.mag(dx,0,p.dMagD||10),'sub'));
       const hs=holes(h.R-4);if(hs.length)f.push(prism(-1,th+1,hs,'sub'));
     }else if(p.hatch==='twist'){
       /* printed upside down: the disc on the bed, with a ridged edge to grip; the plug ring rises from it and carries
@@ -186,7 +194,10 @@
     const n=Math.floor((x1-x0-w)/pitch),o0=(x0+x1-(n*pitch+w))/2;for(let i=0;i<=n;i++){const x=o0+i*pitch;xs.push(rect(x,-ob-1,x+w,ob+1)[0])}
     return {sub:prism(z0,z1,xs,'sub'),z0,z1,n:n+1};
   }
-  function rectBase(d,p){const v=frontVents(d,p);const m=base(rectC(d),{gw:d.g,wall:2.4,S:d.S,s:d.s,f:d.f,join:'miter',corners:rectCorners(d,p.corners==='rounded'),rounded:p.corners==='rounded',subs:v?[v.sub]:[]},p);m.vents=v;return m}
+  function rectBase(d,p){const v=frontVents(d,p),subs=v?[v.sub]:[];
+    /* magnet pockets in the front of the two front corner blocks, for a decorative front frame */
+    if(p.frameMags==='yes')for(const x of [0,d.W])subs.push(G.yMag(x,d.S/2,p.dMagD||10,-d.Eh-1,-d.Eh+(p.dMagH||3)+.2,'sub'));
+    const m=base(rectC(d),{gw:d.g,wall:2.4,S:d.S,s:d.s,f:d.f,join:'miter',corners:rectCorners(d,p.corners==='rounded'),rounded:p.corners==='rounded',subs},p);m.vents=v;return m}
   /* where each corner's lid screw goes: in the outer quarter of the post, clear of both panel slots */
   function screwSpots(d,p){if(p.lidScrews!=='screws')return [];const c=screwSpec(d.slim).c;return [[0,0],[d.W,0],[d.W,d.D],[0,d.D]].map(([x,y],i)=>{const a=i*Math.PI/2,co=Math.round(Math.cos(a)),si=Math.round(Math.sin(a));return [x+co*-c-si*-c,y+si*-c+co*-c]})}
   function rectLid(d,p,preview){
@@ -204,6 +215,7 @@
     if(p.lidScrews==='screws'){const sp=screwSpec(d.slim);f.push(screwHole(-sp.c,-sp.c,Hp-SCREW.len-1,Hp,sp))}
     /* holes in both outer faces for the door's turn latch (every post gets them, so any post fits any corner) */
     if(d.latch){const dep=latchDepth(d),z=d.latchZ;f.push(G.yDisc(3,z,1.5,-a-1,-a+dep,'sub'),G.xDisc(3,z,1.5,-a-1,-a+dep,'sub'))}
+    if(d.lockZ!=null){const dep=latchDepth(d);for(const z of [d.lockZ-6,d.lockZ+6])f.push(G.yDisc(3,z,1.5,-a-1,-a+dep,'sub'),G.xDisc(3,z,1.5,-a-1,-a+dep,'sub'))}
     return build(f);
   }
   const latchDepth=d=>Math.min(5,d.a-d.g/2-.8);
@@ -327,15 +339,17 @@
     ff.push(prism(-1,pH+1,rect(xo0,-T-1,xo1,1),'sub'));
     const clip=subtract(unite(circle(xh,yh,cR,48),rect(xh-cR*.8,-.01,xh+cR*.8,yh)),unite(circle(xh,yh,rr+cl,48),rect(xh-rr*.85,yh,xh+rr*.85,yh+cR+1)));
     for(const i of [0,2,4]){const [z0,z1]=zone(i);ff.push(prism(z0,z1,clip))}
-    if(mag)for(const z of zm)ff.push(yDisc(xm,z,Rm,off-pd,off+1,'sub'));
+    if(mag)for(const z of zm)ff.push(G.yMag(xm,z,md,off-pd,off+1,'sub'));
     else if(!turn)for(const z of zm)ff.push(prism(z-12,z+12,G.rrect(xm-.6,off-.01,xm+.6,off+.6,.3)));
     /* door */
     const leaf=rect(xh,off,xd1,off+dt),df=[prism(zd0,zd1,leaf),prism(zd0,zd1,circle(xh,yh,rr,40))];
     df.push(prism((zd0+zd1)/2-15,(zd0+zd1)/2+15,rect(xd1-10,off+dt-.01,xd1,off+dt+8)));
     for(const i of [0,2,4]){const [z0,z1]=zone(i);df.push(prism(z0-gp,z1+gp,subtract(rect(xh-cR-2,off-1,xh+cR+1.2,off+dt+1),circle(xh,yh,rr+.01,40)),'sub'))}
-    if(mag)for(const z of zm)df.push(yDisc(xm,z,Rm,off-1,off+pd,'sub'));
+    if(mag)for(const z of zm)df.push(G.yMag(xm,z,md,off-1,off+pd,'sub'));
     else if(!turn)for(const z of zm)df.push(prism(z-13,z+13,rect(xm-.9,off-1,xm+.9,off+.9),'sub'));
     let buttons=0;
+    /* lock hasp: two shallow holes near the free edge, clear of the magnet pockets in the back */
+    if(o.lockZ!=null)for(const z of [o.lockZ-6,o.lockZ+6])df.push(yDisc(xd1-5,z,1.5,off+dt-3,off+dt+1,'sub'));
     if(recess){
       /* window opening with rounded corners, which also keeps cracks from starting there */
       const wx0=xo0+3,wx1=xo1-3,wz0=zo0+3,wz1=zo1-3,rc=6;
@@ -355,5 +369,5 @@
       button:buttons?turnButton(0,4.5):null,front:off+dt,edge:xd1,midZ:(zd0+zd1)/2};
   }
 
-  root.HabitatEnclosure={screwSpec,lidScrew,turnButton,latchDepth,frontVents,hatchCover,TW,base,lid,rectBase,rectLid,rectPost,polyGeom,polyEnclosure,spineToWorld,roundEnclosure,perimeter,tilePanel,TILE,swingDoor,lightWindows,mirrorY};
+  root.HabitatEnclosure={screwSpec,screwSpots,stud,hasp,screwHoleUp,lidScrew,turnButton,latchDepth,frontVents,hatchCover,TW,base,lid,rectBase,rectLid,rectPost,polyGeom,polyEnclosure,spineToWorld,roundEnclosure,perimeter,tilePanel,TILE,swingDoor,lightWindows,mirrorY};
 })(typeof window!=='undefined'?window:globalThis);

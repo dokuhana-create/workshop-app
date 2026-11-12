@@ -9,7 +9,7 @@
   /* scale a shape made in units of 1 to s mm */
   const sized=(f,s)=>(x,y,z)=>f(x/s,y/s,z/s)*s;
 
-  const pockets=(f,o,list)=>{if(o.mount!=='magnet')return f;const r=(o.dMagD||10)/2+.15,d=(o.dMagH||3)+.2;return cut(f,...list.map(([x,y])=>S.cylZ(x,y,r,-1,d)))};
+  const pockets=(f,o,list)=>{if(o.mount!=='magnet')return f;const r=(o.dMagD||10)/2+.05,d=(o.dMagH||3)+.2;return cut(f,...list.map(([x,y])=>S.cylZ(x,y,r,-1,d)))};
 
   /* ---------- pieces made from real 3D scans ----------
      Each scan was merged into one solid and stored as a distance field: a small grid (gzip, int8) that says how
@@ -127,7 +127,7 @@
     const h=Math.max(.2,Math.min(.5,o.size/(sh.relief?170:140)))*(o.detail==='fine'?.75:1)*(o.preview?1.8:1);
     const m=mesh(sh.f,sh.b,h,{print:o.print!=='full'&&!sh.relief});
     const notes=[S0.note,S0.credit+(S0.credit.includes('no credit needed')?'':' You may sell prints; credit it, for example on the card or listing.')];
-    if(sh.relief)notes.push(o.mount==='magnet'?'The magnet pockets are in the back.':'Glue it to the wall, or choose magnets.');
+    if(sh.relief)notes.push(o.mount==='magnet'?'The magnet pockets are in the back.':'Choose magnets to hang it on a wall.');
     if(o.print==='full'&&!sh.relief)notes.push('Full detail: turn on tree supports in the slicer.');
     const res={parts:[part(k+'.stl',m)],notes,magnets:sh.magnets||0,display:sh.display,relief:!!sh.relief};
     if(CACHE.size>20)CACHE.clear();CACHE.set(key,res);return res;
@@ -173,8 +173,8 @@
     }else{
       parts.push(part('model.stl',{tris:t,vol:abs(vol)}));
       if(o.mount==='magnet'){const w=min(40,max(16,r)),f=[G.prism(0,2.6,G.rrect(-w/2,-w/2,w/2,w/2,3)),G.prism(2.6-(o.mh||3)+0,2.6,G.circle(0,0,(o.md||10)/2+.15,40),'sub')];
-        const pl=G.build([G.prism(0,(o.mh||3)+1,G.rrect(-w/2,-w/2,w/2,w/2,3)),G.prism(1,(o.mh||3)+1.01,G.circle(0,0,(o.md||10)/2+.15,40),'sub')]);
-        parts.push(part('magnet-plate.stl',pl,'Second file'));magnets=1;notes.push('Glue the magnet into the plate, then glue the plate flat to the back of your model.')}
+        const pl=G.build([G.prism(0,(o.mh||3)+1,G.rrect(-w/2,-w/2,w/2,w/2,3)),G.prism(1,(o.mh||3)+1.01,G.mag(0,0,o.md||10),'sub')]);
+        parts.push(part('magnet-plate.stl',pl,'Second file'));magnets=1;notes.push('Press the magnet into the plate. Fix the plate to the back of your model with double-sided tape, or give the model a flat back and choose magnets instead.')}
     }
     if(o.turn&&o.turn!=='none')notes.push('Turned before printing, as chosen. Check in the slicer that the flattest side is on the bed.');
     notes.push('Your model is printed as you made it: if it hangs out over air, turn on supports in the slicer.');

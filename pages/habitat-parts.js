@@ -34,7 +34,7 @@
     const R=md/2+.2,pd=mh+.2,bt=pd+1.4,ph=Math.max(h,2*R+6),zc=ph/2;
     f.push(prism(0,ph,rrect(-w/2,-bt,w/2,.6,1)));
     const xs=w>=4*R+12?[-w/4,w/4]:[0];
-    for(const x of xs)f.push(yDisc(x,zc,R,-bt-1,-bt+pd,'sub'));
+    for(const x of xs)f.push(G.yMag(x,zc,md,-bt-1,-bt+pd,'sub'));
     return xs.length;
   }
   function clipBack(f,{w,h}){
@@ -212,7 +212,7 @@
       }
     }
     let magnets=0;
-    if(mag){const y=Hb-R-4,xs=o.L>=4*R+16?[-o.L/4,o.L/4]:[0];for(const x of xs)f.push(prism(-1,pd,circle(x,y,R),'sub'));magnets=xs.length}
+    if(mag){const y=Hb-R-4,xs=o.L>=4*R+16?[-o.L/4,o.L/4]:[0];for(const x of xs)f.push(prism(-1,pd,G.mag(x,y,md),'sub'));magnets=xs.length}
     if(clip){const wc=Math.min(o.L*.4,CLIP.maxW/2);f.push(prism(bt,bt+.35,rect(-wc+2,1,wc-2,2)))}
     if(o.pattern&&o.pattern!=='solid')notes.push('The see-through pattern prints as is, with lines at least '+Math.max(1.6,o.lw||2.2).toFixed(1)+' mm wide. Tap Shuffle shape for a different version.');
     return {parts:[{file:'wall-ledge.stl',role:'Main colour',m:build(f)}],notes,magnets};
@@ -223,15 +223,18 @@
     const clip=o.mount==='clip',mag=o.mount==='magnet',R=o.md/2+.2,pd=o.mh+.2;
     const sp=4,ov=3,pt=clip?RAIL.tongue:mag?Math.max(2,pd+1.4):2,Lp=o.cw+2*sp,drop=clip?CLIP.clearZ:0,Hp=o.ch+sp-3+drop;
     const shape=clip?unite(rrect(-Lp/2,drop,Lp/2,Hp,4),rrect(-CLIP.maxW/2,0,CLIP.maxW/2,drop+4,1)):rrect(-Lp/2,0,Lp/2,Hp,4),pf=[prism(0,pt,shape)];let magnets=0;
-    if(mag){const y=drop+(Hp-drop)/2,xs=Lp>=4*R+16?[-Lp/4,Lp/4]:[0];for(const x of xs)pf.push(prism(-1,pd,circle(x,y,R),'sub'));magnets=xs.length;}
+    if(mag){const y=drop+(Hp-drop)/2,xs=Lp>=4*R+16?[-Lp/4,Lp/4]:[0];for(const x of xs)pf.push(prism(-1,pd,G.mag(x,y,o.md),'sub'));magnets=xs.length;}
     if(clip)pf.push(prism(pt,pt+.35,rect(-CLIP.maxW/2+3,1,CLIP.maxW/2-3,2)));
     const gz=.8,lz=1.2,y0=drop;
     const spacer=intersect(shape,unite(rect(-Lp/2,y0,-Lp/2+sp,Hp),unite(rect(Lp/2-sp,y0,Lp/2,Hp),rect(-Lp/2,y0,Lp/2,y0+sp))));
     const lips=intersect(shape,unite(rect(-Lp/2,y0,-Lp/2+sp+ov,Hp),unite(rect(Lp/2-sp-ov,y0,Lp/2,Hp),rect(-Lp/2,y0,Lp/2,y0+sp+ov))));
-    /* the frame prints on its own, lips down on the bed, so the lips never hang over the card slot; glue it on */
-    const ff=[prism(0,lz,lips),prism(lz,lz+gz,spacer)];
+    /* the frame prints on its own, lips down on the bed, so the lips never hang over the card slot. Three small pins on
+       its back press into holes in the plate, so it needs no glue */
+    const ym=y0+(Hp-y0)/2,pins=[[-Lp/2+sp/2,ym],[Lp/2-sp/2,ym],[0,y0+sp/2]];
+    const ff=[prism(0,lz,lips),prism(lz,lz+gz,spacer),prism(lz+gz-.01,lz+gz+1.8,pins.map(([x,y])=>circle(x,y,1.2,20)[0]))];
+    pf.push(prism(pt-2.2,pt+1,pins.map(([x,y])=>circle(x,y,1.1,20)[0]),'sub'));
     const notes=[];if(mag&&o.ch<2*R+2)notes.push('The card is too short for the magnets. Make it taller.');
-    notes.push('The frame prints separately, face down. Glue it onto the plate along the sides and bottom, leaving the top open for the card. Print it in a second colour if you like.');
+    notes.push('The frame prints separately, face down. Press its three pins into the holes in the plate; the top stays open for the card. Print it in a second colour if you like.');
     return {parts:[{file:'label-plate.stl',role:'Main colour',m:build(pf)},{file:'label-frame.stl',role:'Second file',m:build(ff)}],notes,magnets};
   }
 
@@ -301,7 +304,7 @@
     }
     if(!hatch)notes.push('There is no room for the feeding hatch next to the light windows, so you open the enclosure by lifting the lid.');
     const lf=[prism(0,Lt,oR),prism(Lt-.01,Lt+s,subtract(oR,oG)),prism(Lt-.01,Lt+s,subtract(iG,iR))];
-    if(hatch){const {Rh,hx,hy}=hatch;lf.push(prism(0,boss,subtract(circle(hx,hy,Rh+12),circle(hx,hy,Rh))),prism(-1,boss+1,circle(hx,hy,Rh),'sub'));for(const x of [hx-(Rh+6),hx+Rh+6])lf.push(prism(-1,pd,circle(x,hy,R),'sub'))}
+    if(hatch){const {Rh,hx,hy}=hatch;lf.push(prism(0,boss,subtract(circle(hx,hy,Rh+12),circle(hx,hy,Rh))),prism(-1,boss+1,circle(hx,hy,Rh),'sub'));for(const x of [hx-(Rh+6),hx+Rh+6])lf.push(prism(-1,pd,G.mag(x,hy,md),'sub'))}
     const hs=[];
     if(win)addWindows(lf,hs,win,p,0,Lt,false,preview);
     if(!preview){

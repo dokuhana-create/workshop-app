@@ -294,8 +294,8 @@
       const R=o.md/2+.2,pd=o.mh+.2,w=b.x1-b.x0,safe=offset(ft,-R-1.2),xs=opts.xs||(w>=4*R+16?[b.cx-w/4,b.cx+w/4]:[b.cx]),my=opts.my!=null?opts.my+dy:b.cy;
       const ok=xs.filter(x=>safe.length&&G.inside(safe,x,my));
       if(ok.length){plate=unite(plate,ok.flatMap(x=>circle(x,my,R+2.4,40)));f[f.length-1]=prism(0,bt,plate)}
-      for(const x of ok){f.push(prism(-1,pd,circle(x,my,R),'sub'));magnets++}
-      if(!magnets)notes.push('This piece is too small for a magnet pocket. Use glue, or make it bigger.');
+      for(const x of ok){f.push(prism(-1,pd,G.mag(x,my,o.md),'sub'));magnets++}
+      if(!magnets)notes.push('This piece is too small for a magnet pocket. Make it bigger, or choose another way to mount it.');
     }
     return {f,bt,dy,magnets,notes,plate};
   }
@@ -393,7 +393,7 @@
     if(o.mount==='tie'){shape=subtract(unite(shape,rrect(-W/2,L-2,W/2,L+10,3)),unite(circle(-W/4,L+4.5,1.3,20),circle(W/4,L+4.5,1.3,20)))}
     else if(o.mount==='hook'){const rd=o.dia/2+1.6;shape=unite(shape,stroke([[[0,L-2],[0,L+6],...E_(-rd,L+6,rd,rd,0,180),[-2*rd,L+2]]],3))}
     else if(o.mount==='clip'){const cw=Math.min(W,CLIP.maxW);shape=unite(subtract(shape,rect(-W,-1,W,CLIP.clearZ)),rrect(-cw/2,0,cw/2,CLIP.clearZ+4,1));f.push(prism(t,t+.35,rect(-cw/2+2,1,cw/2-2,2)))}
-    else if(o.mount==='magnet'){shape=unite(shape,rrect(-W/2,L-o.md-6,W/2,L,2));const R=o.md/2+.2;if(W>=2*R+3){f.push(prism(-1,o.mh+.2,circle(0,L-R-3,R),'sub'));magnets=1}else notes.push('Make the ladder wider so a magnet fits.')}
+    else if(o.mount==='magnet'){shape=unite(shape,rrect(-W/2,L-o.md-6,W/2,L,2));const R=o.md/2+.2;if(W>=2*R+3){f.push(prism(-1,o.mh+.2,G.mag(0,L-R-3,o.md),'sub'));magnets=1}else notes.push('Make the ladder wider so a magnet fits.')}
     f.push(prism(0,t,shape));
     if(ridges.length)f.push(prism(t,t+.6,intersect(stroke(ridges,1),offset(shape,-.6))));
     if(o.mount==='tie')notes.push('Thread fishing line or a twist tie through the two holes and around the lid mesh. The ladder then hangs just below the lid, where mantises like to moult.');
@@ -469,10 +469,10 @@
     const bed=(enc&&enc.bed)||350,parts=[];
     if(span+2*knob>bed-10){const mx=span/2,my=yAt(.5),a=w*.28,b=w*.42,L=Math.min(8,w),tab=[[[mx-.5,my-a],[mx+L,my-b],[mx+L,my+b],[mx-.5,my+a]]];
       const left=rect(-200,-2000,mx,2000),right=rect(mx,-2000,span+200,2000);
-      const half=(keep,add,sub)=>{const out=[prism(0,t,subtract(unite(intersect(body,keep),add?intersect(tab,offset(body,.01)):[]),sub?offset(tab,.15):[])),prism(0,ps,intersect(pins,keep))];
+      const half=(keep,add,sub)=>{const out=[prism(0,t,subtract(unite(intersect(body,keep),add?intersect(tab,offset(body,.01)):[]),sub?offset(tab,.05):[])),prism(0,ps,intersect(pins,keep))];
         if(ridges.length)out.push(prism(t,t+.5,intersect(intersect(stroke(ridges,.7),offset(body,-.6)),keep)));return out};
       parts.push({file:'twig-bridge-half-1.stl',role:'Main colour',m:build(half(left,true,false))},{file:'twig-bridge-half-2.stl',role:'Main colour',m:build(half(right,false,true))});
-      notes.push('The bridge is longer than your print bed, so it comes in two halves that join with a dovetail in the middle. Push them together and add a drop of glue.')}
+      notes.push('The bridge is longer than your print bed, so it comes in two halves that join with a dovetail in the middle. Slide them together: the dovetail is a tight fit and holds without glue.')}
     else parts.push(part('twig-bridge.stl',build(solid)));
     parts.push({file:'wall-bracket-print-2.stl',role:'Second file',m:br.m});
     const where=across==='depth'?'the front and the back wall':'the left and the right wall';
@@ -850,10 +850,10 @@
     parts.push(part('transport-box.stl',build(f)));
     const lf=[prism(0,2,unite(outer,o.handle==='tabs'?unite(rrect(-6,(bounds(outer).y1)-2,6,bounds(outer).y1+6,3),rrect(-6,bounds(outer).y0-6,6,bounds(outer).y0+2,3)):[])),prism(2,7,subtract(offset(fp,-.3),offset(fp,-1.9)))];
     if(o.vents!=='sides'){const hs=holes(offset(fp,-3),o.pattern,1.6,1.3,o.seed),ob=bounds(outer);const keep=o.handle==='loop'?hs.filter(h=>h.every(([x,y])=>Math.hypot(Math.abs(x)-(ob.x1-ob.x0)*.3,y)>5)):hs;if(keep.length)lf.push(prism(-1,3,keep,'sub'))}
-    if(o.handle==='loop'){const ob=bounds(outer),ax=(ob.x1-ob.x0)*.3;lf.push(prism(-1,3,unite(rect(-ax-2.2,-2.2,-ax+2.2,2.2),rect(ax-2.2,-2.2,ax+2.2,2.2)),'sub'));
+    if(o.handle==='loop'){const ob=bounds(outer),ax=(ob.x1-ob.x0)*.3;lf.push(prism(-1,3,unite(rect(-ax-2,-2,-ax+2,2),rect(ax-2,-2,ax+2,2)),'sub'));
       const hp=[[-ax,-2],[-ax,6],[-ax+6,6+Math.min(14,ax*.5)],[ax-6,6+Math.min(14,ax*.5)],[ax,6],[ax,-2]];
       parts.push(part('transport-handle.stl',build([prism(0,4,unite(stroke([hp.slice(1,5)],4),unite(rect(-ax-2,-2,-ax+2,6.5),rect(ax-2,-2,ax+2,6.5))))]),'Second file'));
-      notes.push('Push the handle pegs into the two square holes in the lid, with a drop of glue.')}
+      notes.push('Press the handle pegs into the two square holes in the lid: they are a tight fit and hold without glue.')}
     parts.splice(1,0,part('transport-lid.stl',build(lf),'Second file'));
     notes.push('The lid prints upside down and pushes into the box. Line the floor with a paper towel and add a twig so the mantis can hold on.');
     return {parts,notes,magnets:0,separate:true};
@@ -872,7 +872,7 @@
     const bb=bounds(badge),my=T.rings.length?bb.cy+(bb.y1-bb.y0)*.1:bb.cy,ty=bb.y0+(bb.y1-bb.y0)*.2;
     let art=unite(move(mk.mark,0,my),move(T.rings,0,ty));
     if(o.border==='yes')art=unite(art,subtract(offset(badge,-1),offset(badge,-1-Math.max(1.2,W*.025))));
-    const o2=Object.assign({},o,{mount:o.mount==='none'?'glue':o.mount}),mt=backMount(o2,badge,{min:2});notes.push(...mt.notes);
+    const o2=Object.assign({},o,{mount:o.mount==='none'||o.mount==='glue'?'magnet':o.mount}),mt=backMount(o2,badge,{min:2});notes.push(...mt.notes);
     const art2=move(art,0,mt.dy),parts=[part('shiftys-emblem.stl',build(mt.f),'Colour 1'),part('shiftys-emblem-mark.stl',build([prism(mt.bt,mt.bt+1,art2)]),'Colour 2')];
     parts.push({file:'shiftys-logo.svg',text:()=>logoSVG({font:o.font}),role:'Logo'},{file:'shiftys-logo-wide.svg',text:()=>logoSVG({layout:'wide',font:o.font}),role:'Logo'});
     notes.push('The mark comes as its own file. In Creality Print, add it to the badge as a part and give it a second CFS colour. The zip also has the logo as SVG files for labels and your shop.');

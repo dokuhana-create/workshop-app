@@ -55,11 +55,11 @@
         const outer=(x,y,z)=>max(abs(x-cx)-pw/2,y0-y,y-(y0+ph),z-(bt+min(pd,(y-y0)+2)),-z),inner=(x,y,z)=>max(abs(x-cx)-pw/2+wl,y0+wl-y,y-(y0+ph+5),z-(bt+min(pd,(y-y0)+2)-wl),bt+.6-z);
         const drain=(x,y,z)=>max(Math.hypot(x-cx,z-(bt+3.5))-1.3,y0-1-y,y-(y0+wl+1));
         f=S.cut(S.union(f,outer),inner,drain)}
-      if(mags.length){f=S.cut(f,...mags.map(([x,y])=>S.cylZ(x,y,md/2+.15,-1,mh+.2)));magnets+=2}
+      if(mags.length){f=S.cut(f,...mags.map(([x,y])=>S.cylZ(x,y,md/2+.05,-1,mh+.2)));magnets+=2}
       const m=S.mesh(f,[-8,-8,w+8,h+8,bt+max(dep+1,pk.length?24:0)],o.preview?1:.6);
       parts.push(part(`wall-tile-r${j+1}-c${i+1}.stl`,m,parts.length?'Second file':'Main colour'));
     }
-    notes.push(`${cols*rows} tiles, ${cols} across and ${rows} down: the texture runs on from one tile into the next. They push together with dovetails (right and top tabs into left and bottom slots); a drop of glue makes it permanent.`);
+    notes.push(`${cols*rows} tiles, ${cols} across and ${rows} down: the texture runs on from one tile into the next. They push together with dovetails (right and top tabs into left and bottom slots). They stay together once the wall is in place.`);
     if(pk.length)notes.push('Planting pockets: a little cup open at the top, with a drain hole. Fill with moss or a small air plant.');
     notes.push('Every tile prints flat on its back, without supports.'+(o.mount==='magnet'?' Two magnet pockets in the back of each tile.':''));
     return {parts,notes,magnets,separate:true};
@@ -77,7 +77,7 @@
     /* grip: tiny bumps along the bars */
     const bumps=[];for(let y=2;y<h-2;y+=pitch)for(let x=2;x<w-2;x+=pitch)bumps.push(circle(x+bar/2-.2,y+bar/2-.2,.75,10));
     f.push(prism(bt,bt+.6,intersect(U(...bumps),offset(plate,-.1))));
-    if(o.mount==='magnet'){for(const [x,y] of [[12,12],[w-12,12],[12,h-12],[w-12,h-12]]){f.push(prism(0,mh+1,circle(x,y,md/2+2.5,40)),prism(-1,mh+.2,circle(x,y,md/2+.15,40),'sub'))}magnets=4;
+    if(o.mount==='magnet'){for(const [x,y] of [[12,12],[w-12,12],[12,h-12],[w-12,h-12]]){f.push(prism(0,mh+1,circle(x,y,md/2+2.5,40)),prism(-1,mh+.2,G.mag(x,y,md),'sub'))}magnets=4;
       notes.push('Magnets: 4 in the grid; put 4 more on top of the lid over them, and the grid hangs underneath.')}
     else notes.push('Glue or tape the grid under the lid.');
     notes.push('Prints flat. Mantises hang from the ceiling to moult: this gives a firm grip under a smooth or clear lid. Keep it clean of old skins.');
