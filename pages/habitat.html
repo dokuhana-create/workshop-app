@@ -3,19 +3,20 @@
 <script src="../shim.js"></script>
 <script src="../lib/clipper.js"></script>
 <script src="../lib/earcut.min.js"></script>
-<script src="../lib/geo.js?v=28"></script>
-<script src="habitat-parts.js?v=28"></script>
-<script src="habitat-enclosure.js?v=28"></script>
-<script src="habitat-more.js?v=28"></script>
-<script src="habitat-motifs.js?v=28"></script>
-<script src="habitat-keep.js?v=28"></script>
-<script src="../lib/sdf.js?v=28"></script>
-<script src="habitat-sculpt.js?v=28"></script>
-<script src="habitat-trim.js?v=28"></script>
-<script src="habitat-addons.js?v=28"></script>
-<script src="habitat-forms.js?v=28"></script>
-<script src="habitat-shapes.js?v=28"></script>
-<script src="habitat-sets.js?v=28"></script>
+<script src="../lib/geo.js?v=29"></script>
+<script src="habitat-parts.js?v=29"></script>
+<script src="habitat-enclosure.js?v=29"></script>
+<script src="habitat-more.js?v=29"></script>
+<script src="habitat-motifs.js?v=29"></script>
+<script src="habitat-keep.js?v=29"></script>
+<script src="../lib/sdf.js?v=29"></script>
+<script src="habitat-pots.js?v=29"></script>
+<script src="habitat-sculpt.js?v=29"></script>
+<script src="habitat-trim.js?v=29"></script>
+<script src="habitat-addons.js?v=29"></script>
+<script src="habitat-forms.js?v=29"></script>
+<script src="habitat-shapes.js?v=29"></script>
+<script src="habitat-sets.js?v=29"></script>
 <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Bricolage+Grotesque:opsz,wght@12..96,600;12..96,750&family=IBM+Plex+Mono:wght@500&family=IBM+Plex+Sans:wght@400;500;600&display=swap">
 <style>
 /* Same layout as the Resin Workshop: inputs on the left, the 3D preview and downloads beside them. */
@@ -964,8 +965,12 @@ const LIGHT_LINK='<a href="https://insektenliebe.com/en/?p=158875" target="_blan
 const ITEMS={
   dish:{group:'food',name:'Pearl dish',fields:[['L','Length',50],['W','Width',40],['depth','Depth',12],['wall','Wall',2.4]],shapes:['round','oval','pebble','hex'],mounts:['free','peg','magnet','clip'],
     hint:'A shallow dish for water gel pearls such as Aqua Pearls Calcium. Its stepped inner edge lets feeder insects and small nymphs climb in and out. Replace the pearls every few days, since they go mouldy in a warm, humid enclosure.'},
-  pot:{group:'plants',name:'Plant pot',fields:[['L','Length',60],['W','Width',50],['H','Height',60],['wall','Wall',2],['taper','Wider at the top (%)',12]],shapes:['round','oval','hex','square','pebble'],selects:[['surface','Surface',[['straight','Smooth'],...Object.entries(HabitatParts.PROFILES).filter(([k])=>k!=='straight').map(([k,v])=>[k,v.name])]]],mounts:['free','peg','magnet','clip'],drain:true,
-    hint:'A pot with small feet and drainage holes. Fluted, bamboo, stone or bark surfaces have straight sides. Turn the holes off if it shouldn\'t drip onto the substrate. For live plants, print in PETG so the pot stays watertight.'},
+  pot:{group:'plants',keep:'pot',name:'Plant pot',fields:[['L','Length',60],['W','Width',50],['H','Height',55],['wall','Wall',2.2]],shapes:['round','oval','pebble','hex','square'],
+    selects:[['surface','Surface',Object.entries(HabitatPots.SURF).map(([k,v])=>[k,v.name])],['form','Form',Object.entries(HabitatPots.FORM).map(([k,v])=>[k,v.name])]],mounts:['free','peg'],drain:true,
+    hint:'A soft, rounded pot with drainage holes, in a surface to match the style: rock, river pebbles, bark, flutes, petals, bamboo and more. For live plants, print in PETG.'},
+  wallpot:{group:'plants',keep:'wallpot',name:'Wall pot',fields:[['L','Width',70],['W','Depth from the wall',40],['H','Height',55],['wall','Wall',2.2]],shapes:['round','pebble','hex','square'],
+    selects:[['surface','Surface',Object.entries(HabitatPots.SURF).map(([k,v])=>[k,v.name])],['form','Form',Object.entries(HabitatPots.FORM).map(([k,v])=>[k,v.name])]],mounts:['magnet'],drain:true,
+    hint:'Half a pot with a flat back, held to a clear or mesh wall by magnets: plants up the walls instead of more decoration.'},
   twig:{group:'climb',name:'Twig holder',fields:[['dia','Twig thickness',6],['H','Height',30]],shapes:['cylinder','rock','cone','hex'],mounts:['free','peg','magnet','clip'],
     hint:'Holds a branch upright. Standing or pegged versions have a wide base for the floor, and wall versions sit against a panel. Measure the thickest part of the twig end. The socket adds a little play.'},
   ledge:{group:'climb',name:'Wall ledge',fields:[['L','Length',70],['dep','Depth',45],['Hh','Back height',35],['underH','Underside depth',25],['lw','Pattern line width',2.2]],shapes:['fungus','lobed','tiered','leaf','pebble','moon','cloud','classic','sharp'],mounts:['magnet','clip','glue'],
@@ -1001,7 +1006,7 @@ Object.assign(ITEMS,{
     selects:[['style','Style',[['classic','Two hooks'],['minimal','One hook'],['cradle','Side cradle'],['organic','Organic plate']]],['open','Back plate',[['yes','See-through cells'],['no','Solid']]]],shuffle:true,mounts:['magnet','clip','glue'],
     hint:'Holds a piece of cork bark flat against a wall, as a climbing and hiding surface. A shelf takes its weight, and hooks or side clamps keep it from tipping forward.'},
   tiers:{group:'plants',keep:'tiers',name:'Tiered back planter',fields:[['up','Front tier above the substrate',20],['step','Each tier higher by',30],['pct','Depth (% of the floor)',60],['wall','Wall',2]],
-    selects:[['tiers','Tiers',[['2','Two'],['3','Three']]],['front','Front of each tier',Object.entries(HabitatParts.PROFILES).map(([k,v])=>[k,v.name])],['top','Top edge',[['flat','Straight'],['arches','Arches'],['pointed','Pointed'],['battlements','Battlements'],['waves','Waves']]],['mods','Pieces',[['auto','As many as the bed needs'],['1','One'],['2','Two modules'],['3','Three modules']]]],mounts:[],
+    selects:[['tiers','Tiers',[['2','Two'],['3','Three']]],['front','Front of each tier',Object.entries(HabitatPots.SURF).map(([k,v])=>[k,v.name])],['top','Top edge',[['flat','Straight'],['arches','Arches'],['pointed','Pointed'],['battlements','Battlements'],['waves','Waves']]],['mods','Pieces',[['auto','As many as the bed needs'],['1','One'],['2','Two modules'],['3','Three modules']]]],mounts:[],
     hint:'Pots in steps along the back wall, sized to your enclosure: fill the tiers with soil and plants, and the floor in front with aquarium gravel, sand or moss.'},
   planter:{group:'plants',more:'planter',name:'Hanging planter',fields:[['L','Width',70],['D','Depth',35],['H','Height',50],['wall','Wall',2],['taper','Narrower at the bottom (%)',20,{show:s=>s.shape!=='cone'}]],
     selects:[['shape','Shape',[['halfround','Half round'],['halfhex','Half hexagon'],['facet','Faceted'],['scallop','Scalloped'],['pebble','Pebble'],['square','Rounded box'],['cone','Cone']]]],shuffle:true,mounts:['magnet','clip','glue'],drain:true,
@@ -1169,7 +1174,7 @@ function trimEnc(){const p=readEnc(),k=JSON.stringify(p);if(trimMemo.k===k)retur
 HabitatKeep.trim=o=>HabitatTrim.piece(Object.assign({},trimEnc(),o));
 /* the anatomical skull loads in the background; redraw when it arrives */
 let scanT;HabitatSculpt.onready=()=>{clearTimeout(scanT);scanT=setTimeout(()=>{if(typeof BMEMO!=='undefined')BMEMO.clear();if(state.tab==='acc'&&['sculpt','set'].includes(A.item))accCalc();else if(state.tab==='build')buildCalc()},200)};
-HabitatSculpt.setVersion('28');
+HabitatSculpt.setVersion('29');
 HabitatKeep.hanger=o=>HabitatForms.hanger(Object.assign({},trimEnc(),o));HabitatKeep.carry=o=>HabitatForms.carry(Object.assign({},trimEnc(),o));
 function encInfo(){
   const e=Object.assign({},DEF,state.enc||{}),bed=Math.max(e.bx||350,e.by||350),g=e.T+.6,band=g/2+2.4,o={e,bed,band,hatchR:e.hatch!=='none'?(state.encHatchR||Math.min(30,e.hatchD/2)):0};
@@ -1196,6 +1201,8 @@ function itemDesign(key,over,mount,seed,sc){
   for(let k=1;k<=3&&r.parts.some(p=>p.m&&openEdges(p.m.tris));k++)r=itemDesign1(key,over,mount,seed+101*k,sc);
   return r;
 }
+/* soft pots are slow to make at full detail: the Accessories preview uses a coarser version, the download the full one */
+let POT_FINAL=false;
 function itemDesign1(key,over,mount,seed,sc){
   const it=ITEMS[key],o={mount,md:Math.max(4,+$('magD').value||10),mh:Math.max(1,+$('magH').value||3),seed,drain:A.drain,kind:A.kind in (it.kinds||{})?A.kind:'ring'};
   const fields=it.kinds?it.kinds[o.kind].fields:it.fields,v=over?{}:(A.v[key]||{});
@@ -1203,6 +1210,7 @@ function itemDesign1(key,over,mount,seed,sc){
   if(it.shapes){o.shape=it.shapes.includes(A.shape[key])&&!over?A.shape[key]:it.shapes[0];if(o.shape==='round')o.W=o.L}
   for(const [k,,opts] of it.selects||[])o[k]=(!over&&((A.sel||{})[key]||{})[k])||opts[0][0];
   if(over)Object.assign(o,over);
+  if(['pot','wallpot','tiers'].includes(key)&&o.preview==null)o.preview=POT_FINAL?0:1;
   if(sc&&sc!==1&&!['ship','turntable','cupRack','divider','chute','airlock','trim','custom','hanger','carry','wall','grid','stage','tiers'].includes(key))for(const k of SCALE)if(typeof o[k]==='number'&&!(key==='light'))o[k]=Math.round(o[k]*sc*10)/10;
   if(o.shape==='round'&&o.L)o.W=o.L;
   if(key==='ledge'&&o.shape==='sharp')o.shape='square';
@@ -1272,7 +1280,8 @@ function accCalc(){
   const n=$('accNote');n.hidden=!notes.length;n.innerHTML='';for(const x of notes){const dv=document.createElement('div');dv.textContent=x;n.append(dv)}
 }
 $('accDl').onclick=async()=>{
-  accDesign();await HabitatSculpt.pending();const d=accDesign(),msg=$('accMsg');if(!d.parts.length)return;
+  $('accMsg').textContent='Making the files…';await new Promise(r=>setTimeout(r,30));
+  POT_FINAL=true;let d;try{accDesign();await HabitatSculpt.pending();d=accDesign()}finally{POT_FINAL=false}const msg=$('accMsg');if(!d.parts.length)return;
   if(d.parts.length===1){const p=d.parts[0];await save(p.file,new Blob([stl(place(p.m.tris))]),msg,'Saved. Open it in Creality Print.');return}
   /* parts in a second colour keep their main part's origin, so they line up as one object; everything else sits on the bed */
   const groups=layout(d),files=[],enc=new TextEncoder();
@@ -1307,7 +1316,7 @@ $('bAddGo').onclick=()=>{const k=$('bAdd').value,th=SETS[B.theme]||SETS.orchid,o
   B.extra.push([k,ov]);saveB();buildSetup()};
 $('bEncGo').onclick=()=>view('enc');
 function catOf(key,ov,mount){
-  if(key==='dish')return 'dish';if(key==='pot'||key==='planter'||key==='tiers')return 'pot';if(key==='twig')return 'twig';
+  if(key==='dish')return 'dish';if(['pot','planter','tiers','wallpot'].includes(key))return 'pot';if(key==='twig')return 'twig';
   if(key==='ledge'||key==='bark'||(key==='flower'&&!['peg','stem'].includes(mount)))return 'wall';
   if(['diorama','motif','emblem','plate','moult','tile','label','sculpt'].includes(key))return 'deco';return '';
 }
@@ -1321,7 +1330,7 @@ function buildPieces(){
   const th=SETS[B.theme]||SETS.orchid,PL=HABITAT_PLANTS(B.theme),list=[];
   /* decoration that hangs on the walls: kept to one piece (the name plate first) or none, so the walls stay calm */
   const wallDeco=(k,ov)=>{const m=pieceMount(k,ov);return ['tile','emblem','plate'].includes(k)||(['motif','moult'].includes(k)&&!['free','peg'].includes(m))||(k==='sculpt'&&m==='magnet')};
-  const theme=th.pieces.map(([key,ov,tier],i)=>({key,ov:key==='pot'?Object.assign({},PL.pot,ov):key==='planter'?Object.assign({},PL.wall,ov):ov,tier,i})).filter(p=>p.tier<=+B.pack);
+  const theme=th.pieces.map(([key,ov,tier],i)=>key==='pot'?{key,ov:Object.assign({},PL.pot,ov.shape?{shape:ov.shape}:{}),tier,i}:key==='planter'?{key:'wallpot',ov:Object.assign({},PL.wall),tier,i}:{key,ov,tier,i}).filter(p=>p.tier<=+B.pack);
   let walls=theme.filter(p=>wallDeco(p.key,p.ov));
   if(B.walls!=='full'){const keep=B.walls==='none'?[]:[walls.find(p=>p.key==='plate')||walls[0]].filter(Boolean);walls=walls.filter(p=>!keep.includes(p))}else walls=[];
   theme.forEach(p=>{if(!walls.includes(p))list.push({key:p.key,ov:p.ov,src:'theme',id:'t'+p.i})});
@@ -1329,7 +1338,7 @@ function buildPieces(){
   if(B.plants!=='theme'){const e=readEnc();
     if(B.plants==='tiered'&&['rect','poly','round','oval'].includes(e.shape))list.push({key:'tiers',ov:Object.assign({},PL.tiers),src:'plants',id:'pt'});
     else if(!list.some(p=>p.key==='pot'))list.push({key:'pot',ov:Object.assign({},PL.pot),src:'plants',id:'pp'});
-    if(!list.some(p=>p.key==='planter'))list.push({key:'planter',ov:Object.assign({},PL.wall),src:'plants',id:'pw'})}
+    if(!list.some(p=>p.key==='wallpot'))list.push({key:'wallpot',ov:Object.assign({},PL.wall),src:'plants',id:'pw'})}
   B.extra.forEach(([key,ov],i)=>list.push({key,ov,src:'extra',id:'x'+i,i}));
   const on=p=>!B.off[p.id],has=c=>list.some(p=>on(p)&&catOf(p.key,p.ov,pieceMount(p.key,p.ov))===c);
   const shapes=th.pieces.map(p=>p[1].shape).filter(Boolean),pick=(ok,d)=>shapes.find(s=>ok.includes(s))||d;
@@ -1362,7 +1371,7 @@ const BMEMO=new Map();
 function buildDesign(pv){
   const sc={s:.75,m:1,l:1.3}[B.size]||1,out=[],enc=JSON.stringify(readEnc());let n=0;
   for(const p of buildPieces()){if(B.off[p.id])continue;n++;const m=pieceMount(p.key,p.ov);
-    const o=Object.assign({font:B.font},p.ov,nameOv(p.key,p.ov,B.name),pv?{preview:1}:{});
+    const o=Object.assign({font:B.font},p.ov,nameOv(p.key,p.ov,B.name),{preview:pv?1:0});
     const key=JSON.stringify([p.key,o,m,(B.seed||1)*31+n,sc,['trim','hanger','carry','bridge'].includes(p.key)?enc:'']);
     try{let r=BMEMO.get(key);if(!r){r=itemDesign(p.key,o,m,(B.seed||1)*31+n,sc);if(BMEMO.size>80)BMEMO.clear();BMEMO.set(key,r)}out.push({p,r,m,n})}catch(err){console.error(err);out.push({p,err:true,n})}}
   return out;

@@ -550,5 +550,5 @@
     if(hs[0]>(e.S||40)+(e.H||300)-30)notes.push('The back tier comes close to the lid. Make the steps lower.');
     return {parts,notes,magnets:0};
   }
-  root.HabitatKeep={tiers,motif:o=>root.HabitatMotifs.piece(o),sculpt:o=>root.HabitatSculpt.build(Object.assign({},o,{dMagD:o.md,dMagH:o.mh})),custom:o=>root.HabitatSculpt.custom(o),incubator,oothClip,divider,cupRack,chute,airlock,shipInsert,turntable,gear,diorama,DIORAMA};
+  root.HabitatKeep={tiers:(o,i)=>root.HabitatPots.tiers(o,i),pot:(o,i)=>root.HabitatPots.pot(o,i),wallpot:(o,i)=>root.HabitatPots.wallPot(o,i),motif:o=>root.HabitatMotifs.piece(o),sculpt:o=>root.HabitatSculpt.build(Object.assign({},o,{dMagD:o.md,dMagH:o.mh})),custom:o=>root.HabitatSculpt.custom(o),incubator,oothClip,divider,cupRack,chute,airlock,shipInsert,turntable,gear,diorama,DIORAMA};
 })(typeof window!=='undefined'?window:globalThis);

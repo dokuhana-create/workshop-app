@@ -169,27 +169,30 @@
   };
   root.HABITAT_SETS=S;
 
-  /* Flowerpots for each style: the tiered back planter (front surface, top edge, tiers), a standing pot (shape,
-     surface) and a wall pot (hanging planter shape). Group first, then the styles that differ from their group. */
-  const PG={Flowers:{tiers:{front:'scallops',top:'arches',tiers:'2'},pot:{shape:'round',surface:'scallops'},wall:{shape:'scallop'}},
-    Woodland:{tiers:{front:'bark',top:'flat',tiers:'2'},pot:{shape:'pebble',surface:'bark'},wall:{shape:'pebble'}},
-    'Asian garden':{tiers:{front:'bamboo',top:'flat',tiers:'2'},pot:{shape:'hex',surface:'bamboo'},wall:{shape:'halfhex'}},
-    'Earth and water':{tiers:{front:'stones',top:'flat',tiers:'3'},pot:{shape:'pebble',surface:'stones'},wall:{shape:'pebble'}},
-    Fantasy:{tiers:{front:'waves',top:'waves',tiers:'2'},pot:{shape:'round',surface:'waves'},wall:{shape:'halfround'}},
-    Gothic:{tiers:{front:'flutes',top:'pointed',tiers:'2'},pot:{shape:'square',surface:'flutes'},wall:{shape:'facet'}},
-    Diorama:{tiers:{front:'stones',top:'battlements',tiers:'2'},pot:{shape:'square',surface:'stones'},wall:{shape:'square'}},
-    Modern:{tiers:{front:'zigzag',top:'flat',tiers:'3'},pot:{shape:'hex',surface:'zigzag'},wall:{shape:'facet'}},
-    'Keeper kits':{tiers:{front:'flutes',top:'flat',tiers:'2'},pot:{shape:'round',surface:'flutes'},wall:{shape:'square'}}};
-  const PT={tropical:{tiers:{front:'waves',top:'waves'},pot:{surface:'waves'}},lotus:{tiers:{front:'scallops',top:'waves'},wall:{shape:'halfround'}},
-    protea:{tiers:{front:'zigzag',top:'pointed'},pot:{surface:'zigzag'}},sakura:{tiers:{front:'waves',top:'arches'}},
-    cabin:{tiers:{front:'bark',top:'battlements'},pot:{shape:'square',surface:'bark'}},mossy:{tiers:{tiers:'3'}},deadleaf:{tiers:{front:'bark',top:'arches'}},
-    zen:{tiers:{front:'straight',top:'flat',tiers:'2'},pot:{shape:'square',surface:'straight'},wall:{shape:'square'}},pagoda:{tiers:{top:'pointed'}},
-    canyon:{tiers:{front:'stones',top:'battlements'}},reef:{tiers:{front:'scallops',top:'waves'},pot:{surface:'scallops'},wall:{shape:'scallop'}},
-    moon:{tiers:{top:'arches'}},astral:{tiers:{front:'zigzag',top:'pointed'}},sky:{tiers:{front:'scallops',top:'arches'}},glow:{tiers:{front:'zigzag'}},
-    nouveau:{tiers:{front:'waves',top:'arches'},wall:{shape:'scallop'}},gothic:{tiers:{front:'flutes',top:'pointed'}},
-    ruins:{tiers:{front:'stones',top:'battlements'}},temple:{tiers:{front:'flutes',top:'battlements'},pot:{surface:'flutes'}},olympus:{tiers:{front:'flutes',top:'flat'},pot:{shape:'round',surface:'flutes'}},
-    fairy:{tiers:{front:'bark',top:'arches'},pot:{shape:'pebble',surface:'bark'}},library:{tiers:{front:'straight',top:'battlements'}},
-    botanical:{tiers:{front:'flutes',top:'flat',tiers:'3'},pot:{shape:'round',surface:'flutes'}},honey:{tiers:{front:'zigzag',top:'flat'},pot:{shape:'hex'}},
-    minimal:{tiers:{front:'straight',top:'flat'},pot:{shape:'square',surface:'straight'}}};
+  /* Flowerpots for each style: the tiered back planter (front surface, top edge, tiers), a standing pot and a wall
+     pot (shape, surface, form). Group first, then the styles that differ from their group. */
+  const PG={Flowers:{tiers:{front:'petals',top:'arches',tiers:'2'},pot:{shape:'round',surface:'petals',form:'tulip'},wall:{shape:'round',surface:'petals',form:'tulip'}},
+    Woodland:{tiers:{front:'bark',top:'flat',tiers:'2'},pot:{shape:'pebble',surface:'bark',form:'belly'},wall:{shape:'pebble',surface:'bark',form:'belly'}},
+    'Asian garden':{tiers:{front:'bamboo',top:'flat',tiers:'2'},pot:{shape:'round',surface:'bamboo',form:'straight'},wall:{shape:'round',surface:'bamboo',form:'straight'}},
+    'Earth and water':{tiers:{front:'rock',top:'flat',tiers:'3'},pot:{shape:'pebble',surface:'rock',form:'belly'},wall:{shape:'pebble',surface:'rock',form:'belly'}},
+    Fantasy:{tiers:{front:'swirl',top:'waves',tiers:'2'},pot:{shape:'round',surface:'swirl',form:'belly'},wall:{shape:'round',surface:'swirl',form:'belly'}},
+    Gothic:{tiers:{front:'flutes',top:'pointed',tiers:'2'},pot:{shape:'square',surface:'flutes',form:'urn'},wall:{shape:'square',surface:'flutes',form:'urn'}},
+    Diorama:{tiers:{front:'rock',top:'battlements',tiers:'2'},pot:{shape:'pebble',surface:'rock',form:'belly'},wall:{shape:'pebble',surface:'rock',form:'belly'}},
+    Modern:{tiers:{front:'facets',top:'flat',tiers:'3'},pot:{shape:'hex',surface:'facets',form:'straight'},wall:{shape:'hex',surface:'facets',form:'straight'}},
+    'Keeper kits':{tiers:{front:'smooth',top:'flat',tiers:'2'},pot:{shape:'round',surface:'smooth',form:'belly'},wall:{shape:'round',surface:'smooth',form:'belly'}}};
+  const PT={cottage:{tiers:{front:'knit',top:'waves'},pot:{surface:'knit',form:'belly'},wall:{surface:'knit',form:'belly'}},
+    lotus:{tiers:{top:'waves'},pot:{form:'bowl'},wall:{form:'bowl'}},tropical:{tiers:{front:'swirl',top:'waves'},pot:{surface:'swirl'},wall:{surface:'swirl'}},
+    protea:{tiers:{top:'pointed'},pot:{form:'urn'}},cabin:{tiers:{top:'battlements'}},mossy:{tiers:{front:'pebbles',tiers:'3'},pot:{surface:'pebbles'},wall:{surface:'pebbles'}},
+    zen:{tiers:{front:'smooth'},pot:{shape:'pebble',surface:'smooth',form:'bowl'},wall:{shape:'pebble',surface:'smooth',form:'bowl'}},pagoda:{tiers:{top:'pointed'}},
+    stone:{tiers:{front:'pebbles'},pot:{surface:'pebbles'},wall:{surface:'pebbles'}},canyon:{tiers:{top:'battlements'}},
+    reef:{tiers:{front:'swirl',top:'waves'},pot:{shape:'round',surface:'swirl',form:'tulip'},wall:{shape:'round',surface:'swirl'}},
+    moon:{tiers:{top:'arches'},pot:{surface:'pebbles'}},astral:{tiers:{front:'facets',top:'pointed'},pot:{shape:'hex',surface:'facets',form:'straight'},wall:{shape:'hex',surface:'facets'}},
+    sky:{tiers:{front:'pebbles',top:'arches'},pot:{surface:'pebbles'},wall:{surface:'pebbles'}},glow:{tiers:{front:'facets'},pot:{surface:'facets'}},
+    nouveau:{tiers:{front:'swirl',top:'arches'},pot:{form:'tulip'}},ruins:{tiers:{front:'rock',top:'battlements'}},
+    temple:{tiers:{front:'flutes',top:'battlements'},pot:{shape:'round',surface:'flutes',form:'urn'},wall:{shape:'round',surface:'flutes',form:'urn'}},
+    olympus:{tiers:{front:'flutes',top:'flat'},pot:{shape:'round',surface:'flutes',form:'urn'},wall:{shape:'round',surface:'flutes',form:'urn'}},
+    fairy:{tiers:{front:'bark',top:'arches'},pot:{surface:'bark'},wall:{surface:'bark'}},library:{tiers:{front:'knit',top:'battlements'},pot:{shape:'square',surface:'knit',form:'straight'}},
+    botanical:{tiers:{front:'flutes',top:'flat',tiers:'3'},pot:{surface:'flutes',form:'belly'},wall:{surface:'flutes'}},
+    honey:{pot:{shape:'hex'}},minimal:{tiers:{front:'smooth'},pot:{shape:'round',surface:'smooth',form:'straight'},wall:{shape:'round',surface:'smooth',form:'straight'}}};
   root.HABITAT_PLANTS=k=>{const s=S[k]||S.orchid,g=PG[s.group]||PG.Flowers,t=PT[k]||{},o={};for(const part of ['tiers','pot','wall'])o[part]=Object.assign({},g[part],t[part]||{});return o};
 })(typeof window!=='undefined'?window:globalThis);
