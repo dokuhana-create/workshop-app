@@ -3,19 +3,19 @@
 <script src="../shim.js"></script>
 <script src="../lib/clipper.js"></script>
 <script src="../lib/earcut.min.js"></script>
-<script src="../lib/geo.js?v=23"></script>
-<script src="habitat-parts.js?v=23"></script>
-<script src="habitat-enclosure.js?v=23"></script>
-<script src="habitat-more.js?v=23"></script>
-<script src="habitat-motifs.js?v=23"></script>
-<script src="habitat-keep.js?v=23"></script>
-<script src="../lib/sdf.js?v=23"></script>
-<script src="habitat-sculpt.js?v=23"></script>
-<script src="habitat-trim.js?v=23"></script>
-<script src="habitat-addons.js?v=23"></script>
-<script src="habitat-forms.js?v=23"></script>
-<script src="habitat-shapes.js?v=23"></script>
-<script src="habitat-sets.js?v=23"></script>
+<script src="../lib/geo.js?v=24"></script>
+<script src="habitat-parts.js?v=24"></script>
+<script src="habitat-enclosure.js?v=24"></script>
+<script src="habitat-more.js?v=24"></script>
+<script src="habitat-motifs.js?v=24"></script>
+<script src="habitat-keep.js?v=24"></script>
+<script src="../lib/sdf.js?v=24"></script>
+<script src="habitat-sculpt.js?v=24"></script>
+<script src="habitat-trim.js?v=24"></script>
+<script src="habitat-addons.js?v=24"></script>
+<script src="habitat-forms.js?v=24"></script>
+<script src="habitat-shapes.js?v=24"></script>
+<script src="habitat-sets.js?v=24"></script>
 <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Bricolage+Grotesque:opsz,wght@12..96,600;12..96,750&family=IBM+Plex+Mono:wght@500&family=IBM+Plex+Sans:wght@400;500;600&display=swap">
 <style>
 /* Same layout as the Resin Workshop: inputs on the left, the 3D preview and downloads beside them. */
@@ -167,7 +167,7 @@ h3{font:600 15px var(--body);margin:0 0 6px}
           <label class="f polyOnly">Other walls<select id="polyWalls"></select></label>
           <label class="f roundOnly">Wall<select id="roundWall"></select></label>
           <label class="f swingF">Door catch<select id="doorCatch"></select></label>
-          <label class="f winF">Door window<select id="doorWin"></select></label>
+          <label class="f" hidden>Door window<select id="doorWin"></select></label>
           <label class="f lockF">Door lock<select id="lock"></select></label>
           <label class="f notRound">Panel thickness (mm)<input id="T" type="number" min="1.5" max="6" step="0.5"></label>
           <label class="f">Mesh hole (mm)<input id="hole" type="number" min="1" max="5" step="0.1"></label>
@@ -218,8 +218,8 @@ h3{font:600 15px var(--body);margin:0 0 6px}
         <h2 id="h-enc-tips">Before you print</h2>
         <ul class="tips">
           <li>Print the base and lid flat, the posts lying down, and mesh panels flat. Each file is already turned that way.</li>
-          <li>Glue the posts into the base only after a dry fit, so you can still slide the panels in.</li>
-          <li>If you feed fruit flies to small nymphs, they can get through printed mesh. Glue fine fabric mesh under the lid and mesh panels for that stage.</li>
+          <li>Nothing needs glue: the posts sit in their sockets, the panels slide into the grooves and the lid holds it all together. Choose printed screws under Lid fixing if you want it to stay locked.</li>
+          <li>If you feed fruit flies to small nymphs, they can get through printed mesh. Lay fine fabric mesh under the lid for that stage; the lid's own rim holds it.</li>
           <li>Wash printed parts and let them air out for a day before the mantis moves in.</li>
         </ul>
         <p class="src">Size rule and climate from the <a href="https://dubiaroaches.com/blogs/invert-care/orchid-mantis-care-sheet" target="_blank" rel="noopener">Dubia.com orchid mantis care sheet</a>, the <a href="https://www.reptilecentre.com/pages/info-orchid-mantis-care-sheet" target="_blank" rel="noopener">Reptile Centre care sheet</a> and the <a href="https://keepinginsects.com/praying-mantis/species/dead-leaf-mantis/" target="_blank" rel="noopener">Keeping Insects dead leaf mantis guide</a>.</p>
@@ -589,7 +589,7 @@ opt($('polyFront'),[['clear','Sliding, clear acrylic'],['mesh','Sliding, printed
 opt($('polyWalls'),[['frontclear','Printed mesh'],['clear','Clear acrylic'],['alt','Alternating clear and mesh']]);
 opt($('roundWall'),[['sheet','Rolled clear sheet'],['mesh','Printed mesh tube']]);
 opt($('doorCatch'),[['magnet','Magnets'],['detent','Printed click catch, no magnets'],['turn','Turn latch on the corner post, no magnets']]);
-opt($('doorWin'),[['recess','In a recess, held by turn buttons'],['glue','Glued over the opening']]);
+opt($('doorWin'),[['recess','In a recess, held by turn buttons']]);
 opt($('frame'),[['normal','Standard'],['slim','Slim']]);
 opt($('lidScrews'),[['none','Lid sits on the posts'],['screws','Printed screws in the corners']]);
 opt($('lidVent'),[['grid','Square mesh'],['rings','Rings and spokes']]);
@@ -708,7 +708,7 @@ function rectModel(p,pv){
   for(const q of tp){const {nx,ny}=q.tiles;rd+=`\n${q.label} tile panel, seen from inside (M = mesh tile, C = clear acrylic):\n`;
     for(let j=ny-1;j>=0;j--){let row='  ';for(let i=0;i<nx;i++)row+=(q.states[i*ny+j]==='m'?'M':'C')+' ';rd+=row+'\n'}}
   if(sw&&sw.ok){rd+=`\nSwing door: the rod along the door's edge snaps into the three clips on the frame from the front. ${sw.catchM?`Catch: 4 round magnets, ${p.dMagD} x ${p.dMagH} mm (2 in the rim, 2 in the door).`:sw.turn?'Catch: push the turn latch into the hole in the front of the right-hand corner post, at the height of the door. Turn it over the door edge to close, upright to open.':'Catch: the printed rib on the rim clicks into the groove in the door.'}\n`;
-    if(sw.recess)rd+=`Door window: lay the door face up, tuck the hinge-side edge of the acrylic under the sloped lip, press the pane into the recess and turn the ${sw.buttons} buttons over its other edge.${sw.buttons?'':' There is no room for buttons on this door, so hold the pane with a few dots of clear glue.'}\n`;}
+    if(sw.recess)rd+=`Door window: lay the door face up, tuck the hinge-side edge of the acrylic under the sloped lip, press the pane into the recess and turn the ${sw.buttons} buttons over its other edge.\n`;}
   if(lid.screw)rd+=`\nLid screws: put the lid on, then turn a screw into each corner post through the hole in the lid. Hand-tight is enough; a coin fits the slot.\n`;
   if(base.vents)rd+=`\nAir slots: the base has ${base.vents.n} slots low in the front. Keep the substrate below them, at most ${Math.max(0,Math.round(base.vents.z0-d.f))} mm deep.\n`;
   rd+=`\nAssembly: dry-fit the posts in the base sockets, slide ${d.swing?'the front frame, ':''}the back and side panels into the grooves, put the lid on${d.swing?', then snap the door onto the hinge clips':', then drop the front door in through the slot in the lid'}.\n`;
@@ -1151,7 +1151,7 @@ function trimEnc(){const p=readEnc(),k=JSON.stringify(p);if(trimMemo.k===k)retur
 HabitatKeep.trim=o=>HabitatTrim.piece(Object.assign({},trimEnc(),o));
 /* the anatomical skull loads in the background; redraw when it arrives */
 let scanT;HabitatSculpt.onready=()=>{clearTimeout(scanT);scanT=setTimeout(()=>{if(typeof BMEMO!=='undefined')BMEMO.clear();if(state.tab==='acc'&&['sculpt','set'].includes(A.item))accCalc();else if(state.tab==='build')buildCalc()},200)};
-HabitatSculpt.setVersion('23');
+HabitatSculpt.setVersion('24');
 HabitatKeep.hanger=o=>HabitatForms.hanger(Object.assign({},trimEnc(),o));HabitatKeep.carry=o=>HabitatForms.carry(Object.assign({},trimEnc(),o));
 function encInfo(){
   const e=Object.assign({},DEF,state.enc||{}),bed=Math.max(e.bx||350,e.by||350),g=e.T+.6,band=g/2+2.4,o={e,bed,band,hatchR:e.hatch!=='none'?(state.encHatchR||Math.min(30,e.hatchD/2)):0};

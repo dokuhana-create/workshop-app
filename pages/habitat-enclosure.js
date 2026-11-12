@@ -312,13 +312,14 @@
      groove in the door. */
   function swingDoor(o,p,preview){
     const {fbW,pH,T,postX,s}=o,catchM=p.doorCatch!=='detent',mag=p.doorCatch==='magnet'||!p.doorCatch,turn=p.doorCatch==='turn';
-    const md=p.dMagD||10,mh=p.dMagH||3,pd=mh+.2,Rm=md/2+.2,recess=p.front==='swingWindow'&&p.doorWin!=='glue';
+    const md=p.dMagD||10,mh=p.dMagH||3,pd=mh+.2,Rm=md/2+.2,recess=p.front==='swingWindow';
     const off=catchM?mh+1.6:3.2,dt0=catchM?Math.max(T,mh+1.6):Math.max(T,3.2),rr=3,cR=rr+2.6,cl=.3;
     /* with the window in a recess the door is thicker: the pane sits flush in its outer face, behind it stays a 1.6 mm
        back, and the magnet pockets in the inner face stay clear of the recess */
     const dt=recess?Math.max(dt0,T+.3+1.6,mag?pd+.6+T+.3:0):dt0;
     const xh=postX+.8+cR,yh=off+rr,zd0=s+1,zd1=pH-s-1,Lh=zd1-zd0,xd1=fbW-postX-1.5;
-    const rwR=catchM?2*Rm+4:8,xr0=xh+cR+1.2,xo0=xr0+4,xo1=xd1-1-rwR,zo0=zd0+5,zo1=zd1-5;
+    /* the free side always has room for the window's turn buttons */
+    const rwR=catchM||recess?2*Rm+4:8,xr0=xh+cR+1.2,xo0=xr0+4,xo1=xd1-1-rwR,zo0=zd0+5,zo1=zd1-5;
     if(xo1-xo0<40||zo1-zo0<60)return {ok:false};
     const gp=.6,seg=(Lh-4*gp)/5,zone=i=>[zd0+i*(seg+gp),zd0+i*(seg+gp)+seg],xm=(xo1+xd1-1)/2,zm=[zo0+(zo1-zo0)*.25,zo0+(zo1-zo0)*.75];
     /* frame */
