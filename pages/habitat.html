@@ -3,19 +3,19 @@
 <script src="../shim.js"></script>
 <script src="../lib/clipper.js"></script>
 <script src="../lib/earcut.min.js"></script>
-<script src="../lib/geo.js?v=26"></script>
-<script src="habitat-parts.js?v=26"></script>
-<script src="habitat-enclosure.js?v=26"></script>
-<script src="habitat-more.js?v=26"></script>
-<script src="habitat-motifs.js?v=26"></script>
-<script src="habitat-keep.js?v=26"></script>
-<script src="../lib/sdf.js?v=26"></script>
-<script src="habitat-sculpt.js?v=26"></script>
-<script src="habitat-trim.js?v=26"></script>
-<script src="habitat-addons.js?v=26"></script>
-<script src="habitat-forms.js?v=26"></script>
-<script src="habitat-shapes.js?v=26"></script>
-<script src="habitat-sets.js?v=26"></script>
+<script src="../lib/geo.js?v=27"></script>
+<script src="habitat-parts.js?v=27"></script>
+<script src="habitat-enclosure.js?v=27"></script>
+<script src="habitat-more.js?v=27"></script>
+<script src="habitat-motifs.js?v=27"></script>
+<script src="habitat-keep.js?v=27"></script>
+<script src="../lib/sdf.js?v=27"></script>
+<script src="habitat-sculpt.js?v=27"></script>
+<script src="habitat-trim.js?v=27"></script>
+<script src="habitat-addons.js?v=27"></script>
+<script src="habitat-forms.js?v=27"></script>
+<script src="habitat-shapes.js?v=27"></script>
+<script src="habitat-sets.js?v=27"></script>
 <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Bricolage+Grotesque:opsz,wght@12..96,600;12..96,750&family=IBM+Plex+Mono:wght@500&family=IBM+Plex+Sans:wght@400;500;600&display=swap">
 <style>
 /* Same layout as the Resin Workshop: inputs on the left, the 3D preview and downloads beside them. */
@@ -998,6 +998,9 @@ Object.assign(ITEMS,{
   bark:{group:'climb',more:'bark',name:'Cork bark holder',fields:[['bw','Bark width',80],['bh','Bark height',100],['bk','Bark thickness',15]],
     selects:[['style','Style',[['classic','Two hooks'],['minimal','One hook'],['cradle','Side cradle'],['organic','Organic plate']]],['open','Back plate',[['yes','See-through cells'],['no','Solid']]]],shuffle:true,mounts:['magnet','clip','glue'],
     hint:'Holds a piece of cork bark flat against a wall, as a climbing and hiding surface. A shelf takes its weight, and hooks or side clamps keep it from tipping forward.'},
+  tiers:{group:'plants',keep:'tiers',name:'Tiered back planter',fields:[['up','Front tier above the substrate',20],['step','Each tier higher by',30],['pct','Depth (% of the floor)',60],['wall','Wall',2]],
+    selects:[['tiers','Tiers',[['2','Two'],['3','Three']]],['front','Front of each tier',[['flutes','Fluted'],['waves','Waves'],['straight','Straight']]],['mods','Pieces',[['auto','As many as the bed needs'],['1','One'],['2','Two modules'],['3','Three modules']]]],mounts:[],
+    hint:'Pots in steps along the back wall, sized to your enclosure: fill the tiers with soil and plants, and the floor in front with aquarium gravel, sand or moss.'},
   planter:{group:'plants',more:'planter',name:'Hanging planter',fields:[['L','Width',70],['D','Depth',35],['H','Height',50],['wall','Wall',2],['taper','Narrower at the bottom (%)',20,{show:s=>s.shape!=='cone'}]],
     selects:[['shape','Shape',[['halfround','Half round'],['halfhex','Half hexagon'],['facet','Faceted'],['scallop','Scalloped'],['pebble','Pebble'],['square','Rounded box'],['cone','Cone']]]],shuffle:true,mounts:['magnet','clip','glue'],drain:true,
     hint:'A pocket planter with a flat back, for the wall or the mesh. Good for air plants, pothos or fittonia cuttings.'},
@@ -1164,7 +1167,7 @@ function trimEnc(){const p=readEnc(),k=JSON.stringify(p);if(trimMemo.k===k)retur
 HabitatKeep.trim=o=>HabitatTrim.piece(Object.assign({},trimEnc(),o));
 /* the anatomical skull loads in the background; redraw when it arrives */
 let scanT;HabitatSculpt.onready=()=>{clearTimeout(scanT);scanT=setTimeout(()=>{if(typeof BMEMO!=='undefined')BMEMO.clear();if(state.tab==='acc'&&['sculpt','set'].includes(A.item))accCalc();else if(state.tab==='build')buildCalc()},200)};
-HabitatSculpt.setVersion('26');
+HabitatSculpt.setVersion('27');
 HabitatKeep.hanger=o=>HabitatForms.hanger(Object.assign({},trimEnc(),o));HabitatKeep.carry=o=>HabitatForms.carry(Object.assign({},trimEnc(),o));
 function encInfo(){
   const e=Object.assign({},DEF,state.enc||{}),bed=Math.max(e.bx||350,e.by||350),g=e.T+.6,band=g/2+2.4,o={e,bed,band,hatchR:e.hatch!=='none'?(state.encHatchR||Math.min(30,e.hatchD/2)):0};
@@ -1198,7 +1201,7 @@ function itemDesign1(key,over,mount,seed,sc){
   if(it.shapes){o.shape=it.shapes.includes(A.shape[key])&&!over?A.shape[key]:it.shapes[0];if(o.shape==='round')o.W=o.L}
   for(const [k,,opts] of it.selects||[])o[k]=(!over&&((A.sel||{})[key]||{})[k])||opts[0][0];
   if(over)Object.assign(o,over);
-  if(sc&&sc!==1&&!['ship','turntable','cupRack','divider','chute','airlock','trim','custom','hanger','carry','wall','grid','stage'].includes(key))for(const k of SCALE)if(typeof o[k]==='number'&&!(key==='light'))o[k]=Math.round(o[k]*sc*10)/10;
+  if(sc&&sc!==1&&!['ship','turntable','cupRack','divider','chute','airlock','trim','custom','hanger','carry','wall','grid','stage','tiers'].includes(key))for(const k of SCALE)if(typeof o[k]==='number'&&!(key==='light'))o[k]=Math.round(o[k]*sc*10)/10;
   if(o.shape==='round'&&o.L)o.W=o.L;
   if(key==='ledge'&&o.shape==='sharp')o.shape='square';
   return it.keep?HabitatKeep[it.keep](o,encInfo()):it.more?HabitatMore[it.more](o,encInfo()):HabitatParts[key](o,encInfo());

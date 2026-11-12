@@ -505,5 +505,42 @@
     return res;
   }
 
-  root.HabitatKeep={motif:o=>root.HabitatMotifs.piece(o),sculpt:o=>root.HabitatSculpt.build(Object.assign({},o,{dMagD:o.md,dMagH:o.mh})),custom:o=>root.HabitatSculpt.custom(o),incubator,oothClip,divider,cupRack,chute,airlock,shipInsert,turntable,gear,diorama,DIORAMA};
+
+  /* ---------------- tiered back planter ----------------
+     Pots that stand on the base floor along the back wall, each tier lower than the one behind it, with fluted or wavy
+     fronts. Fill them with soil; the floor in front stays free for gravel, aquarium substrate or moss. Sized from the
+     enclosure: the planter fills the width between the walls and keeps clear of the corner blocks. Printed upright,
+     open at the top, so nothing hangs over. Wide enclosures get it in modules that stand side by side. */
+  function tiers(o,info){
+    const e=info.e||{},rectE=e.shape==='rect',W=rectE?e.W:Math.min(e.W,e.D||e.W)*.7,D=rectE?e.D:Math.min(e.W,e.D||e.W)*.7;
+    const g=(e.T||3)+.6,ob=g/2+2.4,S=e.S||40,n=Math.max(2,Math.min(3,+o.tiers||2)),wall=Math.max(1.2,o.wall||2),fl=2;
+    const Wp=W-2*ob-1,Dfloor=D-2*ob-1,Dp=Math.max(30*n,Math.min(Dfloor-25,Dfloor*(o.pct||60)/100)),nt=rectE&&info.Eh?info.Eh-ob+.75:0;
+    const bed=info.bed||350,m=o.mods&&o.mods!=='auto'?+o.mods:Math.max(1,Math.ceil(Wp/(bed-10))),Mw=(Wp-(m-1))/m;
+    const WV={flutes:[2.5,12],waves:[6,40],straight:[0,40]}[o.front||'flutes'],amp=WV[0],lam=Mw/Math.max(1,Math.round(Mw/WV[1]));
+    const hk=k=>S-2.4+(o.up||20)+(n-1-k)*(o.step||30),step=Math.min(1,lam/16);
+    const bnd=k=>k<0?()=>0:x=>(k+1)*Dp/n-amp*(.5+.5*Math.cos(2*Math.PI*x/lam));
+    const parts=[],notes=[];
+    for(let j=0;j<m;j++){
+      const f=[],first=j===0,last=j===m-1;
+      const band=(k0,k1)=>{const top=bnd(k1),bot=bnd(k0-1),q=[];for(let x=0;x<=Mw+1e-9;x+=step)q.push([Math.min(x,Mw),top(Math.min(x,Mw))]);for(let x=Mw;x>=-1e-9;x-=step)q.push([Math.max(x,0),bot(Math.max(x,0))]);
+        let r=[q];if(k0===0&&nt>0){if(first)r=subtract(r,rect(-1,-1,nt,nt));if(last)r=subtract(r,rect(Mw-nt,-1,Mw+1,nt))}return r};
+      /* the body in steps: the whole footprint up to the front tier's height, then less of it for each tier behind */
+      for(let k=n-1;k>=0;k--)f.push(prism(k===n-1?0:hk(k+1),hk(k),band(0,k)));
+      for(let k=0;k<n;k++){
+        const outer=band(k,k),cav=offset(outer,-wall),h=hk(k);if(cav.length){f.push(prism(fl,h+1,cav,'sub'));
+          /* drain holes, 2 mm, every 10 mm */
+          const lim=offset(cav,-2.5),b=bounds(lim),hs=[];for(let x=b.x0+3;x<b.x1;x+=10)for(let y=b.y0+3;y<b.y1;y+=10)if(G.inside(lim,x,y))hs.push(circle(x,y,1,12)[0]);if(hs.length)f.push(prism(-1,fl+1,hs,'sub'))}
+      }
+      parts.push(part(m>1?`tiered-planter-${j+1}-of-${m}.stl`:'tiered-planter.stl',build(f),j?'Second file':'Main colour'));
+    }
+    const hs=[...Array(n)].map((_,k)=>Math.round(hk(k)));
+    notes.push(`${n} tiers across the back, ${Math.round(Wp)} × ${Math.round(Dp)} mm and ${hs.join(', ')} mm tall from back to front. It stands on the base floor and leaves ${Math.round(Dfloor-Dp)} mm of floor free in front.`);
+    if(m>1)notes.push(`It comes in ${m} modules that stand side by side; they need nothing to join them.`);
+    notes.push('Put a thin layer of clay balls or gravel in each tier for drainage, then soil. Fill the floor in front with aquarium gravel, sand or moss: the planter walls keep the two apart.');
+    notes.push('Prints upright and open at the top, without supports. Drain holes in each floor let water through to the base.');
+    if(!rectE)notes.push('Made for rectangular enclosures; for this shape it is a free-standing planter of a matching size.');
+    if(hs[0]>(e.S||40)+(e.H||300)-30)notes.push('The back tier comes close to the lid. Make the steps lower.');
+    return {parts,notes,magnets:0};
+  }
+  root.HabitatKeep={tiers,motif:o=>root.HabitatMotifs.piece(o),sculpt:o=>root.HabitatSculpt.build(Object.assign({},o,{dMagD:o.md,dMagH:o.mh})),custom:o=>root.HabitatSculpt.custom(o),incubator,oothClip,divider,cupRack,chute,airlock,shipInsert,turntable,gear,diorama,DIORAMA};
 })(typeof window!=='undefined'?window:globalThis);
