@@ -184,6 +184,7 @@
     if(two)notes.push('Two colours: add the filigree file to the frame as a part (same origin), for example gold on black.');
     if(!glue){notes.push(`Magnets: 8 in all, pressed into their pockets. 4 go in the frame; 2 in the pockets in the front corners of the base${o.frameMags?'':' (turn on Enclosure, Size, Magnets for a front frame, so the base gets them)'}; and 2 in the lid clips, which push onto the front edge of the lid. The frame sticks to them.`);
       parts.push({file:'lid-clip.stl',role:'Second file',m:lidClip(o),at:'loose',count:2})}
+    if(o.blocked)notes.push('The door\'s turn latch and lock hasps sit where the frame\'s right side goes. With a front frame, choose the magnet or click catch and no lock.');
     else notes.push('Glue: fix the frame to the front of the base and the corner posts with double-sided foam tape (it comes off again).');
     notes.push('The frame prints flat on its back, with the pattern facing up.');
     return {parts,notes,magnets:glue?0:4,size:[W,Ht+ch]};
@@ -191,7 +192,7 @@
   /* a clip that pushes onto the front edge of the lid and holds a magnet facing forward, for the top of the frame */
   function lidClip(o){
     /* printed lying down: the profile (x forward, y up) stands on the bed and is w tall */
-    const L=o.Lt||2.4,md=o.md||10,mh=o.mh||3,w=md+6,g=L+.35,d=10,f=mh+1,y0=min(-2,g/2-md/2-2),y1=max(g+2,g/2+md/2+2);
+    const L=o.Lt||2.4,md=o.md||10,mh=o.mh||3,w=md+6,g=L+.35,d=10,f=Math.max(mh+1,o.clipReach||0),y0=min(-2,g/2-md/2-2),y1=max(g+2,g/2+md/2+2);
     const prof=U(rect(-d,g,0,g+2),rect(-d,-2,0,0),rect(0,y0,f,y1));
     return build([prism(0,w,prof),prism(w/2-md/2-.02,w/2+md/2+.02,rect(f-mh-.2,g/2-md/2-.02,f+1,g/2+md/2+.02),'sub')]);
   }

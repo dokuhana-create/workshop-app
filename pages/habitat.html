@@ -3,19 +3,19 @@
 <script src="../shim.js"></script>
 <script src="../lib/clipper.js"></script>
 <script src="../lib/earcut.min.js"></script>
-<script src="../lib/geo.js?v=25"></script>
-<script src="habitat-parts.js?v=25"></script>
-<script src="habitat-enclosure.js?v=25"></script>
-<script src="habitat-more.js?v=25"></script>
-<script src="habitat-motifs.js?v=25"></script>
-<script src="habitat-keep.js?v=25"></script>
-<script src="../lib/sdf.js?v=25"></script>
-<script src="habitat-sculpt.js?v=25"></script>
-<script src="habitat-trim.js?v=25"></script>
-<script src="habitat-addons.js?v=25"></script>
-<script src="habitat-forms.js?v=25"></script>
-<script src="habitat-shapes.js?v=25"></script>
-<script src="habitat-sets.js?v=25"></script>
+<script src="../lib/geo.js?v=26"></script>
+<script src="habitat-parts.js?v=26"></script>
+<script src="habitat-enclosure.js?v=26"></script>
+<script src="habitat-more.js?v=26"></script>
+<script src="habitat-motifs.js?v=26"></script>
+<script src="habitat-keep.js?v=26"></script>
+<script src="../lib/sdf.js?v=26"></script>
+<script src="habitat-sculpt.js?v=26"></script>
+<script src="habitat-trim.js?v=26"></script>
+<script src="habitat-addons.js?v=26"></script>
+<script src="habitat-forms.js?v=26"></script>
+<script src="habitat-shapes.js?v=26"></script>
+<script src="habitat-sets.js?v=26"></script>
 <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Bricolage+Grotesque:opsz,wght@12..96,600;12..96,750&family=IBM+Plex+Mono:wght@500&family=IBM+Plex+Sans:wght@400;500;600&display=swap">
 <style>
 /* Same layout as the Resin Workshop: inputs on the left, the 3D preview and downloads beside them. */
@@ -629,7 +629,9 @@ function readEnc(){const o={};for(const k in encIds){const el=$(encIds[k]);o[k]=
    bottom left as seen from inside */
 function tileStates(p,k,n){const s=(p.tileMap||{})[k];return typeof s==='string'&&s.length===n?s:'m'.repeat(n)}
 function rectDims(p){const g=p.T+.6,s=6,r=2.4,slim=p.frame==='slim',a=g/2+(slim?4.7:s),band=g/2+r,swing=p.front.startsWith('swing');
-  return {W:p.W,D:p.D,S:p.S,H:p.H,s,g,band,Eh:a+.25+r,f:2.4,a,Lt:2.4,swing,Hp:p.H-.5,slim,latch:swing&&p.doorCatch==='turn',latchZ:(p.H-.5)/2+24,lockZ:swing&&p.lock==='pin'?(p.H-.5)/2-30:null}}
+  /* turn latch above the door's pull, lock hasps below it; both stay clear of the window buttons near the door's ends */
+  const pH=p.H-.5,lockZ=Math.max(pH/2-30,s+1+1.7+14+20),lockOK=lockZ+9<=pH/2-16,latchOK=pH/2+27.5<=pH-31;
+  return {W:p.W,D:p.D,S:p.S,H:p.H,s,g,band,Eh:a+.25+r,f:2.4,a,Lt:2.4,swing,Hp:pH,slim,latch:swing&&p.doorCatch==='turn',latchZ:latchOK?pH/2+24:pH/2-24,lockZ:swing&&p.lock==='pin'&&lockOK&&latchOK?lockZ:null,lockShort:swing&&p.lock==='pin'&&!(lockOK&&latchOK)}}
 /* a printed mesh panel, flat on the bed: x across, y up the wall, z through it; the inner face is z=T */
 function meshPanelBox(q,p,s,Lt,preview){
   const bd=s+2,top=q.k==='front'?Lt+20+bd:bd,adds=[[0,0,0,q.w,q.h,p.T]];
@@ -705,6 +707,8 @@ function rectModel(p,pv){
         parts.push({name:'Lock hasp for the door',file:'lock-hasp-door.stl',tris:place(hd.tris)},{name:'Lock hasp for the corner post',file:'lock-hasp-post.stl',tris:place(hp.tris)});
         items.push({tris:place0(hd.tris,(x,y,z)=>[xd+x,yF-y,d.S+d.lockZ+9-z]),color:c.frame},{tris:place0(hp.tris,(x,y,z)=>[xp-x,-d.a-y,d.S+d.lockZ-9+z]),color:c.frame});
         notes.push('Door lock: press the door hasp\'s two pegs into the holes near the door\'s free edge, and the post hasp into the holes in the front of the right-hand corner post. When the door is shut their tabs stand side by side; hang a mini padlock through both.')}}}
+  if(d.lockShort)notes.push('The door is too short for the lock hasps as well as the window buttons and the latch. Make the enclosure taller for a lock.');
+  if(p.frameMags==='yes'&&p.S<(p.dMagD||10)+4)notes.push(`The base is too shallow for the front frame's magnet pockets: make the substrate at least ${(p.dMagD||10)+4} mm deep.`);
   lidCut(lid,cut);
   let rd=`Insect enclosure ${p.W} x ${p.D} x ${p.H} mm (substrate ${p.S} mm), ${p.corners} corners\nSuggested filament: ${MATS[p.mat].name}.\n`;
   if(cut.length)rd+='\nTo cut:\n'+cut.map(([a,b])=>`- ${a}: ${b} mm`).join('\n')+'\n';
@@ -1155,12 +1159,12 @@ let trimMemo={k:'',v:null};
 function trimEnc(){const p=readEnc(),k=JSON.stringify(p);if(trimMemo.k===k)return trimMemo.v;
   let mn=[1e9,1e9,1e9],mx=[-1e9,-1e9,-1e9];try{for(const it of encModel(p,true).items){const t=it.tris;for(let i=0;i<t.length;i+=3)for(let a=0;a<3;a++){if(t[i+a]<mn[a])mn[a]=t[i+a];if(t[i+a]>mx[a])mx[a]=t[i+a]}}}catch(e){mn=[0,0,0];mx=[p.W,p.D||p.W,p.S+p.H+2.4]}
   const v={rect:p.shape==='rect',W:Math.round((mx[0]-mn[0])*10)/10,Htot:Math.round((mx[2]-Math.max(0,mn[2]))*10)/10,S:p.S,Hwin:p.S+p.H,Lt:2.4,bed:[p.bx||350,p.by||350],box:[mn,mx]};
-  if(v.rect){const d=rectDims(p);v.cornerX=[-mn[0],p.W-mn[0]];v.frameMags=p.frameMags==='yes';v.lidScrews=p.lidScrews==='screws';v.screw=HE.screwSpec(d.slim);v.finSpots=HE.screwSpots(d,{lidScrews:'screws'})}
+  if(v.rect){const d=rectDims(p);v.cornerX=[-mn[0],p.W-mn[0]];v.frontY=-d.Eh;v.clipReach=d.Eh-d.band;v.blocked=d.latch||d.lockZ!=null;v.frameMags=p.frameMags==='yes';v.lidScrews=p.lidScrews==='screws';v.screw=HE.screwSpec(d.slim);v.finSpots=HE.screwSpots(d,{lidScrews:'screws'})}
   trimMemo={k,v};return v}
 HabitatKeep.trim=o=>HabitatTrim.piece(Object.assign({},trimEnc(),o));
 /* the anatomical skull loads in the background; redraw when it arrives */
 let scanT;HabitatSculpt.onready=()=>{clearTimeout(scanT);scanT=setTimeout(()=>{if(typeof BMEMO!=='undefined')BMEMO.clear();if(state.tab==='acc'&&['sculpt','set'].includes(A.item))accCalc();else if(state.tab==='build')buildCalc()},200)};
-HabitatSculpt.setVersion('25');
+HabitatSculpt.setVersion('26');
 HabitatKeep.hanger=o=>HabitatForms.hanger(Object.assign({},trimEnc(),o));HabitatKeep.carry=o=>HabitatForms.carry(Object.assign({},trimEnc(),o));
 function encInfo(){
   const e=Object.assign({},DEF,state.enc||{}),bed=Math.max(e.bx||350,e.by||350),g=e.T+.6,band=g/2+2.4,o={e,bed,band,hatchR:e.hatch!=='none'?(state.encHatchR||Math.min(30,e.hatchD/2)):0};
@@ -1383,7 +1387,7 @@ function buildScene(des){
   for(const d of des){if(!d.r||d.p.key!=='trim')continue;const te=trimEnc(),[mn,mx]=te.box;let lift=0;
     for(const q of d.r.parts)if(q.at==='bottom'&&q.m){const t=q.m.tris;let z1=0;for(let i=2;i<t.length;i+=3)z1=Math.max(z1,t[i]);lift=Math.max(lift,z1-5)}
     for(const q of d.r.parts){if(!q.m||q.at==='loose')continue;const col=q.role==='Colour 2'?c2:c1;
-      if(q.at==='front')items.push({tris:place0(q.m.tris,(x,y,z)=>[mn[0]+x,mn[1]-1-z,y]),color:col});
+      if(q.at==='front')items.push({tris:place0(q.m.tris,(x,y,z)=>[mn[0]+x,(te.frontY??mn[1]-1)-z,y]),color:col});
       else if(q.at==='top'){if(!te.rect)continue;for(const [cx,cy] of te.finSpots||[[mn[0]+8,mn[1]+8],[mx[0]-8,mn[1]+8],[mn[0]+8,mx[1]-8],[mx[0]-8,mx[1]-8]])items.push({tris:place0(q.m.tris,(x,y,z)=>[x+cx,y+cy,z+mx[2]]),color:col})}
       else if(q.at==='bottom'){if(!te.rect)continue;const t=q.m.tris;let z1=0;for(let i=2;i<t.length;i+=3)z1=Math.max(z1,t[i]);const zt=z1-5;
         for(const [cx,cy,a] of [[mn[0]+15,mn[1]+15,0],[mx[0]-15,mn[1]+15,1],[mx[0]-15,mx[1]-15,2],[mn[0]+15,mx[1]-15,3]]){const c=[1,0,-1,0][a],s_=[0,1,0,-1][a];

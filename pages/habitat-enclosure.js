@@ -17,7 +17,8 @@
      corner post; both work without supports. The same profile function makes the screw and the hole, offset by a
      small clearance, so they always match. */
   const SCREW={cl:.22,len:12,head:12,headH:3};
-  const screwSpec=slim=>slim?{d:6,P:2,c:2}:{d:7,P:2.5,c:2.5};
+  /* sized so the threaded hole keeps at least 1 mm of wall to the panel slots, the outside and the print flat */
+  const screwSpec=slim=>slim?{d:5,P:1.6,c:2}:{d:6,P:2,c:2.5};
   function threadR(sp,a,z,cl){const h=.4*sp.P,ph=((z/sp.P-a/TAU)%1+1)%1*sp.P,f=ph<h?ph/h:ph<sp.P/2?1:ph<sp.P/2+h?1-(ph-sp.P/2)/h:0;return sp.d/2-h+h*f+cl}
   /* threaded hole along z, open at z1, with a small lead-in at the mouth */
   function screwHole(cx,cy,z0,z1,sp){return varying(z0,z1+1,z=>polar(cx,cy,a=>Math.max(threadR(sp,a,z,SCREW.cl),sp.d/2+SCREW.cl+.6-(z1-z)),48),.2,'sub')}
@@ -196,7 +197,7 @@
   }
   function rectBase(d,p){const v=frontVents(d,p),subs=v?[v.sub]:[];
     /* magnet pockets in the front of the two front corner blocks, for a decorative front frame */
-    if(p.frameMags==='yes')for(const x of [0,d.W])subs.push(G.yMag(x,d.S/2,p.dMagD||10,-d.Eh-1,-d.Eh+(p.dMagH||3)+.2,'sub'));
+    if(p.frameMags==='yes'&&d.S>=(p.dMagD||10)+4)for(const x of [0,d.W])subs.push(G.yMag(x,d.S/2,p.dMagD||10,-d.Eh-1,-d.Eh+(p.dMagH||3)+.2,'sub'));
     const m=base(rectC(d),{gw:d.g,wall:2.4,S:d.S,s:d.s,f:d.f,join:'miter',corners:rectCorners(d,p.corners==='rounded'),rounded:p.corners==='rounded',subs},p);m.vents=v;return m}
   /* where each corner's lid screw goes: in the outer quarter of the post, clear of both panel slots */
   function screwSpots(d,p){if(p.lidScrews!=='screws')return [];const c=screwSpec(d.slim).c;return [[0,0],[d.W,0],[d.W,d.D],[0,d.D]].map(([x,y],i)=>{const a=i*Math.PI/2,co=Math.round(Math.cos(a)),si=Math.round(Math.sin(a));return [x+co*-c-si*-c,y+si*-c+co*-c]})}
