@@ -516,9 +516,13 @@
     const g=(e.T||3)+.6,ob=g/2+2.4,S=e.S||40,n=Math.max(2,Math.min(3,+o.tiers||2)),wall=Math.max(1.2,o.wall||2),fl=2;
     const Wp=W-2*ob-1,Dfloor=D-2*ob-1,Dp=Math.max(30*n,Math.min(Dfloor-25,Dfloor*(o.pct||60)/100)),nt=rectE&&info.Eh?info.Eh-ob+.75:0;
     const bed=info.bed||350,m=o.mods&&o.mods!=='auto'?+o.mods:Math.max(1,Math.ceil(Wp/(bed-10))),Mw=(Wp-(m-1))/m;
-    const WV={flutes:[2.5,12],waves:[6,40],straight:[0,40]}[o.front||'flutes'],amp=WV[0],lam=Mw/Math.max(1,Math.round(Mw/WV[1]));
-    const hk=k=>S-2.4+(o.up||20)+(n-1-k)*(o.step||30),step=Math.min(1,lam/16);
-    const bnd=k=>k<0?()=>0:x=>(k+1)*Dp/n-amp*(.5+.5*Math.cos(2*Math.PI*x/lam));
+    const P=HP.PROFILES[o.front]||HP.PROFILES.flutes,lam0=P.lam||Mw,sc=Mw/(Math.max(1,Math.round(Mw/lam0))*lam0),pf=x=>P.f(x/sc,(o.seed||1)+7);
+    const hk=k=>S-2.4+(o.up||20)+(n-1-k)*(o.step||30),step=.6;
+    /* each tier's front follows the profile; the tiers behind use it shifted by half a repeat, so they don't line up */
+    const bnd=k=>k<0?()=>0:x=>(k+1)*Dp/n-pf(x+k*lam0*sc/2);
+    /* top edge: how deep a notch is at x */
+    const RIM={flat:null,battlements:[20,x=>{const u=((x/20)%1+1)%1;return u>.5?6:0}],pointed:[16,x=>{const u=((x/16)%1+1)%1;return 8*(1-Math.abs(2*u-1))}],
+      arches:[24,x=>{const u=((x/24)%1+1)%1,v=2*u-1;return Math.max(0,6*Math.sqrt(Math.max(0,1-v*v*1.6)))}],waves:[30,x=>3*(.5+.5*Math.cos(2*Math.PI*x/30))]}[o.top||'flat'];
     const parts=[],notes=[];
     for(let j=0;j<m;j++){
       const f=[],first=j===0,last=j===m-1;
@@ -527,7 +531,11 @@
       /* the body in steps: the whole footprint up to the front tier's height, then less of it for each tier behind */
       for(let k=n-1;k>=0;k--)f.push(prism(k===n-1?0:hk(k+1),hk(k),band(0,k)));
       for(let k=0;k<n;k++){
-        const outer=band(k,k),cav=offset(outer,-wall),h=hk(k);if(cav.length){f.push(prism(fl,h+1,cav,'sub'));
+        const outer=band(k,k),cav=offset(outer,-wall),h=hk(k);
+        if(RIM){/* notches cut down from the top of this tier's front and sides; its back wall stays whole */
+          const [rl,rf]=RIM,rs=Mw/(Math.max(1,Math.round(Mw/rl))*rl),y0=k?bnd(k-1)(0)+Dp/n*.3:wall+1,y1=(k+1)*Dp/n+1;let dmax=0;for(let x=0;x<=Mw;x+=.5)dmax=Math.max(dmax,rf(x/rs));
+          f.push(varying(h-dmax,h+1,z=>{const d=h-z,rs_=[];let x0=null;for(let x=-.5;x<=Mw+.5;x+=.25){const cut=rf(Math.max(0,Math.min(Mw,x))/rs)>=d;if(cut&&x0==null)x0=x;if(!cut&&x0!=null){rs_.push(rect(x0,y0,x,y1)[0]);x0=null}}if(x0!=null)rs_.push(rect(x0,y0,Mw+1,y1)[0]);return rs_},.25,'sub'))}
+        if(cav.length){f.push(prism(fl,h+1,cav,'sub'));
           /* drain holes, 2 mm, every 10 mm */
           const lim=offset(cav,-2.5),b=bounds(lim),hs=[];for(let x=b.x0+3;x<b.x1;x+=10)for(let y=b.y0+3;y<b.y1;y+=10)if(G.inside(lim,x,y))hs.push(circle(x,y,1,12)[0]);if(hs.length)f.push(prism(-1,fl+1,hs,'sub'))}
       }

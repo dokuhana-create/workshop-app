@@ -71,10 +71,38 @@
     if(o.mount==='clip')clipBack(f,{w,h});
   }
 
+
+  /* ---------------- surface profiles for pots and planters ----------------
+     Each gives how far in (0..amp mm) the wall sits at a distance s along it, so a fluted, bamboo or stone face is
+     still just an outline: the wall stays upright and prints without supports. */
+  const PROFILES={
+    flutes:{name:'Fluted',f:s=>2.5*(.5+.5*Math.cos(2*Math.PI*s/12)),lam:12},
+    waves:{name:'Waves',f:s=>6*(.5+.5*Math.cos(2*Math.PI*s/40)),lam:40},
+    zigzag:{name:'Zigzag',f:s=>{const u=((s/20)%1+1)%1,v=2*u-1,e=.004;return 5*(Math.sqrt(v*v+e)-Math.sqrt(e))/(Math.sqrt(1+e)-Math.sqrt(e))},lam:20},
+    scallops:{name:'Scallops',f:s=>{const u=((s/24)%1+1)%1,v=2*u-1;return 5*(1-Math.sqrt(Math.max(0,1-v*v)))},lam:24},
+    bamboo:{name:'Bamboo stalks',f:s=>{const u=((s/14)%1+1)%1,v=2*u-1;return 3.2*(1-Math.sqrt(Math.max(0,1-v*v)))},lam:14},
+    stones:{name:'Stones',f:(s,seed)=>{const R=k=>{const x=Math.sin((k+1)*12.9898+(seed||1)*78.233)*43758.5453;return x-Math.floor(x)};
+      let k=0,a=0;for(;;){const w=14+16*R(k);if(a+w>s){const v=2*(s-a)/w-1;return 1+(2+3*R(k+50))*(1-Math.sqrt(Math.max(0,1-v*v)))}a+=w;k++;if(k>4000)return 1}},lam:0},
+    bark:{name:'Bark',f:(s,seed)=>{const p=(seed||1)*1.7;return 1.6+1.1*Math.sin(s*.31+p)+.6*Math.sin(s*1.13+2*p)+.4*Math.sin(s*2.7+p)},lam:0},
+    straight:{name:'Smooth',f:()=>0,lam:0}
+  };
+  /* an outline pushed in along its normals by a profile, sampled every 0.6 mm (CCW outer ring) */
+  function textured(rings,kind,seed){
+    const P=PROFILES[kind];if(!P||kind==='straight')return rings;
+    return rings.map(r=>{const q=[],n=r.length;let L=0;const seg=[];for(let i=0;i<n;i++){const a=r[i],b=r[(i+1)%n];seg.push(Math.hypot(b[0]-a[0],b[1]-a[1]));L+=seg[i]}
+      const cw=(()=>{let A=0;for(let i=0;i<n;i++){const a=r[i],b=r[(i+1)%n];A+=a[0]*b[1]-b[0]*a[1]}return A<0})();
+      /* a whole number of repeats around the outline, so the pattern meets itself */
+      const sc=P.lam?L/(Math.max(1,Math.round(L/P.lam))*P.lam):1;
+      let s=0;for(let i=0;i<n;i++){const a=r[i],b=r[(i+1)%n],l=seg[i];if(l<1e-9)continue;const tx=(b[0]-a[0])/l,ty=(b[1]-a[1])/l,nx=cw?-ty:ty,ny=cw?tx:-tx;
+        const m=Math.max(1,Math.ceil(l/.8));for(let j=0;j<m;j++){const t=j/m*l,d=P.f((s+t)/sc,seed);q.push([a[0]+tx*t-nx*d,a[1]+ty*t-ny*d])}s+=l}
+      return q}).flatMap(q=>{/* corners push the pattern inward from two sides: tidy the crossings and near-duplicate points */
+        const CL=root.ClipperLib,K=1000,p=CL.Clipper.CleanPolygon(q.map(([x,y])=>({X:Math.round(x*K),Y:Math.round(y*K)})),20);
+        return G.unite([p.map(v=>[v.X/K,v.Y/K])])})}
   /* ---------------- plant pot ---------------- */
   function pot(o){
-    const base=body2D(o.shape,o.L,o.W,o.seed),b=bounds(base),f=[],notes=[];
-    const raise=o.drain?3:0,fl=2,H=o.H,tp=(o.taper||0)/100;
+    /* a textured surface goes round softened corners, so the pattern never folds over itself at a sharp corner */
+    const sf=o.surface||'straight',b0=body2D(o.shape,o.L,o.W,o.seed),base=sf==='straight'?b0:textured(offset(offset(b0,-6),6),sf,o.seed),b=bounds(base),f=[],notes=[];
+    const raise=o.drain?3:0,fl=2,H=o.H,tp=sf==='straight'?(o.taper||0)/100:0;/* textured pots have straight sides */
     const at=z=>scaleAbout(base,1+tp*z/H,b.cx,b.cy);
     const hub=o.mount==='peg'?circle(b.cx,b.cy,PEG.hub):null;
     const inner=z=>{let c=offset(at(z),-o.wall);if(hub&&z<raise+fl+PEG.depth)c=subtract(c,hub);return c};
@@ -389,5 +417,5 @@
   }
   /* a wall mount behind an upright body (back at y=0): returns the number of magnets */
   function mountWall(f,o,b,h,out){addMount(f,o,b,h,out);return o.mount==='magnet'?magnetBack(f,{w:Math.min(b.x1-b.x0,60),h,md:o.md,mh:o.mh}):0}
-  root.HabitatParts={rectLid,lightWindows,RAIL,CLIP,PEG,dish,pot,twig,ledge,label,light,roundEnclosure,rectBase,perimeter,body2D,fit,bounds,bez,curl,mountWall,LEDGE_PATTERNS};
+  root.HabitatParts={PROFILES,textured,rectLid,lightWindows,RAIL,CLIP,PEG,dish,pot,twig,ledge,label,light,roundEnclosure,rectBase,perimeter,body2D,fit,bounds,bez,curl,mountWall,LEDGE_PATTERNS};
 })(typeof window!=='undefined'?window:globalThis);

@@ -29,7 +29,7 @@
     rustic:{name:'Rustic twig',open:'round',stile:'bark',rail:'bark',corner:'tree',crest:'branch',finial:'acorn',foot:'root'}
   };
   /* which frame goes with which style package */
-  const FOR={graveyard:'gothic',gothic:'gothic',curio:'gothic',spider:'gothic',moon:'celestial',astral:'celestial',glow:'celestial',sky:'celestial',wizard:'celestial',
+  const FOR={graveyard:'gothic',gothic:'gothic',curio:'gothic',moon:'celestial',astral:'celestial',glow:'celestial',sky:'celestial',wizard:'celestial',
     hoard:'fantasy',ruins:'greek',olympus:'greek',temple:'oriental',bamboo:'oriental',zen:'oriental',pagoda:'oriental',sakura:'oriental',lotus:'oriental',
     library:'baroque',cottage:'baroque',orchid:'nouveau',nouveau:'nouveau',botanical:'nouveau',protea:'nouveau',tropical:'vine',fairy:'vine',forest:'vine',mossy:'vine',
     rainforest:'vine',deadleaf:'rustic',cabin:'rustic',stone:'fantasy',canyon:'rustic',reef:'celestial',honey:'deco',geo:'deco',minimal:'deco'};

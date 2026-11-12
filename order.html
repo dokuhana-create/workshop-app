@@ -166,7 +166,7 @@ function render(){const t=T[L];document.documentElement.lang=L;
   const s0=SPECIES.find(s=>s[0]===st.species);
   document.querySelectorAll('.lang button').forEach(b=>b.setAttribute('aria-pressed',b.dataset.l===L));price()}
 /* styles, grouped */
-{const th=$('theme'),groups={};for(const [k,v] of Object.entries(HABITAT_SETS)){if(['namekit','breeder','shop','nursery','fanclub','spider'].includes(k))continue;if(!groups[v.group]){groups[v.group]=document.createElement('optgroup');groups[v.group].label=v.group;th.append(groups[v.group])}groups[v.group].append(new Option(v.name,k))}th.value='orchid'}
+{const th=$('theme'),groups={};for(const [k,v] of Object.entries(HABITAT_SETS)){if(['namekit','breeder','shop','nursery','fanclub'].includes(k))continue;if(!groups[v.group]){groups[v.group]=document.createElement('optgroup');groups[v.group].label=v.group;th.append(groups[v.group])}groups[v.group].append(new Option(v.name,k))}th.value='orchid'}
 $('shopName').textContent=CFG.shop;
 document.querySelectorAll('.lang button').forEach(b=>b.onclick=()=>{L=b.dataset.l;render()});
 $('species').onchange=e=>{st.species=e.target.value;render()};

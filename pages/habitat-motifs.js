@@ -41,12 +41,7 @@
     return {fill:U(c(-18,46,13),c(0,64,15),c(18,36,12),flame(-18,46),flame(0,64),flame(18,36),rect(-30,0,30,4)),lines:[[[-18,46],[-18,50]],[[0,64],[0,68]],[[18,36],[18,40]]]}};
   M.raven=()=>{const body=U(R(ellipse(0,46,27,14,48),-.35,0,46),circle(22,63,10,32),P([29,66],[45,60],[29,58]),P([-20,40],[-48,28],[-45,38],[-48,44],[-22,50]));
     return {fill:D(U(body,S([[[2,36],[0,16]],[[10,36],[12,16]],[[-22,16],[30,16]]],3)),circle(25,65,2,14)),lines:[[[-14,52],[12,44]],[[-18,46],[8,38]],[[-22,40],[2,33]]]}};
-  M.spider=()=>{const legs=[];for(const s of [-1,1])for(let i=0;i<4;i++){const a=(-40+i*28)*Math.PI/180,kx=s*(18+i*2),ky=52+18*Math.sin(-a);legs.push([[s*8,50],[kx,ky+10],[s*(34+i*4),ky-14+i*6]])}
-    return {fill:U(circle(0,40,13,48),circle(0,60,8,32),S(legs,3),S([[[0,96],[0,68]]],1.2)),lines:[[[-6,46],[6,46],[0,34],[-6,46]]]}};
-  M.web=()=>{const lines=[];for(let i=0;i<8;i++){const a=i*TAU/8;lines.push([[0,50],[48*Math.cos(a),50+48*Math.sin(a)]])}
-    for(const r of [10,20,30,40,48]){const q=[];for(let i=0;i<=8;i++){const a=i*TAU/8,b=(i+.5)*TAU/8;q.push([r*Math.cos(a),50+r*Math.sin(a)]);if(i<8)q.push([r*.88*Math.cos(b),50+r*.88*Math.sin(b)])}lines.push(q)}
-    return {fill:S(lines,2.2),lines:[],thin:true}};
-  M.moon=()=>({fill:U(D(circle(-6,50,38,96),circle(10,58,32,96)),star(26,22,9),star(34,72,6),star(18,90,4)),lines:[]});
+      M.moon=()=>({fill:U(D(circle(-6,50,38,96),circle(10,58,32,96)),star(26,22,9),star(34,72,6),star(18,90,4)),lines:[]});
 
   /* ---------- Greek and Roman ---------- */
   M.laurel=()=>{const f=[],lines=[];for(const s of [-1,1]){const path=[];for(let i=0;i<=20;i++){const a=(-90+s*(i*8+10))*Math.PI/180;path.push([40*Math.cos(a)*s*s,50+40*Math.sin(a)])}
@@ -151,7 +146,7 @@
     return {fill:U(page(1),page(-1),rect(-48,4,48,10)),lines:[[[0,10],[0,64]],...lines]}};
 
   const GROUPS=[
-    ['Gothic and vampire',[['bat','Bat'],['skull','Skull'],['crossbones','Skull and bones'],['coffin','Coffin'],['tombstone','Tombstone'],['roseWindow','Rose window'],['gothicWindow','Gothic window'],['gothicCross','Gothic cross'],['candles','Candles'],['raven','Raven'],['web','Spider web'],['moon','Crescent moon']]],
+    ['Gothic and vampire',[['bat','Bat'],['skull','Skull'],['crossbones','Skull and bones'],['coffin','Coffin'],['tombstone','Tombstone'],['roseWindow','Rose window'],['gothicWindow','Gothic window'],['gothicCross','Gothic cross'],['candles','Candles'],['raven','Raven'],['moon','Crescent moon']]],
     ['Greek and Roman',[['laurel','Laurel wreath'],['helmet','Corinthian helmet'],['temple','Temple'],['amphora','Amphora'],['owl','Owl of Athena'],['lyre','Lyre'],['ionic','Ionic column'],['meander','Greek key border']]],
     ['Zodiac',[['zodiacWheel','Zodiac wheel'],...Object.keys(Z).map(k=>['zodiac-'+k,k[0].toUpperCase()+k.slice(1)])]],
     ['Fantasy',[['dragon','Dragon'],['castle','Castle'],['crystal','Crystals'],['wizardHat','Wizard hat'],['potion','Potion'],['mushroomSil','Toadstool'],['tree','Gnarled tree']]],

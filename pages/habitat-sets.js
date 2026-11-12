@@ -68,20 +68,16 @@
       ['ledge',{shape:'sharp',pattern:'solid',under:'wedge'},3],['moult',{shape:'square',post:'fork'},3],['stack',{kind:'foot',style:'cone'},3]]},
     reef:{name:'Coral reef',group:'Earth and water',colours:'Coral pink, sea blue and sand',note:'Coral shelves, scales and waves.',pieces:[['sculpt',{kind:'starfish',size:50},1],['sculpt',{kind:'nautilus',size:45},2],['sculpt',{kind:'murex',size:45},3],
       ['ledge',{shape:'fungus',pattern:'rings',under:'ribs'},1],['tile',{texture:'scales'},1],['feeder',{shape:'scallop'},1],['plate',{shape:'cloud',mode:'raised'},1],
-      ['ledge',{shape:'lobed',pattern:'web',under:'flat'},2],['tile',{texture:'waves'},2],['mister',{shape:'flower'},2],['dish',{shape:'oval'},2],
+      ['ledge',{shape:'lobed',pattern:'rings',under:'flat'},2],['tile',{texture:'waves'},2],['mister',{shape:'flower'},2],['dish',{shape:'oval'},2],
       ['flower',{kind:'anemone',R:20},3],['moss',{shape:'crescent'},3],['bridge',{style:'wave',hstyle:'rope'},3],['moult',{shape:'oval',post:'fork'},3]]},
     moon:{name:'Moon and stars',group:'Fantasy',colours:'Midnight blue and silver or glow-in-the-dark',note:'Crescent moons and star flowers. Glow-in-the-dark filament is fun here.',pieces:[
       ['ledge',{shape:'moon',pattern:'rings',under:'D'},1],['flower',{kind:'star'},1],['moss',{shape:'crescent'},1],['plate',{shape:'arch',mode:'stencil'},1],
       ['flower',{kind:'star',R:15},2],['tile',{texture:'waves'},2],['mister',{shape:'round'},2],['dish',{shape:'round'},2],
       ['moult',{shape:'round',post:'ring'},3],['emblem',{shape:'round'},3],['ladder',{style:'chain',mount:'tie'},3]]},
     gothic:{name:'Gothic',group:'Fantasy',colours:'Black, deep purple and silver',note:'Pointed arches, cobwebs and old brick.',pieces:[['sculpt',{kind:'angel',size:70},2],['sculpt',{kind:'barnowl',size:55},3],
-      ['ledge',{shape:'classic',pattern:'web',under:'ribs'},1],['bridge',{style:'gothic',hstyle:'rope'},1],['tile',{texture:'brick'},1],['plate',{shape:'scroll',mode:'stencil'},1],
+      ['ledge',{shape:'classic',pattern:'rings',under:'ribs'},1],['bridge',{style:'gothic',hstyle:'rope'},1],['tile',{texture:'brick'},1],['plate',{shape:'scroll',mode:'stencil'},1],
       ['ladder',{style:'chain',mount:'tie'},2],['flower',{kind:'rose'},2],['dish',{shape:'hex'},2],['moult',{shape:'hex',post:'ring'},2],
       ['ledge',{shape:'moon',pattern:'nouveau',under:'flat'},3],['emblem',{shape:'shield'},3],['stack',{kind:'foot',style:'turned'},3],['transport',{shape:'octagon',handle:'loop'},3]]},
-    spider:{name:'Spider web',group:'Fantasy',colours:'Bone white and charcoal',note:'Webs and nets everywhere. A favourite for autumn sales.',pieces:[
-      ['ledge',{shape:'fungus',pattern:'web',under:'flat'},1],['ladder',{style:'net',mount:'tie'},1],['dish',{shape:'round'},1],['plate',{shape:'tag',mode:'stencil'},1],
-      ['ledge',{shape:'moon',pattern:'web',under:'ribs'},2],['tile',{texture:'roots'},2],['flyLid',{pattern:'radial'},2],
-      ['bridge',{style:'twisted',hstyle:'branch'},3],['moult',{shape:'round',post:'fork'},3],['flower',{kind:'protea',R:18},3]]},
     nouveau:{name:'Art nouveau',group:'Fantasy',colours:'Antique gold and bottle green',note:'Whiplash curves and filigree.',pieces:[
       ['ledge',{shape:'classic',pattern:'nouveau',under:'ribs'},1],['ladder',{style:'vine',mount:'tie'},1],['plate',{shape:'scroll',mode:'raised'},1],['flower',{kind:'lily'},1],
       ['bridge',{style:'vine',hstyle:'vine'},2],['tile',{texture:'roots'},2],['ledge',{shape:'leaf',pattern:'scroll',under:'D'},2],['feeder',{shape:'flower'},2],
@@ -107,7 +103,7 @@
       ['ledge',{shape:'moon',pattern:'rings',under:'D'},2],['flower',{kind:'lily',R:20,accent:'yes'},2],['diorama',{kind:'cottage',accent:'yes',mount:'free'},2],
       ['moult',{shape:'round',post:'ring'},3],['emblem',{shape:'round'},3]]},
     graveyard:{name:'Vampire graveyard',group:'Gothic',colours:'Black, blood red and bone white',note:'Tombstones, a coffin, candles and bats, for a spooky enclosure or a Halloween sale.',pieces:[['sculpt',{kind:'tombstone',size:80},1],['sculpt',{kind:'angel',size:70},2],
-      ['diorama',{kind:'tombstone',style:'intact',mount:'free'},1],['diorama',{kind:'coffin',accent:'yes'},1],['sculpt',{kind:'bat',size:80},1],['ledge',{shape:'moon',pattern:'web',under:'flat'},1],
+      ['diorama',{kind:'tombstone',style:'intact',mount:'free'},1],['diorama',{kind:'coffin',accent:'yes'},1],['sculpt',{kind:'bat',size:80},1],['ledge',{shape:'moon',pattern:'rings',under:'flat'},1],
       ['sculpt',{kind:'real',size:32},2],['diorama',{kind:'candles',accent:'yes'},2],['motif',{motif:'gothicWindow',form:'plaque',base:'arch'},2],['flower',{kind:'rose'},2],['tile',{texture:'brick'},2],
       ['sculpt',{kind:'raven',size:45},3],['diorama',{kind:'tombstone',style:'broken',size:24,h:44,mount:'free'},3],['motif',{motif:'roseWindow',form:'stencil',base:'round'},3],['motif',{motif:'bat',form:'ornament'},3]]},
     curio:{name:'Cabinet of curiosities',group:'Gothic',colours:'Bone white or aged ivory, with black and brass',note:'Lifelike sculpted pieces: a skull, a raven, a death\'s-head moth and a coiled snake, with old books and candles, like a Victorian collector\'s cabinet.',pieces:[['sculpt',{kind:'ammonite',size:60},1],['sculpt',{kind:'stagbeetle',size:80},2],['sculpt',{kind:'nautilus',size:45},2],['sculpt',{kind:'barnowl',size:55},3],
@@ -172,4 +168,28 @@
       ['transport',{shape:'hex'},3],['moult',{shape:'log',post:'leaf'},3],['label',{},3],['ship',{},1],['turntable',{},2]]}
   };
   root.HABITAT_SETS=S;
+
+  /* Flowerpots for each style: the tiered back planter (front surface, top edge, tiers), a standing pot (shape,
+     surface) and a wall pot (hanging planter shape). Group first, then the styles that differ from their group. */
+  const PG={Flowers:{tiers:{front:'scallops',top:'arches',tiers:'2'},pot:{shape:'round',surface:'scallops'},wall:{shape:'scallop'}},
+    Woodland:{tiers:{front:'bark',top:'flat',tiers:'2'},pot:{shape:'pebble',surface:'bark'},wall:{shape:'pebble'}},
+    'Asian garden':{tiers:{front:'bamboo',top:'flat',tiers:'2'},pot:{shape:'hex',surface:'bamboo'},wall:{shape:'halfhex'}},
+    'Earth and water':{tiers:{front:'stones',top:'flat',tiers:'3'},pot:{shape:'pebble',surface:'stones'},wall:{shape:'pebble'}},
+    Fantasy:{tiers:{front:'waves',top:'waves',tiers:'2'},pot:{shape:'round',surface:'waves'},wall:{shape:'halfround'}},
+    Gothic:{tiers:{front:'flutes',top:'pointed',tiers:'2'},pot:{shape:'square',surface:'flutes'},wall:{shape:'facet'}},
+    Diorama:{tiers:{front:'stones',top:'battlements',tiers:'2'},pot:{shape:'square',surface:'stones'},wall:{shape:'square'}},
+    Modern:{tiers:{front:'zigzag',top:'flat',tiers:'3'},pot:{shape:'hex',surface:'zigzag'},wall:{shape:'facet'}},
+    'Keeper kits':{tiers:{front:'flutes',top:'flat',tiers:'2'},pot:{shape:'round',surface:'flutes'},wall:{shape:'square'}}};
+  const PT={tropical:{tiers:{front:'waves',top:'waves'},pot:{surface:'waves'}},lotus:{tiers:{front:'scallops',top:'waves'},wall:{shape:'halfround'}},
+    protea:{tiers:{front:'zigzag',top:'pointed'},pot:{surface:'zigzag'}},sakura:{tiers:{front:'waves',top:'arches'}},
+    cabin:{tiers:{front:'bark',top:'battlements'},pot:{shape:'square',surface:'bark'}},mossy:{tiers:{tiers:'3'}},deadleaf:{tiers:{front:'bark',top:'arches'}},
+    zen:{tiers:{front:'straight',top:'flat',tiers:'2'},pot:{shape:'square',surface:'straight'},wall:{shape:'square'}},pagoda:{tiers:{top:'pointed'}},
+    canyon:{tiers:{front:'stones',top:'battlements'}},reef:{tiers:{front:'scallops',top:'waves'},pot:{surface:'scallops'},wall:{shape:'scallop'}},
+    moon:{tiers:{top:'arches'}},astral:{tiers:{front:'zigzag',top:'pointed'}},sky:{tiers:{front:'scallops',top:'arches'}},glow:{tiers:{front:'zigzag'}},
+    nouveau:{tiers:{front:'waves',top:'arches'},wall:{shape:'scallop'}},gothic:{tiers:{front:'flutes',top:'pointed'}},
+    ruins:{tiers:{front:'stones',top:'battlements'}},temple:{tiers:{front:'flutes',top:'battlements'},pot:{surface:'flutes'}},olympus:{tiers:{front:'flutes',top:'flat'},pot:{shape:'round',surface:'flutes'}},
+    fairy:{tiers:{front:'bark',top:'arches'},pot:{shape:'pebble',surface:'bark'}},library:{tiers:{front:'straight',top:'battlements'}},
+    botanical:{tiers:{front:'flutes',top:'flat',tiers:'3'},pot:{shape:'round',surface:'flutes'}},honey:{tiers:{front:'zigzag',top:'flat'},pot:{shape:'hex'}},
+    minimal:{tiers:{front:'straight',top:'flat'},pot:{shape:'square',surface:'straight'}}};
+  root.HABITAT_PLANTS=k=>{const s=S[k]||S.orchid,g=PG[s.group]||PG.Flowers,t=PT[k]||{},o={};for(const part of ['tiers','pot','wall'])o[part]=Object.assign({},g[part],t[part]||{});return o};
 })(typeof window!=='undefined'?window:globalThis);
