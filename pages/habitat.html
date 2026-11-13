@@ -3,20 +3,20 @@
 <script src="../shim.js"></script>
 <script src="../lib/clipper.js"></script>
 <script src="../lib/earcut.min.js"></script>
-<script src="../lib/geo.js?v=32"></script>
-<script src="habitat-parts.js?v=32"></script>
-<script src="habitat-enclosure.js?v=32"></script>
-<script src="habitat-more.js?v=32"></script>
-<script src="habitat-motifs.js?v=32"></script>
-<script src="habitat-keep.js?v=32"></script>
-<script src="../lib/sdf.js?v=32"></script>
-<script src="habitat-pots.js?v=32"></script>
-<script src="habitat-sculpt.js?v=32"></script>
-<script src="habitat-trim.js?v=32"></script>
-<script src="habitat-addons.js?v=32"></script>
-<script src="habitat-forms.js?v=32"></script>
-<script src="habitat-shapes.js?v=32"></script>
-<script src="habitat-sets.js?v=32"></script>
+<script src="../lib/geo.js?v=33"></script>
+<script src="habitat-parts.js?v=33"></script>
+<script src="habitat-enclosure.js?v=33"></script>
+<script src="habitat-more.js?v=33"></script>
+<script src="habitat-motifs.js?v=33"></script>
+<script src="habitat-keep.js?v=33"></script>
+<script src="../lib/sdf.js?v=33"></script>
+<script src="habitat-pots.js?v=33"></script>
+<script src="habitat-sculpt.js?v=33"></script>
+<script src="habitat-trim.js?v=33"></script>
+<script src="habitat-addons.js?v=33"></script>
+<script src="habitat-forms.js?v=33"></script>
+<script src="habitat-shapes.js?v=33"></script>
+<script src="habitat-sets.js?v=33"></script>
 <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Bricolage+Grotesque:opsz,wght@12..96,600;12..96,750&family=IBM+Plex+Mono:wght@500&family=IBM+Plex+Sans:wght@400;500;600&display=swap">
 <style>
 /* Same layout as the Resin Workshop: inputs on the left, the 3D preview and downloads beside them. */
@@ -635,7 +635,7 @@ function tileStates(p,k,n){const s=(p.tileMap||{})[k];return typeof s==='string'
 function rectDims(p){const g=p.T+.6,s=6,r=2.4,slim=p.frame==='slim',a=g/2+(slim?4.7:s),band=g/2+r,swing=p.front.startsWith('swing');
   /* turn latch above the door's pull, lock hasps below it; both stay clear of the window buttons near the door's ends */
   const pH=p.H-.5,lockZ=Math.max(pH/2-30,s+1+1.7+14+20),lockOK=lockZ+9<=pH/2-16,latchOK=pH/2+27.5<=pH-31;
-  return {W:p.W,D:p.D,S:p.S,H:p.H,s,g,band,Eh:a+.25+r,f:2.4,a,Lt:2.4,swing,Hp:pH,slim,latch:swing&&p.doorCatch==='turn',latchZ:latchOK?pH/2+24:pH/2-24,lockZ:swing&&p.lock==='pin'&&lockOK&&latchOK?lockZ:null,lockShort:swing&&p.lock==='pin'&&!(lockOK&&latchOK)}}
+  return {W:p.W,D:p.D,S:p.S,H:p.H,s,g,band,Eh:a+.25+r,E:a+.25+r+5.5,f:2.4,a,Lt:2.4,swing,Hp:pH,slim,latch:swing&&p.doorCatch==='turn',latchZ:latchOK?pH/2+24:pH/2-24,lockZ:swing&&p.lock==='pin'&&lockOK&&latchOK?lockZ:null,lockShort:swing&&p.lock==='pin'&&!(lockOK&&latchOK)}}
 /* a printed mesh panel, flat on the bed: x across, y up the wall, z through it (inner face at z=T).
    It is 0.4 mm thinner than the clear panels and 0.5 mm shorter at every edge, so it slides into the grooves even
    when the print comes out a little fat. Pin rails are solid bands with holes through, so both faces stay flat. */
@@ -1180,12 +1180,12 @@ let trimMemo={k:'',v:null};
 function trimEnc(){const p=readEnc(),k=JSON.stringify(p);if(trimMemo.k===k)return trimMemo.v;
   let mn=[1e9,1e9,1e9],mx=[-1e9,-1e9,-1e9];try{for(const it of encModel(p,true).items){const t=it.tris;for(let i=0;i<t.length;i+=3)for(let a=0;a<3;a++){if(t[i+a]<mn[a])mn[a]=t[i+a];if(t[i+a]>mx[a])mx[a]=t[i+a]}}}catch(e){mn=[0,0,0];mx=[p.W,p.D||p.W,p.S+p.H+2.4]}
   const v={rect:p.shape==='rect',W:Math.round((mx[0]-mn[0])*10)/10,Htot:Math.round((mx[2]-Math.max(0,mn[2]))*10)/10,S:p.S,Hwin:p.S+p.H,Lt:2.4,bed:[p.bx||350,p.by||350],box:[mn,mx]};
-  if(v.rect){const d=rectDims(p);v.cornerX=[-mn[0],p.W-mn[0]];v.frontY=-d.Eh;v.clipReach=d.Eh-d.band;v.blocked=d.latch||d.lockZ!=null;v.frameMags=p.frameMags==='yes';v.lidScrews=p.lidScrews==='screws';v.screw=HE.screwSpec(d.slim);v.finSpots=HE.screwSpots(d,{lidScrews:'screws'})}
+  if(v.rect){const d=rectDims(p);v.cornerX=[-mn[0],p.W-mn[0]];v.frontY=-d.E;v.clipReach=d.Eh-d.band;{const lx=HE.lugX(d),zt=d.S+d.H+d.Lt-HE.LUG.zc;v.topMags=[[lx-mn[0],zt],[d.W-lx-mn[0],zt]]}v.blocked=d.latch||d.lockZ!=null;v.frameMags=p.frameMags==='yes';v.lidScrews=p.lidScrews==='screws';v.screw=HE.screwSpec(d.slim);v.finSpots=HE.screwSpots(d,{lidScrews:'screws'})}
   trimMemo={k,v};return v}
 HabitatKeep.trim=o=>HabitatTrim.piece(Object.assign({},trimEnc(),o));
 /* the anatomical skull loads in the background; redraw when it arrives */
 let scanT;HabitatSculpt.onready=()=>{clearTimeout(scanT);scanT=setTimeout(()=>{if(typeof BMEMO!=='undefined')BMEMO.clear();if(state.tab==='acc'&&['sculpt','set'].includes(A.item))accCalc();else if(state.tab==='build')buildCalc()},200)};
-HabitatSculpt.setVersion('32');
+HabitatSculpt.setVersion('33');
 HabitatKeep.hanger=o=>HabitatForms.hanger(Object.assign({},trimEnc(),o));HabitatKeep.carry=o=>HabitatForms.carry(Object.assign({},trimEnc(),o));
 function encInfo(){
   const e=Object.assign({},DEF,state.enc||{}),bed=Math.max(e.bx||350,e.by||350),g=e.T+.6,band=g/2+2.4,o={e,bed,band,hatchR:e.hatch!=='none'?(state.encHatchR||Math.min(60,e.hatchD/2)):0};

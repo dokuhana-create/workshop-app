@@ -157,7 +157,7 @@
     const mags=[];const glue=o.mount==='glue';
     /* the bottom pair sits in front of the base's front corner blocks, which have matching pockets */
     const bx=o.cornerX||[sw/2+2,W-sw/2-2],by=o.cornerX?o.S/2:bot/2;
-    if(!glue){const md=o.md||10,mh=o.mh||3;for(const [x,y] of [[bx[0],by],[bx[1],by],[sw/2+2,Ht-top/2],[W-sw/2-2,Ht-top/2]])mags.push([x,y]);
+    if(!glue){const md=o.md||10,mh=o.mh||3;for(const [x,y] of [[bx[0],by],[bx[1],by],...(o.topMags||[[sw/2+2,Ht-top/2],[W-sw/2-2,Ht-top/2]])])mags.push([x,y]);
       const pd=max(mh+.2,bt+oh),rz=pd+.6,ros=U(...mags.map(([x,y])=>st.stile==='stars'?star(x,y,md/2+5,8,.7):st.stile==='quatrefoil'?U(...[0,1,2,3].map(i=>circle(x+cos(i*PI/2)*(md/4+1.5),y+sin(i*PI/2)*(md/4+1.5),md/2+.5,32))):circle(x,y,md/2+3.5,48)));
       deco=subtract(deco,offset(ros,1));mags.rz=rz;mags.ros=ros;mags.pd=pd}
     /* split in two when it doesn't fit the bed */
@@ -177,8 +177,8 @@
         {file:`frame${sfx}-filigree.stl`,role:'Colour 2',m:build([prism(bt,bt+oh,cl(deco))]),at:'front'})}
       else parts.push({file:`frame${sfx}.stl`,role:i?'Second file':'Main colour',m:build([...f,...a]),at:'front'})});
     if(two)notes.push('Two colours: add the filigree file to the frame as a part (same origin), for example gold on black.');
-    if(!glue){notes.push(`Magnets: 8 in all, pressed into their pockets. 4 go in the frame; 2 in the pockets in the front corners of the base${o.frameMags?'':' (turn on Enclosure, Size, Magnets for a front frame, so the base gets them)'}; and 2 in the lid clips, which push onto the front edge of the lid. The frame sticks to them.`);
-      parts.push({file:'lid-clip.stl',role:'Second file',m:lidClip(o),at:'loose',count:2})}
+    if(!glue){notes.push(`Magnets: 8 in all, pressed into their pockets. 4 go in the frame; 2 in the pockets in the front corners of the base${o.frameMags?'':' (turn on Enclosure, Size, Magnets for a front frame, so the base and lid get them)'}; ${o.topMags?'and 2 in the pockets in the lugs under the front corners of the lid':'and 2 in the lid clips, which push onto the front edge of the lid'}. The frame sticks to them.`);
+      if(!o.topMags)parts.push({file:'lid-clip.stl',role:'Second file',m:lidClip(o),at:'loose',count:2})}
     if(o.blocked)notes.push('The door\'s turn latch and lock hasps sit where the frame\'s right side goes. With a front frame, choose the magnet or click catch and no lock.');
     else notes.push('Glue: fix the frame to the front of the base and the corner posts with double-sided foam tape (it comes off again).');
     notes.push('The frame prints flat on its back, with the pattern facing up.');

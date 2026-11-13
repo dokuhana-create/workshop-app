@@ -182,6 +182,7 @@
     }
     if(hs.length)f.push(prism(-1,o.Lt+1,hs,'sub'));
     if(o.rounded)f.push(prism(-1,o.Lt+o.s+2,roundClip(outer,o.corners),'sub'));
+    for(const x of o.extra||[])f.push(x);
     const m=mirrorY(build(f));m.win=win;m.hatch=hatch;m.notes=notes;m.cover=hatch?hatchCover(hatch,p,preview):null;
     return m;
   }
@@ -197,18 +198,56 @@
   function frontVents(d,p){
     if(p.frontVent!=='slots'||d.S<20)return null;
     const ob=d.g/2+2.4,z1=d.S-3,z0=Math.max(d.f+3,d.S-14),w=p.hole,pitch=Math.max(w+1.6,p.hole+p.bar),xs=[],x0=d.Eh+6,x1=d.W-d.Eh-6;
-    const n=Math.floor((x1-x0-w)/pitch),o0=(x0+x1-(n*pitch+w))/2;for(let i=0;i<=n;i++){const x=o0+i*pitch;xs.push(rect(x,-ob-1,x+w,ob+1)[0])}
+    const n=Math.floor((x1-x0-w)/pitch),o0=(x0+x1-(n*pitch+w))/2;for(let i=0;i<=n;i++){const x=o0+i*pitch;xs.push(rect(x,-(d.E||ob)-1,x+w,ob+1)[0])}
     return {sub:prism(z0,z1,xs,'sub'),z0,z1,n:n+1};
   }
+  /* ---------- the plinth and cornice (v32) ----------
+     The base is wrapped in a thin moulded skin that runs flush round the corners, E out from the panel line: a small
+     chamfer at the foot, a shadow line 8 mm up, and a chamfer at the top. Behind the skin is a hollow, open underneath
+     and closed at the top by a short flat bridge, so it prints without supports and costs little filament. Ribs tie the skin
+     to the wall. The lid gets a matching cornice: its top plate runs out to the same line, with chamfered edges, over
+     the recessed frieze of the corner blocks. */
+  const PL={skin:1.2,rib:1.2,ribPitch:55};
+  const plRect=(d,i,r)=>G.rrect(-d.E+i,-d.E+i,d.W+d.E-i,d.D+d.E-i,Math.max(.4,r-i),10);
+  function baseInset(z,Hb){if(z<.8)return .8-z;if(z>7&&z<8.6)return .8-Math.abs(z-7.8);if(z>Hb-1.4)return z-(Hb-1.4);return 0}
+  function plinthBase(d,p){
+    const Hb=d.S+d.s,r=p.corners==='rounded'?6:2,ob=d.g/2+2.4,wallL=offset(rectC(d),ob,'miter'),C=rectC(d);
+    const blocks=[[0,0],[d.W,0],[d.W,d.D],[0,d.D]].map(([x,y])=>rect(x-d.Eh,y-d.Eh,x+d.Eh,y+d.Eh)[0]);
+    /* ribs from the skin to the wall, about every 55 mm */
+    const ribs=[],rw=PL.rib/2;
+    for(const [len,mk] of [[d.W,(t,sd)=>sd?rect(t-rw,d.D,t+rw,d.D+d.E+1):rect(t-rw,-d.E-1,t+rw,0)],[d.D,(t,sd)=>sd?rect(d.W,t-rw,d.W+d.E+1,t+rw):rect(-d.E-1,t-rw,0,t+rw)]]){
+      const span=len-2*d.Eh,n=Math.max(1,Math.round(span/PL.ribPitch));for(let i=1;i<n;i++){const t=d.Eh+span*i/n;for(const sd of [0,1])ribs.push(mk(t,sd)[0])}}
+    /* solid bosses behind the magnet pockets for a front frame */
+    const zb=d.S/2+7,boss=[0,d.W].map(x=>rect(x-7,-d.E-1,x+7,-d.Eh+.5)[0]);
+    const skin=varying(0,Hb,z=>subtract(plRect(d,baseInset(z,Hb),r),wallL),.2);
+    /* the roof over the hollow is a flat 1.6 mm bridge, about 10 mm wide between the ribs */
+    const hollow=varying(-1,Hb-1.6,z=>{const zz=Math.max(0,z),ins=PL.skin+baseInset(zz,Hb);
+      if(d.E-ins<=ob+.4)return [];return subtract(plRect(d,ins,r),unite(wallL,blocks,ribs,zz<zb?boss:[]))},.2,'sub');
+    return [skin,hollow];
+  }
   function rectBase(d,p){const v=frontVents(d,p),subs=v?[v.sub]:[];
-    /* magnet pockets in the front of the two front corner blocks, for a decorative front frame */
-    if(p.frameMags==='yes'&&d.S>=(p.dMagD||10)+4)for(const x of [0,d.W])subs.push(G.yMag(x,d.S/2,p.dMagD||10,-d.Eh-1,-d.Eh+(p.dMagH||3)+.2,'sub'));
-    const m=base(rectC(d),{gw:d.g,wall:2.4,S:d.S,s:d.s,f:d.f,join:'miter',corners:rectCorners(d,p.corners==='rounded'),rounded:p.corners==='rounded',subs},p);m.vents=v;return m}
+    if(d.E)subs.push(...plinthBase(d,p));
+    /* magnet pockets in the front of the two front corners, for a decorative front frame */
+    const fy=-(d.E||d.Eh);
+    if(p.frameMags==='yes'&&d.S>=(p.dMagD||10)+4)for(const x of [0,d.W])subs.push(G.yMag(x,d.S/2,p.dMagD||10,fy-1,fy+(p.dMagH||3)+.2,'sub'));
+    const m=base(rectC(d),{gw:d.g,wall:2.4,S:d.S,s:d.s,f:d.f,join:'miter',corners:rectCorners(d,p.corners==='rounded'),rounded:!d.E&&p.corners==='rounded',subs},p);m.vents=v;return m}
+  /* the cornice plate: the lid's top runs out to the plinth line, chamfered top and bottom */
+  function lidInset(z){if(z<.8)return .8-z;if(z>1.6)return z-1.6;return 0}
+  /* where a front frame's top magnets sit: in lugs under the cornice, in front of the front corner blocks */
+  const lugX=d=>(-d.E+2.4+1.2)/2;
+  const LUG={zc:2.4+6.3,h:2.4+12.4};
+  function cornice(d,p){
+    const r=p.corners==='rounded'?6:2,ob=d.g/2+2.4,f=[varying(0,2.4,z=>plRect(d,lidInset(z),r),.2)];
+    if(p.frameMags==='yes'){const md=p.dMagD||10,mh=p.dMagH||3;
+      for(const xc of [lugX(d),d.W-lugX(d)]){const x0=Math.max(xc-6.6,-d.E+1.2),x1=Math.min(xc+6.6,d.W+d.E-1.2);
+        f.push(prism(1,LUG.h,rect(x0,-d.E+.01,x1,-d.Eh+.3)),G.yMag(xc,LUG.zc,md,-d.E-1,-d.E+mh+.2,'sub'))}}
+    return f;
+  }
   /* where each corner's lid screw goes: in the outer quarter of the post, clear of both panel slots */
   function screwSpots(d,p){if(p.lidScrews!=='screws')return [];const c=screwSpec(d.slim).c;return [[0,0],[d.W,0],[d.W,d.D],[0,d.D]].map(([x,y],i)=>{const a=i*Math.PI/2,co=Math.round(Math.cos(a)),si=Math.round(Math.sin(a));return [x+co*-c-si*-c,y+si*-c+co*-c]})}
   function rectLid(d,p,preview){
     const g=d.g,slot=d.swing?null:rect(g/2,-g/2,d.W-g/2,g/2),sp=screwSpec(d.slim);
-    const m=lid(rectC(d),{gw:g,wall:2.4,s:d.s,Lt:d.Lt,join:'miter',corners:rectCorners(d,p.corners==='rounded'),slot,screws:screwSpots(d,p).map(([x,y])=>[x,y,sp.d/2+.4]),centre:[d.W/2,d.D/2],alongY:d.D>d.W,rounded:p.corners==='rounded'},p,preview);
+    const m=lid(rectC(d),{gw:g,wall:2.4,s:d.s,Lt:d.Lt,join:'miter',corners:rectCorners(d,p.corners==='rounded'),slot,screws:screwSpots(d,p).map(([x,y])=>[x,y,sp.d/2+.4]),centre:[d.W/2,d.D/2],alongY:d.D>d.W,rounded:!d.E&&p.corners==='rounded',extra:d.E?cornice(d,p):[]},p,preview);
     m.screw=p.lidScrews==='screws'?lidScrew(sp,d.Lt):null;return m;
   }
   /* corner post: two slots for the panels; printed lying on a flat side */
@@ -375,5 +414,5 @@
       button:buttons?turnButton(0,4.5):null,front:off+dt,edge:xd1,midZ:(zd0+zd1)/2};
   }
 
-  root.HabitatEnclosure={screwSpec,screwSpots,stud,hasp,screwHoleUp,lidScrew,turnButton,latchDepth,frontVents,hatchCover,TW,base,lid,rectBase,rectLid,rectPost,polyGeom,polyEnclosure,spineToWorld,roundEnclosure,perimeter,tilePanel,TILE,swingDoor,lightWindows,mirrorY};
+  root.HabitatEnclosure={lugX,LUG,screwSpec,screwSpots,stud,hasp,screwHoleUp,lidScrew,turnButton,latchDepth,frontVents,hatchCover,TW,base,lid,rectBase,rectLid,rectPost,polyGeom,polyEnclosure,spineToWorld,roundEnclosure,perimeter,tilePanel,TILE,swingDoor,lightWindows,mirrorY};
 })(typeof window!=='undefined'?window:globalThis);
