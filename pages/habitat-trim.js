@@ -25,10 +25,11 @@
     nouveau:{name:'Art nouveau',open:'round',stile:'whiplash',rail:'whiplash',corner:'tulip',crest:'fan',finial:'bud',foot:'bun'},
     fantasy:{name:'Castle gate',gate:true,open:'round',stile:'stones',rail:'stones',corner:'shield',crest:'battlement',finial:'crystal',foot:'claw',key:true},
     deco:{name:'Art deco',open:'stepped',stile:'lines',rail:'chevron',corner:'sunburst',crest:'ziggurat',finial:'stepped',foot:'block'},
+    forest:{name:'Forest',open:'round',stile:'vine',rail:'leaves',corner:'oakleaf',crest:'branch',finial:'acorn',foot:'root'},
     rustic:{name:'Rustic twig',open:'round',stile:'bark',rail:'bark',corner:'tree',crest:'branch',finial:'acorn',foot:'root'}
   };
   /* which frame goes with which style package */
-  const FOR={orchid:'orchid',temple:'greek',gothic:'gothic',fantasy:'fantasy',forest:'vine',library:'baroque',geo:'deco'};
+  const FOR={orchid:'orchid',temple:'greek',gothic:'gothic',fantasy:'fantasy',forest:'forest',library:'baroque',geo:'deco'};
   const styleFor=theme=>FOR[root.HABITAT_THEME?root.HABITAT_THEME(theme):theme]||'baroque';
 
   /* ---------- the window ---------- */
@@ -109,6 +110,13 @@
     if(kind==='shield'){/* a heater shield with a chevron, as fine lines */const lw=max(1,s*.05),w=s*.42,h=s*.5;
       const out=[[ [cx-w,cy+h*.45],[cx+w,cy+h*.45],...Array.from({length:21},(_,i)=>{const t=i/20;return [cx+w*(1-t*t),cy+h*.45-h*t]}),...Array.from({length:21},(_,i)=>{const t=1-i/20;return [cx-w*(1-t*t),cy+h*.45-h*t]}) ]];
       return U(subtract(out,offset(out,-lw)),stroke([[[cx-w*.75,cy-h*.2],[cx,cy+h*.2],[cx+w*.75,cy-h*.2]]],lw))}
+    if(kind==='oakleaf'){/* an oak leaf with its lobes, a midrib and side veins, as fine lines, and an acorn */const lw=max(1,s*.045),L=s*.62,W=s*.3,pts=[];
+      for(let i=0;i<=60;i++){const t=i/60,w=W*Math.pow(sin(PI*t),.8)*(1+.28*sin(t*PI*9)),pt=[cx-L/2+L*t,cy+w];pts.push(pt)}
+      for(let i=59;i>0;i--){const t=i/60,w=W*Math.pow(sin(PI*t),.8)*(1+.28*sin(t*PI*9+PI)),pt=[cx-L/2+L*t,cy-w];pts.push(pt)}
+      const leafR=rot([pts],-.6,cx,cy),vein=[[[cx-L/2,cy],[cx+L/2*.9,cy]]];for(let k=1;k<5;k++){const x=cx-L/2+L*k/5;vein.push([[x,cy],[x+L*.1,cy+W*.6]],[[x,cy],[x+L*.1,cy-W*.6]])}
+      const vr=rot(stroke(vein,lw*.8),-.6,cx,cy),ax=cx+s*.28,ay=cy-s*.22;
+      return U(subtract(leafR,offset(leafR,-lw)),intersect(vr,leafR),stroke([[[cx-L/2*Math.cos(.6)-s*.06,cy+L/2*Math.sin(.6)+s*.04],[cx-L/2*Math.cos(.6),cy+L/2*Math.sin(.6)]]],lw),
+        subtract(ellipse(ax,ay,s*.06,s*.085,32),ellipse(ax,ay,s*.06-lw,s*.085-lw,32)),rect(ax-s*.075,ay+s*.04,ax+s*.075,ay+s*.075))}
     if(kind==='trefoil'){/* gothic tracery: a ring holding three lobes and a small centre, as fine lines */const lw=max(1,s*.05),r=s*.48,o=[subtract(circle(cx,cy,r,64),circle(cx,cy,r-lw,64))];
       for(let i=0;i<3;i++){const a=PI/2+i*2*PI/3,lx=cx+r*.42*cos(a),ly=cy+r*.42*sin(a);o.push(subtract(circle(lx,ly,r*.42,48),circle(lx,ly,r*.42-lw,48)))}
       o.push(circle(cx,cy,r*.1,24));return U(...o)}
@@ -273,7 +281,7 @@
   function lidCrest(o){
     const st=STYLES[o.style]||STYLES.baroque,c=o.lidCrest,Wc=c.W+2*c.E,ch=min(Wc*.22,46),lw=max(1.3,Wc*.007),bt=c.C.y1-c.C.y0,notes=[];
     const cr=crest(st.crest,Wc,0,ch,lw),pegs=c.xs.map(x=>x+c.E),pk=c.C.peg/2;
-    const bar=rrect(pegs[0]-8,0,pegs[1]+8,3.2,1.2);
+    const fb=B(cr.fill),bar=rrect(min(pegs[0]-8,max(0,fb.x0)),0,max(pegs[1]+8,min(Wc,fb.x1)),3.2,1.2);
     const body=intersect(U(cr.fill,bar),rect(-50,0,Wc+50,ch*3)),f=[prism(0,bt,body),prism(0,bt,U(...pegs.map(x=>rrect(x-pk,-c.C.len,x+pk,.5,.6))))];
     if(cr.raised&&cr.raised.length){const r=intersect(cr.raised,offset(body,-.8));if(r.length)f.push(prism(bt,bt+1,r))}
     notes.push('Crest: push its two pegs into the slots on the front edge of the lid. It prints flat on its back.');

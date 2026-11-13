@@ -29,6 +29,7 @@
     else if(kind==='square')r=rrect(-L/2,0,L/2,W,Math.min(L,W)*.18);
     else if(kind==='pebble'){const w=wobble(seed||1,.14,5);r=polar(0,W/2,a=>{const c=Math.cos(a),s=Math.sin(a),e=1/Math.sqrt(c*c/(L*L/4)+s*s/(W*W/4));return e*(1+w(a))})}
     else if(kind==='leaf'){const o=[],n=60;for(let i=0;i<=n;i++){const t=i/n,hw=(W/2)*Math.pow(Math.sin(Math.PI*t),.85);o.push([-L/2+L*t,hw])}for(let i=n-1;i>0;i--){const t=i/n,hw=(W/2)*Math.pow(Math.sin(Math.PI*t),.85)*.92;o.push([-L/2+L*t,-hw])}r=[o.map(([x,y])=>[x,y+W/2])]}
+    else if(kind==='leaf'&&false){}
     else if(kind==='shield'){/* a heater shield: straight top, sides curving to a point */const o=[[-L/2,W]];for(let i=0;i<=30;i++){const t=i/30;o.push([L/2*(1-t*t),W-W*t])}for(let i=29;i>0;i--){const t=i/30;o.push([-L/2*(1-t*t),W-W*t])}r=[o]}
     else if(kind==='fluted'){/* a round dish with fine flutes round its side, like a classical patera */r=polar(0,W/2,a=>{const c=Math.cos(a),s=Math.sin(a),e=1/Math.sqrt(c*c/(L*L/4)+s*s/(W*W/4));return e-1.1*(.5+.5*Math.cos(32*a))},256)}
     else if(kind==='flower'){/* six soft petals round an oval */r=polar(0,W/2,a=>{const c=Math.cos(a),s=Math.sin(a),e=1/Math.sqrt(c*c/(L*L/4)+s*s/(W*W/4));return e*(.9+.1*Math.cos(6*a))},180)}
@@ -160,7 +161,11 @@
       else if(o.shape==='hex')at=z=>ngon(0,0,(bot+(top-bot)*z/H)/Math.cos(Math.PI/6),6,Math.PI/6);
       else if(o.shape==='cone')at=z=>circle(0,0,bot+(top-bot)*z/H,96);
       else at=z=>polar(0,0,a=>(bot+(top-bot)*Math.pow(z/H,.6))*(1+wv(a+z*.04)),96);
-      if(o.shape==='tower'){
+      if(o.shape==='stump'){
+        /* a tree stump: bark grooves round it and roots spreading at the foot, flaring at 45° or less */
+        const rt=top+3.4,wv2=wobble(o.seed||3,.05,3);
+        f.push(varying(0,H,z=>polar(0,0,a=>{const fl=Math.max(0,1-z/7);return rt*(1+wv2(a))+7*fl*Math.pow(.5+.5*Math.cos(5*a+1),2)+.5*Math.sin(17*a)},72),.8))}
+      else if(o.shape==='tower'){
         /* a round castle tower: a wider footing, the tower, a corbelled ring under the top and battlements round
            the socket; the corbel steps out at 45° */
         const rt=top+3.2,zc=H-7;
