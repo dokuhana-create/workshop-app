@@ -22,18 +22,13 @@
     greek:{name:'Greek and Roman',open:'rect',stile:'flute',rail:'meander',corner:'laurel',crest:'pediment',finial:'urn',foot:'block'},
     vine:{name:'Woodland vines',open:'round',stile:'vine',rail:'leaves',corner:'rose',crest:'leafArch',finial:'acorn',foot:'root'},
     nouveau:{name:'Art nouveau',open:'round',stile:'whiplash',rail:'whiplash',corner:'tulip',crest:'fan',finial:'bud',foot:'bun'},
-    oriental:{name:'East Asian',open:'moon',stile:'lattice',rail:'lattice',corner:'cloud',crest:'roof',finial:'lotus',foot:'drum'},
-    celestial:{name:'Celestial',open:'round',stile:'stars',rail:'stars',corner:'moon',crest:'sunrays',finial:'star',foot:'bun'},
     fantasy:{name:'Castle and dungeon',open:'round',stile:'stones',rail:'stones',corner:'dragon',crest:'battlement',finial:'crystal',foot:'claw',key:true},
     deco:{name:'Art deco',open:'stepped',stile:'lines',rail:'chevron',corner:'sunburst',crest:'ziggurat',finial:'stepped',foot:'block'},
     rustic:{name:'Rustic twig',open:'round',stile:'bark',rail:'bark',corner:'tree',crest:'branch',finial:'acorn',foot:'root'}
   };
   /* which frame goes with which style package */
-  const FOR={graveyard:'gothic',gothic:'gothic',curio:'gothic',moon:'celestial',astral:'celestial',glow:'celestial',sky:'celestial',wizard:'celestial',
-    hoard:'fantasy',ruins:'greek',olympus:'greek',temple:'oriental',bamboo:'oriental',zen:'oriental',pagoda:'oriental',sakura:'oriental',lotus:'oriental',
-    library:'baroque',cottage:'baroque',orchid:'nouveau',nouveau:'nouveau',botanical:'nouveau',protea:'nouveau',tropical:'vine',fairy:'vine',forest:'vine',mossy:'vine',
-    rainforest:'vine',deadleaf:'rustic',cabin:'rustic',stone:'fantasy',canyon:'rustic',reef:'celestial',honey:'deco',geo:'deco',minimal:'deco'};
-  const styleFor=theme=>FOR[theme]||'baroque';
+  const FOR={orchid:'nouveau',temple:'greek',gothic:'gothic',fantasy:'fantasy',forest:'vine',library:'baroque',geo:'deco'};
+  const styleFor=theme=>FOR[root.HABITAT_THEME?root.HABITAT_THEME(theme):theme]||'baroque';
 
   /* ---------- the window ---------- */
   function opening(kind,x0,y0,x1,y1){

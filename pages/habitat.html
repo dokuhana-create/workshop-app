@@ -3,20 +3,20 @@
 <script src="../shim.js"></script>
 <script src="../lib/clipper.js"></script>
 <script src="../lib/earcut.min.js"></script>
-<script src="../lib/geo.js?v=31"></script>
-<script src="habitat-parts.js?v=31"></script>
-<script src="habitat-enclosure.js?v=31"></script>
-<script src="habitat-more.js?v=31"></script>
-<script src="habitat-motifs.js?v=31"></script>
-<script src="habitat-keep.js?v=31"></script>
-<script src="../lib/sdf.js?v=31"></script>
-<script src="habitat-pots.js?v=31"></script>
-<script src="habitat-sculpt.js?v=31"></script>
-<script src="habitat-trim.js?v=31"></script>
-<script src="habitat-addons.js?v=31"></script>
-<script src="habitat-forms.js?v=31"></script>
-<script src="habitat-shapes.js?v=31"></script>
-<script src="habitat-sets.js?v=31"></script>
+<script src="../lib/geo.js?v=32"></script>
+<script src="habitat-parts.js?v=32"></script>
+<script src="habitat-enclosure.js?v=32"></script>
+<script src="habitat-more.js?v=32"></script>
+<script src="habitat-motifs.js?v=32"></script>
+<script src="habitat-keep.js?v=32"></script>
+<script src="../lib/sdf.js?v=32"></script>
+<script src="habitat-pots.js?v=32"></script>
+<script src="habitat-sculpt.js?v=32"></script>
+<script src="habitat-trim.js?v=32"></script>
+<script src="habitat-addons.js?v=32"></script>
+<script src="habitat-forms.js?v=32"></script>
+<script src="habitat-shapes.js?v=32"></script>
+<script src="habitat-sets.js?v=32"></script>
 <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Bricolage+Grotesque:opsz,wght@12..96,600;12..96,750&family=IBM+Plex+Mono:wght@500&family=IBM+Plex+Sans:wght@400;500;600&display=swap">
 <style>
 /* Same layout as the Resin Workshop: inputs on the left, the 3D preview and downloads beside them. */
@@ -137,7 +137,7 @@ h3{font:600 15px var(--body);margin:0 0 6px}
           <label class="f rectOnly">Corner posts<select id="frame"></select></label>
           <label class="f rectOnly">Lid fixing<select id="lidScrews"></select></label>
           <label class="f rectOnly">Magnets for a front frame<select id="frameMags"></select></label>
-          <label class="f rectOnly">Display tower<select id="tiers"></select></label>
+          <label class="f" hidden>Display tower<select id="tiers"></select></label>
           <label class="f"><span id="Wlab">Width (mm)</span><input id="W" type="number" min="60" step="5"></label>
           <label class="f" id="Dwrap">Depth (mm)<input id="D" type="number" min="60" step="5"></label>
           <label class="f nurOnly">Drawers across<input id="cols" type="number" min="1" max="8" step="1"></label>
@@ -541,9 +541,12 @@ const SPECIES=[
   {id:'custom',name:'Another mantis or insect',len:50,box:null,care:'Check the temperature and humidity your species needs.'}
 ];
 const MATS={petg:{name:'PETG',rho:1.27},asa:{name:'ASA',rho:1.07},pla:{name:'PLA',rho:1.24}};
-const PANEL={clear:'Clear acrylic',mesh:'Printed mesh',tiles:'Swappable tiles (mesh or clear)',solid:'Printed solid wall',spine:'Book spine (raised bands)',cover:'Book cover (framed)',pages:'Book pages (fine slot vents)'};
+const PANEL={clear:'Clear acrylic',mesh:'Printed mesh',tiles:'Swappable tiles (mesh or clear)',solid:'Printed solid wall'};
 const DEF={frameMags:'none',frame:'normal',lidScrews:'none',lidVent:'grid',frontVent:'none',doorWin:'recess',species:'orchidF',body:65,W:200,D:200,H:300,S:40,T:3,hole:1.6,bar:1.2,front:'clear',back:'clear',left:'mesh',right:'mesh',bx:350,by:350,bz:350,mat:'petg',dMagD:10,dMagH:3,shape:'rect',ts:.75,pegs:'grid',rails:'yes',lw:'none',lwD:90,lwN:1,cols:3,rows:3,lock:'none',sides:6,corners:'square',polyFront:'clear',polyWalls:'frontclear',roundWall:'sheet',doorCatch:'magnet',hatch:'plug',hatchD:80,hatchX:0,hatchY:0,tiers:'1'};
 const E=Object.assign({},DEF,state.enc||{});
+/* v32 keeps the rectangular enclosure (sliding or swing door) and the nursery cabinet; older saved shapes fall back */
+if(!['rect','nursery'].includes(E.shape))Object.assign(E,{shape:'rect',W:200,D:200,H:300});
+E.tiers='1';for(const k of ['back','left','right'])if(!PANEL[E[k]])E[k]=k==='back'?'clear':'mesh';
 
 function opt(sel,pairs){for(const [v,l] of pairs){const o=document.createElement('option');o.value=v;o.textContent=l;sel.append(o)}}
 opt($('species'),SPECIES.map(s=>[s.id,s.name]));
@@ -551,25 +554,18 @@ const FRONT={clear:'Sliding, clear acrylic',mesh:'Sliding, printed mesh',swingWi
 opt($('pFront'),Object.entries(FRONT));
 for(const id of ['pBack','pLeft','pRight'])opt($(id),Object.entries(PANEL));
 opt($('mat'),Object.entries(MATS).map(([k,m])=>[k,m.name]));
-opt($('eShape'),[['rect','Rectangular'],['poly','Polygon: 5 to 8 flat walls'],['round','Round'],['oval','Oval'],['corner','Corner: a quarter circle for a shelf corner'],['dome','Glass-house dome (faceted)'],['cage','Victorian birdcage'],['hexcell','Hexagonal wall cell (honeycomb)'],['nursery','Nursery cabinet: drawers for nymphs']]);
+opt($('eShape'),[['rect','Rectangular'],['nursery','Keeper tool: nursery cabinet with drawers for nymphs']]);
 opt($('lock'),[['none','None'],['pin','Lock pin through the door (takes a mini padlock)']]);
 const PRESETS={keep:['Keep my settings',null],
-  cabinet:['Gothic cabinet: tall, with a swing door',{shape:'rect',W:200,D:200,H:300,S:40,front:'swingWindow',back:'clear',left:'mesh',right:'mesh',corners:'square',tiers:'1'},'Now add Accessories, Frame and trim, Gothic: the pointed-arch front frame, spire finials and claw feet.'],
-  wallframe:['Wall frame: wide and shallow, to hang like a picture',{shape:'rect',W:300,D:100,H:200,S:20,front:'clear',back:'mesh',left:'mesh',right:'mesh',corners:'square',tiers:'1'},'Now add Accessories, Wall hanger to hang it, and Frame and trim for a picture-frame front.'],
-  showcase:['Show case: clear on all sides, for fairs',{shape:'rect',W:250,D:160,H:200,S:30,front:'clear',back:'clear',left:'clear',right:'clear',corners:'rounded',tiers:'1'},'Now add Accessories, Carrying handle, for taking it to fairs and handovers.'],
-  tower:['Display tower: three small enclosures stacked',{shape:'rect',W:150,D:150,H:180,S:30,front:'clear',back:'mesh',left:'mesh',right:'mesh',corners:'square',tiers:'3'},'Lock the units together with Accessories, Stacking feet and links.'],
-  honeycomb:['Honeycomb: hexagonal cells for the wall',{shape:'hexcell',W:180,D:150,S:15,T:2},'Make one cell per mantis and hang them side by side.'],
-  book:['Book on the shelf: a big antique book',{shape:'rect',W:200,D:110,H:280,S:30,front:'swingWindow',back:'cover',left:'spine',right:'pages',corners:'square',tiers:'1'},'The front opens like the cover of a book, with a window in it. The spine has raised bands, the back is a framed cover, and the right side has fine slot vents like the edges of the pages. Print the frame parts in leather brown or black and paint the bands gold.'],
-  corner:['Corner enclosure for a shelf corner',{shape:'corner',W:220,H:280,S:35,roundWall:'sheet',ts:.75,lw:'fine',lwD:90,lwN:1},null],
-  dome:['Glass-house dome',{shape:'dome',W:220,H:150,S:35,sides:8,ts:.75,lw:'fine',lwD:90,lwN:1},null],
-  cage:['Victorian birdcage',{shape:'cage',W:200,H:170,S:35},null],
-  nursery:['Nursery cabinet for nymphs',{shape:'nursery',W:80,H:100,D:100,cols:3,rows:3},null]};
+  standard:['Standard: sliding acrylic door',{shape:'rect',W:200,D:200,H:300,S:40,front:'clear',back:'clear',left:'mesh',right:'mesh',corners:'square',tiers:'1'},'The classic enclosure. The door slides up through the lid.'],
+  cabinet:['Cabinet: swing door with a window',{shape:'rect',W:200,D:200,H:300,S:40,front:'swingWindow',back:'clear',left:'mesh',right:'mesh',corners:'square',tiers:'1'},'Add a front frame in your theme on the Build tab, or under Accessories, Frame and trim.'],
+  nursery:['Keeper tool: nursery cabinet for nymphs',{shape:'nursery',W:80,H:100,D:100,cols:3,rows:3},null]};
 opt($('preset'),Object.entries(PRESETS).map(([k,v])=>[k,v[0]]));
 $('preset').onchange=()=>{const pr=PRESETS[$('preset').value];if(!pr||!pr[1])return;for(const [k,v] of Object.entries(pr[1]))if(encIds[k])$(encIds[k]).value=v;
   encChanged();encCalc()};
 /* customer orders: the order page (order.html) makes a code; loading it sets the enclosure and the build */
 {const S=Object.assign({shop:"Shifty's",email:'',cur:'CHF',rect:79},state.shop||{});
-  const PRICE={rect:1,cabinet:1.5,book:1.63,corner:1.25,dome:1.89,cage:1.63,round:1,hexcell:.87,tower:2.52,showcase:1.25,nursery:.19};
+  const PRICE={rect:1,cabinet:1.5,nursery:.19};
   for(const [id,k] of [['shopName','shop'],['shopMail','email'],['shopCur','cur'],['shopBase','rect']]){$(id).value=S[k];$(id).addEventListener('input',()=>{S[k]=id==='shopBase'?+$(id).value:$(id).value;state.shop=S;persist()})}
   $('shopLink').onclick=async()=>{const base={};for(const k in PRICE)base[k]=Math.round(S.rect*PRICE[k]);
     const cfg=btoa(unescape(encodeURIComponent(JSON.stringify({shop:S.shop,email:S.email,cur:S.cur,base})))).replace(/\+/g,'-').replace(/\//g,'_').replace(/=+$/,'');
@@ -578,16 +574,16 @@ $('preset').onchange=()=>{const pr=PRESETS[$('preset').value];if(!pr||!pr[1])ret
   $('ordLoad').onclick=()=>{const out=$('ordOut');let o;
     try{const s=$('ordCode').value.trim().match(/ORDER1:([A-Za-z0-9_-]+)/)[1].replace(/-/g,'+').replace(/_/g,'/');o=JSON.parse(decodeURIComponent(escape(atob(s+'==='.slice((s.length+3)%4)))))}
     catch(e){out.textContent='That is not a complete order code. Copy everything from ORDER1: to the end.';return}
-    const key={rect:null,round:null,hexcell:'honeycomb'}[o.shape]===undefined?o.shape:{hexcell:'honeycomb'}[o.shape]||null;
-    const pr=key&&PRESETS[key]?{...PRESETS[key][1]}:{shape:o.shape==='round'?'round':'rect',front:'clear',back:'clear',left:'mesh',right:'mesh',tiers:'1'};
+    const key=o.shape==='cabinet'?'cabinet':o.shape==='nursery'?'nursery':'standard';
+    const pr={...PRESETS[key][1]};
     if(o.shape==='nursery')Object.assign(pr,{cols:o.cols,rows:o.rows});
-    else if(!['tower','hexcell'].includes(o.shape))Object.assign(pr,{W:o.W,D:o.D,H:o.H});
+    else if(o.W&&o.D&&o.H&&['rect','cabinet'].includes(o.shape))Object.assign(pr,{W:o.W,D:o.D,H:o.H});
     pr.species=SPECIES.some(s=>s.id===o.species)?o.species:'custom';
     if(o.lamp)Object.assign(pr,{lw:'fine',lwD:90,lwN:1});
     if(o.lock)pr.lock='pin';
     for(const [k,v] of Object.entries(pr))if(encIds[k]&&$(encIds[k]))$(encIds[k]).value=v;
     $('preset').value='keep';encChanged();encCalc();
-    if(SETS[o.theme])B.theme=o.theme;if(o.pack)B.pack=String(o.pack);B.trim=o.trim?'match':'none';
+    B.theme=HABITAT_THEME(o.theme);if(o.pack)B.pack=+o.pack>1?'3':'1';B.trim=o.trim?'match':'none';
     if(o.plate!==null&&o.plate!==undefined){if(o.plate)B.name=o.plate;if(!B.extra.some(e=>e[0]==='plate'))B.extra.push(['plate',{}])}
     saveB();for(const [id,k] of [['bTheme','theme'],['bPack','pack'],['bTrim','trim'],['bName','name']])$(id).value=B[k];buildSetup();
     out.textContent='';const lines=[`${o.name||'?'} · ${o.contact||''}`,`${o.shape}, ${o.W}×${o.D}×${o.H} mm · ${(SETS[o.theme]||{}).name||o.theme}`,`${o.deliv==='ship'?'Shipping':'Pick up'} · estimate ${o.price||'?'}`,o.msg?`“${o.msg}”`:'','Loaded into Enclosure and Build. Check the sizes, then make the files.'];
@@ -1089,7 +1085,7 @@ Object.assign(ITEMS,{
   sculpt:{group:'dio',keep:'sculpt',name:'Real specimen or statue (3D scan)',fields:[['size','Size (mm): the note below says what it measures',50]],
     selects:[['kind','Piece',HabitatSculpt.OPTIONS],['print','Printing',[['auto','No supports needed (fills under overhangs)'],['full','Full detail, with tree supports']]],
       ['detail','Detail',[['normal','Normal'],['fine','Fine (slower to make)']]]],shuffle:true,mounts:['free','magnet','glue'],
-    hint:'Pieces made from 3D scans of real museum specimens, statues and shells: skulls, a raven and an owl, a bat and a moth, fossils and shells, an angel and a grave monument, a Buddha, a shrine guardian and a stone lantern, a lion, a sphinx and Roman and Egyptian sculpture. All of them may be printed and sold; the ones that ask for a credit say so in the notes below. Standing pieces print without supports: anything that hangs out is filled underneath at 45°, out of sight. The bat, the moth and the ammonite are wall pieces that print flat on their backs; with magnets, the pockets are in the back.'},
+    hint:'Pieces made from 3D scans of real museum specimens, statues and shells: skulls, a raven and an owl, a bat and a moth, fossils and shells, an angel and a grave monument, a pine cone, a stag beetle, an amethyst geode, a lion and a Roman marble torso. All of them may be printed and sold; the ones that ask for a credit say so in the notes below. Standing pieces print without supports: anything that hangs out is filled underneath at 45°, out of sight. The bat, the moth and the ammonite are wall pieces that print flat on their backs; with magnets, the pockets are in the back.'},
   custom:{group:'dio',keep:'custom',file:true,name:'Your own model (STL from Blender)',fields:[['size','Size',50]],
     selects:[['fit','Size sets the',[['height','Height'],['longest','Longest side']]],['turn','Turn it',[['none','As exported'],['x','Stand up (90° about X)'],['xr','Lay down (−90° about X)'],['y','On its side (90° about Y)'],['flip','Upside down']]],
       ['base','Base',[['none','None'],['round','Round plinth'],['rock','Rock']]]],mounts:['free','magnet','peg','glue'],
@@ -1097,19 +1093,20 @@ Object.assign(ITEMS,{
   motif:{group:'dio',keep:'motif',name:'Motif: plaque, cut-out or stencil',fields:[['size','Height',60]],
     selects:[['motif','Motif',HabitatMotifs.MOTIFS],['form','Made as',[['plaque','Raised plaque'],['cutout','Stand-up cut-out'],['stencil','Cut-through stencil plate'],['ornament','Hanging ornament']]],
       ['base','Plaque shape',[['round','Round'],['oval','Oval'],['shield','Shield'],['arch','Arch'],['hex','Hexagon'],['square','Rounded square']],{show:vis('form',['plaque','stencil'])}],['border','Border',[['yes','Yes'],['no','No']],{show:vis('form','plaque')}],['colour','Colours',[['two','Two colours'],['one','One colour']],{show:vis('form',['plaque','cutout','ornament'])}]],mounts:['magnet','clip','glue','free'],
-    hint:'Artwork in 60 motifs: gothic and vampire (bats, skulls, coffins, rose windows, ravens), Greek and Roman (laurel, helmet, temple, owl, lyre), all twelve zodiac signs and a zodiac wheel, fantasy (dragon, castle, crystals, wizard hat), dungeons and dragons (D20, sword and shield, treasure chest), flowers, clouds, books and a praying mantis. Make it a raised two-colour plaque, a cut-out that stands in a little base, a stencil, or an ornament to hang.'},
+    hint:'Artwork in about 40 motifs: gothic and vampire (bats, skulls, coffins, rose windows, ravens), Greek and Roman (laurel, helmet, temple, owl, lyre), fantasy (dragon, castle, crystals, wizard hat), dungeons and dragons (D20, sword and shield, treasure chest), flowers, books and a praying mantis. Make it a raised two-colour plaque, a cut-out that stands in a little base, a stencil, or an ornament to hang.'},
   turntable:{group:'dio',keep:'turntable',name:'Turntable display stand',fields:[['D','Platter diameter',220],['mLen','Motor length (motor and gearbox)',24,{show:vis('drive','motor')}]],selects:[['drive','Turning',[['manual','By hand (lazy Susan)'],['motor','Slow USB motor']]]],mounts:[],
     hint:'A turntable to show an enclosure from every side, at a market stall or in photos. It runs on a skateboard bearing and a ring of airsoft BBs, so it carries a full enclosure. With the motor option, a tiny USB gear motor turns it about once a minute.'},
   ship:{group:'addon',keep:'shipInsert',name:'Shipping box insert',fields:[['L','Box inside length',150],['W','Box inside width',110],['cupB','Cup bottom diameter',70],['cupT','Cup top diameter',90],['cupH','Cup height',80],['n','Cups',1],['text','Name on the insert','Shifty\'s',{text:true}]],selects:[['both','Top and bottom',[['yes','Yes, print 2'],['no','Bottom only']]],['font','Writing',[['script','Cursive'],['caps','Capitals']]]],mounts:[],
     hint:'Holds deli cups upright and still inside a shipping box, for sending mantises to buyers. Measure the inside of your box and your cups.'},
   set:{group:'sets',name:'Matching set',fields:[['t1','Name','Shifty',{text:true}]],
-    selects:[['theme','Theme',Object.entries(HABITAT_SETS).map(([k,v])=>[k,v.name,v.group])],['pack','Pack',[['2','Full set'],['1','Essentials'],['3','Deluxe']]],['size','Size',[['m','Standard'],['s','Small, for nymphs'],['l','Large, for big species']]],['font','Writing',[['script','Cursive'],['caps','Capitals']]]],shuffle:true,mounts:['magnet','clip','glue'],
-    hint:'A group of pieces in one style, to fit out an enclosure in one go or to sell as a bundle. Essentials has 3–4 pieces, Full set about 8, Deluxe everything. Untick any piece you don\'t want. Each piece downloads as its own STL file; make any of them again in its own item if you want to change it.'}
+    selects:[['theme','Theme',Object.entries(HABITAT_SETS).map(([k,v])=>[k,v.name,v.group])],['pack','Pack',[['1','Essentials'],['3','Deluxe']]],['size','Size',[['m','Standard'],['s','Small, for nymphs'],['l','Large, for big species']]],['font','Writing',[['script','Cursive'],['caps','Capitals']]]],shuffle:true,mounts:['magnet','clip','glue'],
+    hint:'A group of pieces in one style, to fit out an enclosure in one go or to sell as a bundle. Essentials has the core pieces, Deluxe adds everything else. Untick any piece you don\'t want. Each piece downloads as its own STL file; make any of them again in its own item if you want to change it.'}
 });
 /* no glue: every piece mounts with magnets, pin rails, pegs or holders */
 for(const k in ITEMS){const it=ITEMS[k];if(it.mounts)it.mounts=it.mounts.filter(m=>m!=="glue");for(const kd of Object.values(it.kinds||{}))if(kd.mounts)kd.mounts=kd.mounts.filter(m=>m!=="glue")}
 const SETS=HABITAT_SETS,SCALE=['L','W','H','depth','R','len','wid','span','rise','bw','bh','w','h','D','size','Hh','dep','postH','cw','ch'];
 const A=Object.assign({item:'dish',magD:10,magH:3,mount:{},v:{},drain:true,shape:{},seed:{},kind:'ring'},state.acc||{});
+if(A.sel&&A.sel.set&&A.sel.set.v!==32){const t=A.sel.set;t.v=32;if(t.theme)t.theme=HABITAT_THEME(t.theme);if(t.pack)t.pack=+t.pack>1?'3':'1';t.off={}}
 for(const k in A.mount)if(A.mount[k]==='glue')delete A.mount[k];
 for(const k of ['mount','v','shape','seed'])A[k]=A[k]||{};
 for(const g in GROUPS){const og=document.createElement('optgroup');og.label=GROUPS[g];for(const k in ITEMS)if(ITEMS[k].group===g){const o=document.createElement('option');o.value=k;o.textContent=ITEMS[k].name;og.append(o)}$('items').append(og)}
@@ -1117,7 +1114,7 @@ $('items').onchange=()=>{A.item=$('items').value;accSetup()};
 $('magD').value=A.magD;$('magH').value=A.magH;
 let accT;const accSoon=()=>{clearTimeout(accT);accT=setTimeout(accCalc,180)};
 function field(box,label,el){const lab=document.createElement('label');lab.className='f';lab.textContent=label;lab.append(el);box.append(lab);return lab}
-function selVals(it){const o={};for(const [k,,opts] of it.selects||[])o[k]=A.sel[A.item][k]||opts[0][0];o._mount=it.mounts.includes(A.mount[A.item])?A.mount[A.item]:it.mounts[0];return o}
+function selVals(it){const o={};for(const [k,,opts] of it.selects||[]){const v=A.sel[A.item][k];o[k]=opts.some(x=>x[0]===v)?v:opts[0][0]}o._mount=it.mounts.includes(A.mount[A.item])?A.mount[A.item]:it.mounts[0];return o}
 function accSetup(){
   const it=ITEMS[A.item]||(A.item='dish',ITEMS.dish),box=$('accFields');box.innerHTML='';
   $('items').value=A.item;
@@ -1188,7 +1185,7 @@ function trimEnc(){const p=readEnc(),k=JSON.stringify(p);if(trimMemo.k===k)retur
 HabitatKeep.trim=o=>HabitatTrim.piece(Object.assign({},trimEnc(),o));
 /* the anatomical skull loads in the background; redraw when it arrives */
 let scanT;HabitatSculpt.onready=()=>{clearTimeout(scanT);scanT=setTimeout(()=>{if(typeof BMEMO!=='undefined')BMEMO.clear();if(state.tab==='acc'&&['sculpt','set'].includes(A.item))accCalc();else if(state.tab==='build')buildCalc()},200)};
-HabitatSculpt.setVersion('31');
+HabitatSculpt.setVersion('32');
 HabitatKeep.hanger=o=>HabitatForms.hanger(Object.assign({},trimEnc(),o));HabitatKeep.carry=o=>HabitatForms.carry(Object.assign({},trimEnc(),o));
 function encInfo(){
   const e=Object.assign({},DEF,state.enc||{}),bed=Math.max(e.bx||350,e.by||350),g=e.T+.6,band=g/2+2.4,o={e,bed,band,hatchR:e.hatch!=='none'?(state.encHatchR||Math.min(60,e.hatchD/2)):0};
@@ -1313,12 +1310,14 @@ $('accDl').onclick=async()=>{
 const MUST=[['dish','A pearl dish'],['pot','A plant pot'],['twig','A twig holder'],['wall','A wall perch'],['deco','A decoration']];
 const INTERIOR=['dish','feeder','twig','ledge','ladder','bridge','flower','bark','pot','planter','moss','mister','label','tile','plate','moult','emblem','diorama','motif','sculpt'];
 const FLOORFIRST=['dish','feeder','twig','pot','moss','moult'];
-const B=Object.assign({plants:'tiered',walls:'calm',trim:'match',trimWhat:'all',theme:'orchid',pack:'2',size:'m',mount:'magnet',font:'script',name:'Shifty',must:{dish:1,pot:1,twig:1,wall:1,deco:1},off:{},extra:[],seed:1},state.build||{});
+const B=Object.assign({plants:'tiered',walls:'calm',trim:'match',trimWhat:'all',theme:'orchid',pack:'3',size:'m',mount:'magnet',font:'script',name:'Shifty',must:{dish:1,pot:1,twig:1,wall:1,deco:1},off:{},extra:[],seed:1},state.build||{});
+/* v32: seven themes, two packs; settings saved before then are mapped across */
+if(B.v!==32){B.v=32;B.theme=HABITAT_THEME(B.theme);B.pack=+B.pack>1?'3':'1';B.off={};if(B.trim!=='match'&&B.trim!=='none'&&!HabitatTrim.STYLES[B.trim])B.trim='match'}
 if(B.mount==='glue')B.mount='magnet';
 for(const k of ['must','off'])B[k]=B[k]||{};B.extra=B.extra||[];
 const saveB=()=>{state.build=B;persist()};
 (()=>{const s=$('bTheme'),gs={};for(const [k,t] of Object.entries(SETS)){const g=t.group||'Other';if(!gs[g]){gs[g]=document.createElement('optgroup');gs[g].label=g;s.append(gs[g])}const o=document.createElement('option');o.value=k;o.textContent=t.name;gs[g].append(o)}})();
-opt($('bPack'),[['1','Essentials'],['2','Full set'],['3','Deluxe']]);opt($('bSize'),[['m','Standard'],['s','Small, for nymphs'],['l','Large, for big species']]);
+opt($('bPack'),[['1','Essentials'],['3','Deluxe']]);opt($('bSize'),[['m','Standard'],['s','Small, for nymphs'],['l','Large, for big species']]);
 opt($('bMount'),[['magnet','Magnets'],['clip','Pin rails']]);opt($('bTrim'),[['match','Matching the style'],['none','None'],...Object.entries(HabitatTrim.STYLES).map(([k,v])=>[k,v.name])]);
 opt($('bPlants'),[['tiered','Tiered planter and a wall pot'],['pots','A pot and a wall pot'],['theme','As the style has them']]);
 opt($('bWalls'),[['calm','One piece at most'],['none','None'],['full','Everything in the style']]);

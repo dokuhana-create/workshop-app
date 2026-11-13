@@ -148,10 +148,9 @@
   const GROUPS=[
     ['Gothic and vampire',[['bat','Bat'],['skull','Skull'],['crossbones','Skull and bones'],['coffin','Coffin'],['tombstone','Tombstone'],['roseWindow','Rose window'],['gothicWindow','Gothic window'],['gothicCross','Gothic cross'],['candles','Candles'],['raven','Raven'],['moon','Crescent moon']]],
     ['Greek and Roman',[['laurel','Laurel wreath'],['helmet','Corinthian helmet'],['temple','Temple'],['amphora','Amphora'],['owl','Owl of Athena'],['lyre','Lyre'],['ionic','Ionic column'],['meander','Greek key border']]],
-    ['Zodiac',[['zodiacWheel','Zodiac wheel'],...Object.keys(Z).map(k=>['zodiac-'+k,k[0].toUpperCase()+k.slice(1)])]],
     ['Fantasy',[['dragon','Dragon'],['castle','Castle'],['crystal','Crystals'],['wizardHat','Wizard hat'],['potion','Potion'],['mushroomSil','Toadstool'],['tree','Gnarled tree']]],
     ['Dungeons and dragons',[['d20','D20'],['swordShield','Sword and shield'],['chest','Treasure chest'],['scroll','Scroll'],['dice','Dice']]],
-    ['Flowers, sky and more',[['rose','Rose'],['tulip','Tulip'],['sunflower','Sunflower'],['lotusSil','Lotus'],['cloud','Cloud'],['rainCloud','Rain cloud'],['sun','Sun'],['mantis','Praying mantis'],['books','Stack of books'],['openBook','Open book']]]
+    ['Flowers, books and the mantis',[['rose','Rose'],['tulip','Tulip'],['sunflower','Sunflower'],['lotusSil','Lotus'],['mantis','Praying mantis'],['books','Stack of books'],['openBook','Open book']]]
   ];
   const MOTIFS=[];for(const [g,list] of GROUPS)for(const [k,n] of list)MOTIFS.push([k,n,g]);
 
