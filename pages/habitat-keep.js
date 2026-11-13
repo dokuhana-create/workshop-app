@@ -87,7 +87,7 @@
     const cw=ds+2*lip,cf=[prism(0,bt,rrect(0,0,Lc,cw,1)),prism(bt,bt+dep,unite(rect(0,0,Lc,lip),rect(0,cw-lip,Lc,cw)))];
     let mags=0;if(o.mount==='magnet'){const R=o.md/2+.2;if(cw<2*R+2){cf[0]=prism(0,bt,rrect(0,-(2*R+3-cw)/2,Lc,cw+(2*R+3-cw)/2,1))}
       for(let x=25;x<Lc-10;x+=Math.max(40,(Lc-50)/3)){cf.push(prism(-1,o.mh+.2,G.mag(x,cw/2,o.md),'sub'));mags++}}
-    parts.push(part('divider-channel-print-2.stl',build(cf)));
+    parts.push(Object.assign(part('divider-channel-print-2.stl',build(cf)),{count:2}));
     const pw=span-2*bt-1.2,ph=e.H-12,fr=8,hole=e.hole||1.6,bar=e.bar||1.2;
     const pf=[prism(0,dt,rrect(0,0,pw,ph,2))],hs=[];
     if(o.style!=='solid'){for(let x=fr;x+hole<=pw-fr;x+=hole+bar)for(let y=fr;y+hole<=ph-fr;y+=hole+bar)hs.push(...rect(x,y,x+hole,y+hole));if(hs.length)pf.push(prism(-1,dt+1,hs,'sub'))}
@@ -117,7 +117,7 @@
 
   /* ================= feeding through the hatch ================= */
   function hatchBase(o,enc){
-    const e=enc.e||{},style=e.hatch&&e.hatch!=='none'?e.hatch:'plug',R=enc.hatchR||Math.min(30,(o.hatchD||60)/2),sr=Math.min(12,R-4.5);
+    const e=enc.e||{},style=e.hatch&&e.hatch!=='none'?e.hatch:'plug',R=enc.hatchR||Math.min(60,(o.hatchD||80)/2),sr=Math.min(12,R-4.5);
     const p={hatch:style,dMagD:e.dMagD||10,dMagH:e.dMagH||3,hole:e.hole||1.6,bar:e.bar||1.2};
     return {m:HE.hatchCover({R},p,false,{hole:sr}),R,sr,style,notes:enc.hatchR?[]:['Your enclosure has no feeding hatch yet, so this is sized for the hatch opening you entered here. Turn a hatch on under Enclosure, Lid and lights.']};
   }
@@ -166,7 +166,7 @@
     if(o.text){const T=HM.text2D([o.text],7,1.1,o.font==='caps'?null:'script');const tx=T.rings.map(q=>q.map(([x,y])=>[L/2-x,y+W-6-T.h/2]));if(T.w<L-12)f.push(prism(-1,.6,tx,'sub'))}
     const m=build(f),parts=[part('shipping-insert.stl',m)];
     notes.push(`Holds ${n} cup${n>1?'s':''} upright at mid height, ${hp.toFixed(0)} mm off the box floor. Turn it over after printing; the two finger notches lift it out.`);
-    if(o.both==='yes'){parts[0].file='shipping-insert-print-2.stl';notes.push('Print 2: one goes in upside down on top of the cups, so they can\'t move up or down.')}
+    if(o.both==='yes'){parts[0].file='shipping-insert-print-2.stl';parts[0].count=2;notes.push('Print 2: one goes in upside down on top of the cups, so they can\'t move up or down.')}
     notes.push('Ship in mild weather, with a heat or cold pack when needed, and pad the cup with paper towel so the mantis can grip.');
     return {parts,notes,magnets:0};
   }

@@ -183,12 +183,15 @@
       const mv=r=>move(r,0,dy);
       if(form==='stencil'){const cut=HM.stencil(mv(out),mv(art),Math.max(1.2,h*.02));f.push(P_(-1,bt+1,cut,'sub'));
         parts.push({file:`stencil-${o.motif}.stl`,role:'Main colour',m:G.build(f)});notes.push('Cut-through artwork: small bridges hold any loose islands in place.');return {parts,notes,magnets}}
-      if(o.border==='yes')f.push(P_(bt,bt+ah,subtract(offset(mv(out),-1),offset(mv(out),-1-Math.max(1.2,h*.02)))));
-      const af=[P_(bt,bt+ah,mv(art))];if(eng.length)af.push(P_(bt+ah-.6,bt+ah+1,mv(eng),'sub'));
-      if(a.raised)af.push(P_(bt+ah,bt+ah+.6,mv(a.raised)));
-      if(a.dots)af.push(P_(bt+ah,bt+ah+.6,mv(a.dots)));
-      if(two){parts.push({file:`plaque-${o.motif}.stl`,role:'Colour 1',m:G.build(f)},{file:`plaque-${o.motif}-art.stl`,role:'Colour 2',m:G.build(af)});notes.push('Two colours: add the artwork file to the plaque as a part in Creality Print and give it its own CFS slot.')}
-      else parts.push({file:`plaque-${o.motif}.stl`,role:'Main colour',m:G.build([...f,...af])});
+      /* border and artwork as one outline, so their top faces never meet edge to edge */
+      const bdr=o.border==='yes'?subtract(offset(mv(out),-1),offset(mv(out),-1-Math.max(1.2,h*.02))):null;
+      /* the artwork is nudged by a few microns so none of its corners lands exactly on one of the plate's */
+      const ma=r=>move(r,.0137,dy+.0091);
+      const af=[P_(bt,bt+ah,bdr?unite(ma(art),bdr):ma(art))];if(eng.length){const keep=unite(a.raised||[],a.dots||[]),e2=keep.length?subtract(eng,offset(keep,.3)):eng;if(e2.length)af.push(P_(bt+ah-.6,bt+ah+1,ma(e2),'sub'))}
+      if(a.raised)af.push(P_(bt,bt+ah+.6,ma(a.raised)));
+      if(a.dots)af.push(P_(bt,bt+ah+.6,ma(a.dots)));
+      if(two)notes.push(HM.colourAt(bt,'the artwork'));
+      parts.push({file:`plaque-${o.motif}.stl`,role:'Main colour',m:G.build([...f,...af])});
       return {parts,notes,magnets};
     }
     /* cut-out or ornament: the silhouette itself, printed flat */

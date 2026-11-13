@@ -67,17 +67,40 @@
       if(inner)return (rn-P)*Rm+wall+sh;return (rn-P)*Rm-sf(frac(a/TAU)*C,z)};
     return {Rx,Ry,H,Rm,wall,fl,field,sh};
   }
+  /* the base's floor pegs (a 40 mm grid) under a planter module, in the module's own frame. The planter stands with
+     its x mirrored against the back wall, so X runs from the right. Pegs fully inside get a socket in a solid hub;
+     pegs on the edge get a notch so the planter still sits flat. */
+  function pegsUnder(e,Wp,ob,X0,Mw,ymax){
+    if(e.shape!=='rect')return [];const P=root.HabitatParts.PEG,g=(e.T||3)+.6,mg=g/2+2.4+14,pi=40,nx=floor((e.W-2*mg)/pi),ny=floor((e.D-2*mg)/pi),ox=(e.W-nx*pi)/2,oy=(e.D-ny*pi)/2,out=[];
+    for(let i=0;i<=nx;i++)for(let j=0;j<=ny;j++){const x=ob+.5+Wp-(ox+i*pi)-X0,y=e.D-ob-.5-(oy+j*pi);
+      if(x<-P.r-.5||x>Mw+P.r+.5||y<-P.r-.5||y>ymax+P.r+.5)continue;out.push([x,y])}
+    return out;
+  }
+  /* a floor-peg socket from underneath with a pointed roof, so the 45° print rule never fills it in */
+  /* the sockets are cut after the 45° print rule (which would fill any hole from underneath) */
+  const socketAt=(cx,cy,r)=>{const P=root.HabitatParts.PEG;return {f:(x,y,z)=>max(Math.hypot(x-cx,y-cy)-r,max(-2-z,z-P.depth)),box:[cx-r-2,cy-r-2,-2,cx+r+2,cy+r+2,P.depth+2]}};
+  const HUB_H=fl=>fl+root.HabitatParts.PEG.depth;
+  function socketPegs(sd,f,spots,fl){
+    const P=root.HabitatParts.PEG,hubs=[],socks=[];
+    for(const [x,y] of spots){const inside=[...Array(9)].every((_,k)=>{const r=k?P.hub:0,a=k*TAU/8;return f(x+r*cos(a),y+r*sin(a),1)<-.2});
+      if(inside)hubs.push(sd.cylZ(x,y,P.hub,0,HUB_H(fl)));socks.push(socketAt(x,y,P.sock+(inside?0:.4)))}
+    if(hubs.length)f=sd.union(f,...hubs);
+    return {f,n:hubs.length,carve:socks};
+  }
   function pot(o,info){
     const sd=S(),b=body(o),{Rx,Ry,H,fl}=b,peg=o.mount==='peg',P=root.HabitatParts.PEG;
     const outer=(x,y,z)=>smax(smax(b.field(x,y,z,false),z-H,1.4),-z,.8);
     const cav=(x,y,z)=>smax(b.field(x,y,z,true),fl-z,1.2);
     let f=sd.scut(1.6,outer,cav);
-    if(peg)f=sd.cut(sd.union(f,sd.cylZ(0,0,P.hub,0,fl+P.depth)),sd.cylZ(0,0,P.sock,-1,P.depth));
+    /* two sockets 40 mm apart, so the pot sits on two floor pegs and can't turn */
+    const pegX=peg?(Rx>=20+P.hub+b.wall+1&&Ry>=P.hub+b.wall+1?[-20,20]:[0]):[];
+    if(peg)f=sd.union(f,...pegX.map(x=>sd.cylZ(x,0,P.hub,0,HUB_H(fl))));const carve=pegX.map(x=>socketAt(x,0,P.sock));
     /* drain holes in the floor, 2 mm, in rings */
-    if(o.drain!==false){const hs=[];for(const r of [0,Math.min(Rx,Ry)*.35,Math.min(Rx,Ry)*.6])for(let k=0,n=r?Math.max(5,round(TAU*r/9)):1;k<n;k++){const a=k*TAU/n;if(peg&&r<P.hub+2)continue;hs.push(sd.cylZ(r*cos(a),r*sin(a),1.05,-1,fl+.5))}if(hs.length)f=sd.cut(f,...hs)}
-    const m=sd.mesh(f,[-Rx*1.25-4,-Ry*1.25-4,Rx*1.25+4,Ry*1.25+4,H+2],o.preview?1:.42);
+    if(o.drain!==false){const hs=[];for(const r of [0,Math.min(Rx,Ry)*.35,Math.min(Rx,Ry)*.6])for(let k=0,n=r?Math.max(5,round(TAU*r/9)):1;k<n;k++){const a=k*TAU/n,hx=r*cos(a),hy=r*sin(a);if(pegX.some(x=>Math.hypot(hx-x,hy)<P.hub+2))continue;hs.push(sd.cylZ(r*cos(a),r*sin(a),1.05,-1,fl+.5))}if(hs.length)f=sd.cut(f,...hs)}
+    const m=sd.mesh(f,[-Rx*1.25-4,-Ry*1.25-4,Rx*1.25+4,Ry*1.25+4,H+2],o.preview?1:.42,{carve});
     const notes=[`A ${(FORM[o.form]||FORM.belly).name.toLowerCase()} pot with a ${(SURF[o.surface]||SURF.smooth).name.toLowerCase()} surface, about ${round(2*Rx)} × ${round(2*Ry)} × ${round(H)} mm. Prints upright without supports.`];
     if(o.drain!==false)notes.push('Drain holes in the floor: put a few clay balls in before the soil.');
+    if(peg)notes.push(pegX.length>1?'Two sockets underneath, 40 mm apart: the pot sits on two floor pegs of the base and can\'t turn or tip. Turn on floor pegs for the enclosure.':'Make the pot at least '+round(2*(20+P.hub+b.wall+1))+' mm long for two floor-peg sockets; it has one now.');
     return {parts:[{file:`pot-${o.surface||'smooth'}.stl`,role:'Main colour',m}],notes,magnets:0};
   }
   /* ---------- a pot for the wall: the same body with a flat back, held by magnets ---------- */
@@ -102,7 +125,7 @@
      and the banks never meet in sharp corners. Each pocket goes down to the floor, so the planter is only thin walls. */
   function flowTiers(o,info){
     const sd=S(),e=info.e||{},rectE=e.shape==='rect',W=rectE?e.W:Math.min(e.W,e.D||e.W)*.7,D=rectE?e.D:Math.min(e.W,e.D||e.W)*.7;
-    const g=(e.T||3)+.6,ob=g/2+2.4,Sb=e.S||40,n=Math.max(2,Math.min(5,+o.tiers||3)),wall=Math.max(1.6,o.wall||2.2),fl=2.4,seed=o.seed||1;
+    const g=(e.T||3)+.6,ob=g/2+2.4,Sb=e.S||40,n=Math.max(2,Math.min(3,+o.tiers||3)),wall=Math.max(1.6,o.wall||2.2),fl=2.4,seed=o.seed||1;
     const Wp=W-2*ob-1,Df=D-2*ob-1,nt=rectE&&info.Eh?info.Eh-ob+.75:0,lay=o.layout||'back',R=(i,s)=>H2(i,s,seed*1.37);
     const bed=info.bed||350,m=o.mods&&o.mods!=='auto'?+o.mods:Math.max(1,Math.ceil(Wp/(bed-10))),Mw=(Wp-(m-1))/m,pct=(o.pct||60)/100;
     /* where the terraces start, and how far they reach */
@@ -122,7 +145,7 @@
     const bnd=(k,x,y)=>{if(k<0)return -1e9;const u=clamp(x/cell+1,0,GX-1.001),v=clamp(y/cell+1,0,GY-1.001),i=floor(u),j=floor(v),a=u-i,b=v-j,G=grid[k],q=j*GX+i;
       return (G[q]*(1-a)+G[q+1]*a)*(1-b)+(G[q+GX]*(1-a)+G[q+GX+1]*a)*b};
     const sk=SURF[o.front]||SURF.smooth,amp=sk.amp||0,sf=surfFn(o.front||'smooth',{C:0,H:T[0],seed});
-    const parts=[];
+    const parts=[];let pegN=0;
     for(let j=0;j<m;j++){
       const first=j===0,last=j===m-1,X0=j*(Mw+1);
       /* x, y, z here are in the module's own frame; X is across the whole planter */
@@ -134,9 +157,11 @@
       f=sd.scut(1.4,f,...[...Array(n)].map((_,k)=>pocket(k)));
       if(nt>0){const cs=[];if(first)cs.push(sd.box(nt/2-.5,nt/2-.5,60,nt/2+.5,nt/2+.5,200));if(last)cs.push(sd.box(Mw-nt/2+.5,nt/2-.5,60,nt/2+.5,nt/2+.5,200));if(cs.length)f=sd.cut(f,...cs)}
       /* drain holes wherever a pocket floor is */
-      const hs=[];for(let x=wall+5;x<Mw-wall-4;x+=12)for(let y=wall+5;y<Df-wall-4;y+=12)if([...Array(n)].some((_,k)=>pocket(k)(x,y,fl+1)<-2.5))hs.push(sd.cylZ(x,y,1.05,-1,fl+.5));
+      const spots=pegsUnder(e,Wp,ob,X0,Mw,Df),near=(x,y)=>spots.some(([u,v])=>Math.hypot(x-u,y-v)<9.5);
+      const hs=[];for(let x=wall+5;x<Mw-wall-4;x+=12)for(let y=wall+5;y<Df-wall-4;y+=12)if(!near(x,y)&&[...Array(n)].some((_,k)=>pocket(k)(x,y,fl+1)<-2.5))hs.push(sd.cylZ(x,y,1.05,-1,fl+.5));
       if(hs.length)f=sd.cut(f,...hs);
-      const mm=sd.mesh(f,[-1,-1,Mw+1,Df+1,T[0]+3],o.preview?1.6:.7);
+      const sp=socketPegs(sd,f,spots,fl);f=sp.f;pegN+=sp.n;const carve=sp.carve;
+      const mm=sd.mesh(f,[-1,-1,Mw+1,Df+1,T[0]+3],o.preview?1.6:.7,{carve});
       parts.push({file:m>1?`terraced-planter-${j+1}-of-${m}.stl`:'terraced-planter.stl',role:j?'Second file':'Main colour',m:mm});
     }
     const where={back:'along the back wall',side:'from the left wall',cornerL:'from the back left corner',cornerR:'from the back right corner',point:'around a hill'}[lay];
@@ -144,6 +169,8 @@
       'Fill every pocket with a few clay balls and then soil; plant the high terraces with trailing plants so they spill over the banks. The floor beyond the last bank stays free for gravel, sand or moss.',
       'Prints upright without supports, as thin walls only. Drain holes in each pocket let water through to the base.'];
     if(m>1)notes.push(`It comes in ${m} modules that stand side by side.`);
+    notes.push(pegN>=2*m?`It sits on ${pegN} floor pegs of the base, so it can't slide or tip. Turn on floor pegs for the enclosure.`:'Turn on floor pegs for the enclosure and make the planter reach further, so it sits on at least two pegs; it has sockets wherever a peg is under it.');
+
     if(!rectE)notes.push('Made for rectangular enclosures; for this shape it is a free-standing planter of a matching size.');
     return {parts,notes,magnets:0,Mw};
   }
@@ -161,7 +188,7 @@
     /* top edge: depth of a dip at x, only along the front of each tier */
     const RIM={flat:()=>0,arches:x=>{const v=2*frac(x/26)-1;return 5*sqrt(max(0,1-v*v))},pointed:x=>7*(1-abs(2*frac(x/18)-1)),
       battlements:x=>{const u=frac(x/22);return u<.5?0:5*clamp(min(u-.5,1-u)*12,0,1)},waves:x=>2.6*(.5+.5*cos(TAU*x/32))}[o.top||'flat']||(()=>0);
-    const parts=[],notes=[];
+    const parts=[],notes=[];let pegN=0;
     for(let j=0;j<m;j++){
       const first=j===0,last=j===m-1,X0=j*(Mw+1);
       /* the tiers as one body: each one runs from the back wall to its own front, so they step down */
@@ -171,14 +198,18 @@
       let f=sd.union(...[...Array(n)].map((_,k)=>tier(k)));
       f=sd.scut(1.4,f,...[...Array(n)].map((_,k)=>cav(k)));
       if(nt>0){const cs=[];if(first)cs.push(sd.box(nt/2-.5,nt/2-.5,60,nt/2+.5,nt/2+.5,200));if(last)cs.push(sd.box(Mw-nt/2+.5,nt/2-.5,60,nt/2+.5,nt/2+.5,200));if(cs.length)f=sd.cut(f,...cs)}
-      const hs=[];for(let k=0;k<n;k++){const y0=(k?yk(k-1):0)+wall+4,y1=yk(k)-amp-wall-4;for(let x=wall+6;x<Mw-wall-4;x+=12)for(let y=y0;y<=y1;y+=12)hs.push(sd.cylZ(x,y,1.05,-1,fl+.5))}
+      const spots=pegsUnder(e,Wp,ob,X0,Mw,Dp+amp),near=(x,y)=>spots.some(([u,v])=>Math.hypot(x-u,y-v)<9.5);
+      const hs=[];for(let k=0;k<n;k++){const y0=(k?yk(k-1):0)+wall+4,y1=yk(k)-amp-wall-4;for(let x=wall+6;x<Mw-wall-4;x+=12)for(let y=y0;y<=y1;y+=12)if(!near(x,y))hs.push(sd.cylZ(x,y,1.05,-1,fl+.5))}
       if(hs.length)f=sd.cut(f,...hs);
-      const mm=sd.mesh(f,[-1,-1,Mw+1,Dp+amp+2,hk(0)+2],o.preview?1.4:.6);
+      const sp=socketPegs(sd,f,spots,fl);f=sp.f;pegN+=sp.n;const carve=sp.carve;
+      const mm=sd.mesh(f,[-1,-1,Mw+1,Dp+amp+2,hk(0)+2],o.preview?1.4:.6,{carve});
       parts.push({file:m>1?`tiered-planter-${j+1}-of-${m}.stl`:'tiered-planter.stl',role:j?'Second file':'Main colour',m:mm});
     }
     const hs=[...Array(n)].map((_,k)=>round(hk(k)));
     notes.push(`${n} tiers across the back, ${round(Wp)} × ${round(Dp)} mm and ${hs.join(', ')} mm tall from back to front, with a ${sk.name.toLowerCase()} front. It stands on the base floor and leaves ${round(Dfloor-Dp)} mm of floor free in front.`);
     if(m>1)notes.push(`It comes in ${m} modules that stand side by side; they need nothing to join them.`);
+    notes.push(pegN>=2*m?`It sits on ${pegN} floor pegs of the base, so it can't slide or tip. Turn on floor pegs for the enclosure.`:'Turn on floor pegs for the enclosure and make the planter reach further, so it sits on at least two pegs; it has sockets wherever a peg is under it.');
+
     notes.push('Put a thin layer of clay balls in each tier, then soil. Fill the floor in front with aquarium gravel, sand or moss: the planter keeps the two apart.');
     notes.push('Prints upright without supports. Drain holes in each floor let water through to the base.');
     if(!rectE)notes.push('Made for rectangular enclosures; for this shape it is a free-standing planter of a matching size.');

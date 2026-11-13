@@ -4,14 +4,22 @@
   const G=root.Geo;
   const {prism,varying,rect,rrect,circle,ellipse,ngon,polar,wobble,offset,intersect,subtract,unite,yDisc,build}=G;
 
-  /* ---- the clip rail on printed mesh panels, seen from the side ----
-     The panel's inner face is y=0. A U-shaped channel opens upwards: a 2.6 mm slot in front of the panel,
-     closed by a 2 mm lip. An accessory's back plate drops into the slot, and a small bump clicks past the lip.
-     In accessory coordinates the body's back is y=0, which sits 4.9 mm out from the panel. */
-  const RAIL={pitch:40,slot:2.6,lip:2,floor:1.6,lipH:7.6,tongue:2.2,front:4.9};
-  /* clips fit between the small ribs that hold up the rail lip every 40 mm, so they are at most 34 mm wide */
-  const CLIP={y0:-(RAIL.front-.2),y1:-(RAIL.front-.2-RAIL.tongue),clearZ:RAIL.lipH-RAIL.floor+.4,maxW:34};
-
+  /* ---- pin rails on printed mesh panels ----
+     Both faces of the panel stay flat. Every 40 mm up the wall there is a solid band with square holes every 20 mm,
+     open to the inside. A piece lies flat against the wall on a back tab with two holes 20 mm apart; a printed snap pin
+     goes through the tab into the wall and clicks behind it. Squeeze the split tip from outside to take it off.
+     In accessory coordinates the body's back is y=0, against the wall. */
+  const RAIL={pitch:40,step:20,band:12,hole:3.8,tongue:2.4,front:0};
+  /* the tab below a piece: two holes 20 mm apart, low enough that the pin heads sit under the body */
+  const CLIP={t:2.4,holeY:5,holeR:2.15,headR:4.5,clearZ:10.5,tabW:32,maxW:32};
+  function clipTab(cx){return {shape:rrect(cx-CLIP.tabW/2,0,cx+CLIP.tabW/2,CLIP.clearZ+4,1.5),holes:[-1,1].map(k=>circle(cx+k*RAIL.step/2,CLIP.holeY,CLIP.holeR,28)[0])}}
+  /* the snap pin, printed head down: shaft through the tab and the panel, a split tip with a barb that clicks behind the panel */
+  function railPin(Tw){
+    const L=CLIP.t+Tw+.3,h=1.4,r=1.75,f=[prism(0,1,circle(0,0,CLIP.headR,40)),prism(.99,h,circle(0,0,CLIP.headR-.4,40)),prism(h-.01,h+L,circle(0,0,r,28))];
+    const z=h+L;f.push(prism(z-.01,z+.6,circle(0,0,2.2,28)),prism(z+.59,z+1.1,circle(0,0,1.95,28)),prism(z+1.09,z+1.6,circle(0,0,1.7,28)));
+    f.push(prism(z-2.2,z+2,rect(-.5,-3,.5,3),'sub'));
+    return build(f);
+  }
   /* ---- plan shapes for bodies: x centred on 0, the back at y=0 ---- */
   function body2D(kind,L,W,seed){
     let r;
@@ -37,11 +45,11 @@
     for(const x of xs)f.push(G.yMag(x,zc,md,-bt-1,-bt+pd,'sub'));
     return xs.length;
   }
+  /* an upright body (back at y=0, printed standing): a back plate whose wings reach past the body, with pin holes in them */
   function clipBack(f,{w,h}){
-    const ph=Math.max(h,CLIP.clearZ+6),wc=Math.min(CLIP.maxW,Math.max(16,w));
-    f.push(prism(0,ph,rect(-wc/2,CLIP.y0,wc/2,CLIP.y1)));                 /* back plate: its lower part is the tongue */
-    f.push(prism(CLIP.clearZ,ph,rect(-wc/2,CLIP.y1-.01,wc/2,.6)));         /* bridge over the lip, joining the body */
-    f.push(prism(1,2,rect(-wc/2+2,CLIP.y1-.01,wc/2-2,CLIP.y1+.35)));       /* click bump */
+    const ph=Math.max(h,16),sp=Math.max(RAIL.step,Math.ceil((w+2*CLIP.headR+2)/RAIL.step)*RAIL.step),zc=Math.min(ph/2,ph-CLIP.headR-1.5);
+    f.push(prism(0,ph,rrect(-sp/2-5.5,-CLIP.t,sp/2+5.5,.6,1)));
+    for(const x of [-sp/2,sp/2])f.push(G.yDisc(x,zc,CLIP.holeR,-CLIP.t-1,1,'sub'));
     return ph;
   }
   /* the floor peg socket: a hole from underneath, inside a solid hub */
@@ -49,16 +57,14 @@
 
   /* ---------------- pearl dish ---------------- */
   function dish(o){
-    const out=body2D(o.shape,o.L,o.W,o.seed),fl=2,top=fl+o.depth,sw=3,sh=3,f=[],notes=[],b=bounds(out);
+    /* a wide, shallow bowl with a flat floor: the sides curve in gently near the floor, so the beads roll to the
+       middle and there are no pits. With a floor peg the whole floor is thick enough for the socket. */
+    const out=body2D(o.shape,o.L,o.W,o.seed),peg=o.mount==='peg',fl=peg?PEG.depth+1.2:2,top=fl+o.depth,f=[],notes=[],b=bounds(out);
+    const rim=Math.min(8,(Math.min(b.x1-b.x0,b.y1-b.y0)/2-o.wall)*.45);
     f.push(prism(0,top,out));
-    const hub=o.mount==='peg'?circle(b.cx,b.cy,PEG.hub):null;
-    for(let k=0;k*sh<o.depth;k++){
-      let c=offset(out,-(o.wall+k*sw));if(!c.length)break;
-      if(hub)c=subtract(c,hub);
-      f.push(prism(Math.max(fl,top-(k+1)*sh),top+1,c,'sub'));
-    }
+    f.push(varying(fl,top+1,z=>{const t=Math.min(1,(z-fl)/o.depth);return offset(out,-(o.wall+rim*(1-t)*(1-t)))},.3,'sub'));
+    if(peg)f.push(prism(-1,PEG.depth,circle(b.cx,b.cy,PEG.sock),'sub'));
     let magnets=0;
-    if(hub){f.push(prism(0,Math.min(top,PEG.depth+1.5),hub));f.push(prism(-1,PEG.depth,circle(b.cx,b.cy,PEG.sock),'sub'));if(top<PEG.depth+1.5)notes.push('Make the dish deeper so the floor socket fits.')}
     addMount(f,o,b,top,out);
     if(o.mount==='magnet')magnets=magnetBack(f,{w:Math.min(b.x1-b.x0,60),h:top,md:o.md,mh:o.mh});
     return {parts:[{file:'pearl-dish.stl',role:'Main colour',m:build(f)}],notes,magnets};
@@ -67,8 +73,8 @@
   function addMount(f,o,b,h,out){
     if(o.mount!=='magnet'&&o.mount!=='clip')return;
     const w=Math.min(b.x1-b.x0,o.mount==='clip'?Math.max(20,(b.x1-b.x0)*.7):60)*.9;
-    f.push(prism(o.mount==='clip'?CLIP.clearZ:0,h,intersect(rect(-w/2,0,w/2,b.cy),unite(offset(out,-.3),rect(-w/2,0,w/2,1)))));
-    if(o.mount==='clip')clipBack(f,{w,h});
+    f.push(prism(0,h,intersect(rect(-w/2,0,w/2,b.cy),unite(offset(out,-.3),rect(-w/2,0,w/2,1)))));
+    if(o.mount==='clip')clipBack(f,{w:2*Math.max(-b.x0,b.x1),h});
   }
 
 
@@ -140,7 +146,7 @@
       f.push(prism(2,H+1,circle(0,cy,rs),'sub'));
       /* a strip joins the body to the back plate all the way up */
       const w=Math.max(8,Math.min(2*top,(b.x1-b.x0)*.8));f.push(prism(0,H,rect(-w/2,-.01,w/2,1.2)));
-      if(o.mount==='clip')clipBack(f,{w,h:H});
+      if(o.mount==='clip')clipBack(f,{w:2*bot,h:H});
       if(o.mount==='magnet'){magnets=magnetBack(f,{w:Math.max(w,2*o.md+6),h:H,md:o.md,mh:o.mh});if(H<o.md+6)notes.push('Make it taller so the magnet fits.')}
       if(o.shape==='rock')notes.push('Rock shapes vary. Tap Shuffle shape for another.');
     }else{
@@ -202,8 +208,26 @@
     if(P.bands)for(let d=7;d<D;d+=7){const a=offset(top,-d),b=offset(top,-d-lw);if(!a.length)break;parts=unite(parts,subtract(a,b))}
     const frame=subtract(top,offset(top,-lw*1.3));
     let all=unite(unite(frame,intersect(parts,top)),intersect(rect(-L,0,L,4),top));
-    all=offset(offset(all,.4),-.4);all=offset(offset(all,-lw*.35),lw*.35);
-    return intersect(all,top);
+    all=offset(offset(all,.4),-.4);all=offset(offset(all,-lw*.35),lw*.35);return intersect(all,top);
+  }
+  /* The shelf prints on its back, so u (out from the wall) is the print height. Every hole in a see-through shelf
+     gets a pointed top: going up, a hole may only narrow by one layer height per layer, so nothing spans thin air.
+     Works on the slices themselves, from the top layer down; returns the slices to print at any u. */
+  function pointedHoles(body,uMax,dz){
+    const N=Math.ceil(uMax/dz)+1,L=new Array(N+1),BIG=1e6;let above=null;
+    for(let i=N;i>=0;i--){const u=i*dz,M=G.slice(body,u).sort((a,b)=>a[0]-b[0]);
+      if(!above||!above.length||!M.length){L[i]=M.length||!above?M:above.map(([a,c])=>[a+dz,c-dz]).filter(([a,c])=>c-a>.4);above=L[i];continue}
+      /* where the layer above is empty, widened by dz: only there may this layer be empty too */
+      const up=[];let x=-BIG;for(const [a,c] of above){if(a>x)up.push([x-dz,a+dz]);x=Math.max(x,c)}up.push([x-dz,BIG]);
+      const gaps=[[-BIG,M[0][0]]];for(let k=1;k<M.length;k++)gaps.push([M[k-1][1],M[k][0]]);gaps.push([M[M.length-1][1],BIG]);
+      const V=[];
+      gaps.forEach(([a,c],k)=>{let keep=up.map(([p,q])=>[Math.max(a,p),Math.min(c,q)]).filter(([p,q])=>q-p>.05);
+        /* a hole closed above gets a pointed top */
+        if(!keep.length&&k>0&&k<gaps.length-1){const m=(a+c)/2;keep=[[Math.max(a,m-dz),Math.min(c,m+dz)]]}
+        V.push(...keep)});
+      const out=[];for(let k=1;k<V.length;k++)if(V[k][0]-V[k-1][1]>.01)out.push([V[k-1][1],V[k][0]]);
+      L[i]=out;above=out}
+    return u=>L[Math.max(0,Math.min(N,Math.round(u/dz)))];
   }
   function ledge(o){
     const f=[],notes=[],clip=o.mount==='clip',mag=o.mount==='magnet';
@@ -215,11 +239,12 @@
     const step=Math.max(14,o.dep*.45);
     const zs0=Math.max(clip?CLIP.clearZ:4,Hd+3,o.Hh*.3);
     const Hb=Math.max(o.Hh,zs0+st+(tiers.length-1)*step+12,clip?CLIP.clearZ+16:16,mag?2*R+18:0);
-    /* back plate outline on the wall: rounded, a little irregular (or square), straight along the bottom for a clip rail */
+    /* back plate outline on the wall: rounded, a little irregular (or square), straight along the bottom for the pin-rail tab */
     const PL=o.L*1.12,wv=wobble(seed+7,o.shape==='classic'||o.shape==='square'?.0:.09,5);
     let plate=o.shape==='square'?rect(-PL/2,0,PL/2,Hb):o.shape==='classic'?rrect(-PL/2,0,PL/2,Hb,6):polar(0,Hb/2,a=>{const c=Math.cos(a),s=Math.sin(a),e=1/Math.sqrt(c*c/(PL*PL/4)+s*s/(Hb*Hb/4));return e*(1+wv(a))},120);
     plate=unite(plate,rrect(-PL/2,Math.max(0,zs0-Hd-4),PL/2,zs0+st+4,3));
-    if(clip){const hw=Math.min(o.L*.4,CLIP.maxW/2);plate=unite(intersect(plate,rect(-o.L,CLIP.clearZ,o.L,Hb*2)),rect(-hw,0,hw,zs0+st))}
+    const tab=clip?clipTab(0):null;
+    if(clip)plate=unite(intersect(plate,rect(-o.L,CLIP.clearZ,o.L,Hb*2)),unite(tab.shape,rect(-CLIP.tabW/2+4,0,CLIP.tabW/2-4,zs0+st)));
     f.push(prism(0,bt,plate));
     const slice=(rings,u)=>G.slice(rings,u);
     for(const t of tiers){
@@ -228,20 +253,21 @@
       /* underside: D (quarter round), wedge, or ribs. Each layer sits inside the one below, so no supports. */
       const hd=Hd*(t.D/o.dep),hfun=u=>under==='D'?hd*Math.sqrt(Math.max(0,1-(u/t.D)**2)):under==='flat'?0:hd*Math.max(0,1-u/t.D);
       const ribs=under==='ribs'?intersect(body,unite((t.L>60?[-t.L/3,0,t.L/3]:[-t.L/4,t.L/4]).map(x=>rect(t.dx+x-1.6,0,t.dx+x+1.6,t.D)[0]).map(r=>[r]).flat())):null;
+      const sl=pointedHoles(body,zMax-zA+.6,.3);
       f.push(varying(zA,zMax,z=>{const u=z-bt,hv=Math.round(hfun(u)/.1)*.1,deep=hv>=.4&&!ribs?zs-hv:zs;
-        const out=slice(body,u).map(([a,c])=>[[a,deep],[c,deep],[c,zs+st],[a,zs+st]]);
+        const out=sl(u).map(([a,c])=>[[a,deep],[c,deep],[c,zs+st],[a,zs+st]]);
         if(ribs&&hv>=.4)for(const [a,c] of slice(ribs,u))out.push([[a,zs-hv],[c,zs-hv],[c,zs+st],[a,zs+st]]);
         return out},.3));
       if(!open){
         const rid=o.shape==='leaf'?intersect(unite(G.stroke([[[t.dx,2],[t.dx,t.D*.92]]],1.4)),offset(top,-1.5)):(()=>{const bands=[];for(let d=4;d<t.D;d+=4.5){const a=offset(top,-d),b=offset(top,-d-1.1);if(!a.length)break;bands.push(...subtract(a,b))}return intersect(unite(bands),rect(-o.L,3,o.L,o.dep*2))})();
         const rim=o.shape==='leaf'?[]:intersect(subtract(offset(top,-.05),offset(top,-1.6)),rect(-o.L,3,o.L,o.dep*2));
-        if(rid.length)f.push(varying(zA,zMax,z=>slice(rid,z-bt).map(([a,c])=>[[a,zs+st-.01],[c,zs+st-.01],[c,zs+st+.8],[a,zs+st+.8]]),.3));
-        if(rim.length)f.push(varying(zA,zMax,z=>slice(rim,z-bt).map(([a,c])=>[[a,zs+st-.01],[c,zs+st-.01],[c,zs+st+1.4],[a,zs+st+1.4]]),.3));
+        if(rid.length)f.push(varying(zA,zMax,z=>slice(rid,z-bt).map(([a,c])=>[[a,zs+st-.01],[c,zs+st-.01],[c,zs+st+.5],[a,zs+st+.5]]),.3));
+        if(rim.length)f.push(varying(zA,zMax,z=>slice(rim,z-bt).map(([a,c])=>[[a,zs+st-.01],[c,zs+st-.01],[c,zs+st+.6],[a,zs+st+.6]]),.3));
       }
     }
     let magnets=0;
     if(mag){const y=Hb-R-4,xs=o.L>=4*R+16?[-o.L/4,o.L/4]:[0];for(const x of xs)f.push(prism(-1,pd,G.mag(x,y,md),'sub'));magnets=xs.length}
-    if(clip){const wc=Math.min(o.L*.4,CLIP.maxW/2);f.push(prism(bt,bt+.35,rect(-wc+2,1,wc-2,2)))}
+    if(clip)f.push(prism(-1,bt+1,tab.holes,'sub'));
     if(o.pattern&&o.pattern!=='solid')notes.push('The see-through pattern prints as is, with lines at least '+Math.max(1.6,o.lw||2.2).toFixed(1)+' mm wide. Tap Shuffle shape for a different version.');
     return {parts:[{file:'wall-ledge.stl',role:'Main colour',m:build(f)}],notes,magnets};
   }
@@ -250,9 +276,9 @@
   function label(o){
     const clip=o.mount==='clip',mag=o.mount==='magnet',R=o.md/2+.2,pd=o.mh+.2;
     const sp=4,ov=3,pt=clip?RAIL.tongue:mag?Math.max(2,pd+1.4):2,Lp=o.cw+2*sp,drop=clip?CLIP.clearZ:0,Hp=o.ch+sp-3+drop;
-    const shape=clip?unite(rrect(-Lp/2,drop,Lp/2,Hp,4),rrect(-CLIP.maxW/2,0,CLIP.maxW/2,drop+4,1)):rrect(-Lp/2,0,Lp/2,Hp,4),pf=[prism(0,pt,shape)];let magnets=0;
+    const tab=clip?clipTab(0):null,shape=clip?unite(rrect(-Lp/2,drop,Lp/2,Hp,4),tab.shape):rrect(-Lp/2,0,Lp/2,Hp,4),pf=[prism(0,pt,shape)];let magnets=0;
     if(mag){const y=drop+(Hp-drop)/2,xs=Lp>=4*R+16?[-Lp/4,Lp/4]:[0];for(const x of xs)pf.push(prism(-1,pd,G.mag(x,y,o.md),'sub'));magnets=xs.length;}
-    if(clip)pf.push(prism(pt,pt+.35,rect(-CLIP.maxW/2+3,1,CLIP.maxW/2-3,2)));
+    if(clip)pf.push(prism(-1,pt+1,tab.holes,'sub'));
     const gz=.8,lz=1.2,y0=drop;
     const spacer=intersect(shape,unite(rect(-Lp/2,y0,-Lp/2+sp,Hp),unite(rect(Lp/2-sp,y0,Lp/2,Hp),rect(-Lp/2,y0,Lp/2,y0+sp))));
     const lips=intersect(shape,unite(rect(-Lp/2,y0,-Lp/2+sp+ov,Hp),unite(rect(Lp/2-sp-ov,y0,Lp/2,Hp),rect(-Lp/2,y0,Lp/2,y0+sp+ov))));
@@ -341,7 +367,7 @@
         const c=[[x,y],[x+p.hole,y],[x+p.hole,y+p.hole],[x,y+p.hole]];
         if(!c.every(([u,v])=>inEl(u,v,0)))continue;
         if(hatch&&c.some(([u,v])=>Math.hypot(u-hatch.hx,v-hatch.hy)<hatch.Rh+13))continue;
-        if(win&&c.some(([u,v])=>win.centers.some(([cx,cy])=>Math.hypot(u-cx,v-cy)<win.Rw+4.5)))continue;
+        if(win&&c.some(([u,v])=>win.centers.some(([cx,cy])=>Math.hypot(u-cx,v-cy)<win.Rw+3+LAMP_COLLAR)))continue;
         hs.push(c);
       }
     }
@@ -367,16 +393,23 @@
     for(let i=0;i<n;i++)centers.push(alongY?[cx,cy+o0+i*pitch]:[cx+o0+i*pitch,cy]);
     return {centers,Rw:R-4,mode:p.lw,R};
   }
+  /* under a lamp: wide ring slots split by six spokes, clearly more open than the vent holes in the rest of the lid */
+  function lampSlots(cx,cy,Rin){
+    const out=[],sw=.9,slot=2.4,bar=1.2;
+    for(let r0=4;r0+slot<=Rin;r0+=slot+bar){const r1=r0+slot;
+      for(let j=0;j<6;j++){const b0=j*Math.PI/3,b1=b0+Math.PI/3,q=[],arc=(r,f)=>{const d=Math.asin(Math.min(.9,sw/r)),a0=b0+d,a1=b1-d,n=Math.max(3,Math.ceil((a1-a0)*r/1.5));for(let i=0;i<=n;i++){const t=f?a0+(a1-a0)*i/n:a1-(a1-a0)*i/n;q.push([cx+r*Math.cos(t),cy+r*Math.sin(t)])}};
+        arc(r1,true);arc(r0,false);out.push(q)}}
+    return out;
+  }
+  /* the solid collar round each lamp area: the lamp seat rests on it, and the vent holes stay outside it */
+  const LAMP_COLLAR=7;
   function addWindows(f,hs,w,p,z0,z1,topAtZ1,preview){
     const dr=1.0;
     for(const [cx,cy] of w.centers){
       if(w.mode==='insert'){
         f.push(prism(z0-1,z1+1,circle(cx,cy,w.Rw),'sub'));
         f.push(topAtZ1?prism(z1-dr,z1+1,circle(cx,cy,w.Rw+3),'sub'):prism(z0-1,z0+dr,circle(cx,cy,w.Rw+3),'sub'));
-      }else if(!preview){
-        const bar=.6,pitch=p.hole+bar,Rin=w.Rw+3;
-        for(let x=cx-Rin;x<cx+Rin;x+=pitch)for(let y=cy-Rin;y<cy+Rin;y+=pitch){const c=[[x,y],[x+p.hole,y],[x+p.hole,y+p.hole],[x,y+p.hole]];if(c.every(([u,v])=>Math.hypot(u-cx,v-cy)<Rin))hs.push(c)}
-      }
+      }else hs.push(...lampSlots(cx,cy,w.Rw+3));
     }
   }
   /* rectangular lid with light windows, built upright like the plain one (rails down, plate on top) */
@@ -396,7 +429,7 @@
       const holes=(a0,a1)=>{const pitch=p.hole+p.bar,n=Math.max(0,Math.floor((a1-a0+p.bar)/pitch)),off=(a1-a0-(n*pitch-p.bar))/2,o=[];for(let i=0;i<n;i++)o.push(a0+off+i*pitch);return o};
       for(const x of holes(m,W-m))for(const y of holes(m,D-m)){
         const q=[[x,y],[x+p.hole,y],[x+p.hole,y+p.hole],[x,y+p.hole]];
-        if(win&&q.some(([u,v])=>win.centers.some(([cx,cy])=>Math.hypot(u-cx,v-cy)<win.Rw+4.5)))continue;
+        if(win&&q.some(([u,v])=>win.centers.some(([cx,cy])=>Math.hypot(u-cx,v-cy)<win.Rw+3+LAMP_COLLAR)))continue;
         hs.push(q);
       }
     }
@@ -417,5 +450,5 @@
   }
   /* a wall mount behind an upright body (back at y=0): returns the number of magnets */
   function mountWall(f,o,b,h,out){addMount(f,o,b,h,out);return o.mount==='magnet'?magnetBack(f,{w:Math.min(b.x1-b.x0,60),h,md:o.md,mh:o.mh}):0}
-  root.HabitatParts={PROFILES,textured,rectLid,lightWindows,RAIL,CLIP,PEG,dish,pot,twig,ledge,label,light,roundEnclosure,rectBase,perimeter,body2D,fit,bounds,bez,curl,mountWall,LEDGE_PATTERNS};
+  root.HabitatParts={PROFILES,textured,rectLid,lightWindows,RAIL,CLIP,PEG,clipTab,railPin,lampSlots,LAMP_COLLAR,dish,pot,twig,ledge,label,light,roundEnclosure,rectBase,perimeter,body2D,fit,bounds,bez,curl,mountWall,LEDGE_PATTERNS};
 })(typeof window!=='undefined'?window:globalThis);

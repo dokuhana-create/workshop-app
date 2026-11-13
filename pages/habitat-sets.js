@@ -173,7 +173,7 @@
      pot (shape, surface, form). Group first, then the styles that differ from their group. */
   const PG={Flowers:{tiers:{front:'petals',top:'arches',tiers:'2'},pot:{shape:'round',surface:'petals',form:'tulip'},wall:{shape:'round',surface:'petals',form:'tulip'}},
     Woodland:{tiers:{front:'bark',top:'flat',tiers:'2'},pot:{shape:'pebble',surface:'bark',form:'belly'},wall:{shape:'pebble',surface:'bark',form:'belly'}},
-    'Asian garden':{tiers:{front:'smooth',top:'flat',tiers:'4',layout:'back'},pot:{shape:'round',surface:'bamboo',form:'straight'},wall:{shape:'round',surface:'bamboo',form:'straight'}},
+    'Asian garden':{tiers:{front:'smooth',top:'flat',tiers:'3',layout:'back'},pot:{shape:'round',surface:'bamboo',form:'straight'},wall:{shape:'round',surface:'bamboo',form:'straight'}},
     'Earth and water':{tiers:{front:'rock',top:'flat',tiers:'3'},pot:{shape:'pebble',surface:'rock',form:'belly'},wall:{shape:'pebble',surface:'rock',form:'belly'}},
     Fantasy:{tiers:{front:'swirl',top:'waves',tiers:'2'},pot:{shape:'round',surface:'swirl',form:'belly'},wall:{shape:'round',surface:'swirl',form:'belly'}},
     Gothic:{tiers:{front:'flutes',top:'pointed',tiers:'2'},pot:{shape:'square',surface:'flutes',form:'urn'},wall:{shape:'square',surface:'flutes',form:'urn'}},
@@ -181,17 +181,17 @@
     Modern:{tiers:{front:'facets',top:'flat',tiers:'3'},pot:{shape:'hex',surface:'facets',form:'straight'},wall:{shape:'hex',surface:'facets',form:'straight'}},
     'Keeper kits':{tiers:{front:'smooth',top:'flat',tiers:'2'},pot:{shape:'round',surface:'smooth',form:'belly'},wall:{shape:'round',surface:'smooth',form:'belly'}}};
   const PT={cottage:{tiers:{front:'knit',top:'waves'},pot:{surface:'knit',form:'belly'},wall:{surface:'knit',form:'belly'}},
-    rainforest:{tiers:{front:'bark',tiers:'4',layout:'back'}},lotus:{tiers:{top:'waves'},pot:{form:'bowl'},wall:{form:'bowl'}},tropical:{tiers:{front:'swirl',top:'waves'},pot:{surface:'swirl'},wall:{surface:'swirl'}},
-    protea:{tiers:{top:'pointed'},pot:{form:'urn'}},cabin:{tiers:{top:'battlements'}},mossy:{tiers:{front:'pebbles',tiers:'4',layout:'cornerL'},pot:{surface:'pebbles'},wall:{surface:'pebbles'}},
-    zen:{tiers:{front:'smooth',layout:'back',tiers:'3'},pot:{shape:'pebble',surface:'smooth',form:'bowl'},wall:{shape:'pebble',surface:'smooth',form:'bowl'}},pagoda:{tiers:{layout:'point',tiers:'4'}},
-    stone:{tiers:{front:'pebbles'},pot:{surface:'pebbles'},wall:{surface:'pebbles'}},canyon:{tiers:{front:'rock',tiers:'4',layout:'cornerR'}},
+    rainforest:{tiers:{front:'bark',tiers:'3',layout:'back'}},lotus:{tiers:{top:'waves'},pot:{form:'bowl'},wall:{form:'bowl'}},tropical:{tiers:{front:'swirl',top:'waves'},pot:{surface:'swirl'},wall:{surface:'swirl'}},
+    protea:{tiers:{top:'pointed'},pot:{form:'urn'}},cabin:{tiers:{top:'battlements'}},mossy:{tiers:{front:'pebbles',tiers:'3',layout:'cornerL'},pot:{surface:'pebbles'},wall:{surface:'pebbles'}},
+    zen:{tiers:{front:'smooth',layout:'back',tiers:'3'},pot:{shape:'pebble',surface:'smooth',form:'bowl'},wall:{shape:'pebble',surface:'smooth',form:'bowl'}},pagoda:{tiers:{layout:'point',tiers:'3'}},
+    stone:{tiers:{front:'pebbles'},pot:{surface:'pebbles'},wall:{surface:'pebbles'}},canyon:{tiers:{front:'rock',tiers:'3',layout:'cornerR'}},
     reef:{tiers:{front:'swirl',top:'waves'},pot:{shape:'round',surface:'swirl',form:'tulip'},wall:{shape:'round',surface:'swirl'}},
     moon:{tiers:{top:'arches'},pot:{surface:'pebbles'}},astral:{tiers:{front:'facets',top:'pointed'},pot:{shape:'hex',surface:'facets',form:'straight'},wall:{shape:'hex',surface:'facets'}},
     sky:{tiers:{front:'pebbles',top:'arches'},pot:{surface:'pebbles'},wall:{surface:'pebbles'}},glow:{tiers:{front:'facets'},pot:{surface:'facets'}},
     nouveau:{tiers:{front:'swirl',top:'arches'},pot:{form:'tulip'}},ruins:{tiers:{front:'rock',top:'battlements'}},
     temple:{tiers:{front:'flutes',top:'battlements'},pot:{shape:'round',surface:'flutes',form:'urn'},wall:{shape:'round',surface:'flutes',form:'urn'}},
     olympus:{tiers:{front:'flutes',top:'flat'},pot:{shape:'round',surface:'flutes',form:'urn'},wall:{shape:'round',surface:'flutes',form:'urn'}},
-    fairy:{tiers:{front:'bark',tiers:'4',layout:'point'},pot:{surface:'bark'},wall:{surface:'bark'}},library:{tiers:{front:'knit',top:'battlements'},pot:{shape:'square',surface:'knit',form:'straight'}},
+    fairy:{tiers:{front:'bark',tiers:'3',layout:'point'},pot:{surface:'bark'},wall:{surface:'bark'}},library:{tiers:{front:'knit',top:'battlements'},pot:{shape:'square',surface:'knit',form:'straight'}},
     botanical:{tiers:{front:'flutes',top:'flat',tiers:'3'},pot:{surface:'flutes',form:'belly'},wall:{surface:'flutes'}},
     honey:{pot:{shape:'hex'}},minimal:{tiers:{front:'smooth'},pot:{shape:'round',surface:'smooth',form:'straight'},wall:{shape:'round',surface:'smooth',form:'straight'}}};
   root.HABITAT_PLANTS=k=>{const s=S[k]||S.orchid,g=PG[s.group]||PG.Flowers,t=PT[k]||{},o={};for(const part of ['tiers','pot','wall'])o[part]=Object.assign({},g[part],t[part]||{});return o};

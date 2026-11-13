@@ -288,8 +288,10 @@
     else if(o.mount==='magnet')bt=Math.max(opts.min||2,o.mh+.2+1.4);
     else bt=opts.min||2;
     const ft=move(foot,0,dy),b=bounds(ft);let plate=opts.plate?move(opts.plate,0,dy):ft;
-    if(o.mount==='clip'){const wc=Math.min(CLIP.maxW,Math.max(16,(b.x1-b.x0)*.6));plate=unite(plate,rrect(b.cx-wc/2,0,b.cx+wc/2,CLIP.clearZ+4,1));f.push(prism(bt,bt+.35,rect(b.cx-wc/2+2,1,b.cx+wc/2-2,2)))}
+    const tab=o.mount==='clip'?HP.clipTab(b.cx):null;
+    if(tab)plate=unite(plate,tab.shape);
     f.push(prism(0,bt,plate));
+    if(tab)f.push(prism(-1,bt+1,tab.holes,'sub'));
     if(o.mount==='magnet'){
       const R=o.md/2+.2,pd=o.mh+.2,w=b.x1-b.x0,safe=offset(ft,-R-1.2),xs=opts.xs||(w>=4*R+16?[b.cx-w/4,b.cx+w/4]:[b.cx]),my=opts.my!=null?opts.my+dy:b.cy;
       const ok=xs.filter(x=>safe.length&&G.inside(safe,x,my));
@@ -392,7 +394,7 @@
     let t=o.mount==='clip'?RAIL.tongue:o.mount==='magnet'?Math.max(2.4,o.mh+1.6):2.4,magnets=0;
     if(o.mount==='tie'){shape=subtract(unite(shape,rrect(-W/2,L-2,W/2,L+10,3)),unite(circle(-W/4,L+4.5,1.3,20),circle(W/4,L+4.5,1.3,20)))}
     else if(o.mount==='hook'){const rd=o.dia/2+1.6;shape=unite(shape,stroke([[[0,L-2],[0,L+6],...E_(-rd,L+6,rd,rd,0,180),[-2*rd,L+2]]],3))}
-    else if(o.mount==='clip'){const cw=Math.min(W,CLIP.maxW);shape=unite(subtract(shape,rect(-W,-1,W,CLIP.clearZ)),rrect(-cw/2,0,cw/2,CLIP.clearZ+4,1));f.push(prism(t,t+.35,rect(-cw/2+2,1,cw/2-2,2)))}
+    else if(o.mount==='clip'){const tb=HP.clipTab(0);shape=unite(subtract(shape,rect(-W,-1,W,CLIP.clearZ)),tb.shape);f.push(prism(-1,t+1,tb.holes,'sub'))}
     else if(o.mount==='magnet'){shape=unite(shape,rrect(-W/2,L-o.md-6,W/2,L,2));const R=o.md/2+.2;if(W>=2*R+3){f.push(prism(-1,o.mh+.2,G.mag(0,L-R-3,o.md),'sub'));magnets=1}else notes.push('Make the ladder wider so a magnet fits.')}
     f.push(prism(0,t,shape));
     if(ridges.length)f.push(prism(t,t+.6,intersect(stroke(ridges,1),offset(shape,-.6))));
@@ -474,10 +476,10 @@
       parts.push({file:'twig-bridge-half-1.stl',role:'Main colour',m:build(half(left,true,false))},{file:'twig-bridge-half-2.stl',role:'Main colour',m:build(half(right,false,true))});
       notes.push('The bridge is longer than your print bed, so it comes in two halves that join with a dovetail in the middle. Slide them together: the dovetail is a tight fit and holds without glue.')}
     else parts.push(part('twig-bridge.stl',build(solid)));
-    parts.push({file:'wall-bracket-print-2.stl',role:'Second file',m:br.m});
+    parts.push({file:'wall-bracket-print-2.stl',role:'Second file',m:br.m,count:2});
     const where=across==='depth'?'the front and the back wall':'the left and the right wall';
     notes.push(`It hangs between ${where}${auto?`, ${Math.round(span+2*c)} mm apart inside`:''}, and sags ${Math.round(sag)} mm in the middle${drop?`; one end sits ${Math.round(Math.abs(drop))} mm lower`:''}. Print 2 wall brackets.`);
-    notes.push(o.mount==='magnet'?'Each bracket holds to its wall with a magnet: put a second magnet on the outside of the panel, opposite it. Set both brackets at the same height first, then drop the bridge\'s square pins into them from above.':o.mount==='clip'?'Each bracket clicks into a clip rail on a mesh wall. Drop the bridge\'s square pins into them from above.':'Glue or tape a bracket to each wall at the same height, then drop the bridge\'s square pins into them from above.');
+    notes.push(o.mount==='magnet'?'Each bracket holds to its wall with a magnet: put a second magnet on the outside of the panel, opposite it. Set both brackets at the same height first, then drop the bridge\'s square pins into them from above.':o.mount==='clip'?'Each bracket is held to a pin rail on a mesh wall by two rail pins. Drop the bridge\'s square pins into them from above.':'Glue or tape a bracket to each wall at the same height, then drop the bridge\'s square pins into them from above.');
     notes.push(`The bridge prints flat on its side, ${fmt1(t)} mm thick: that is the width the mantis walks on. The brackets print on their backs.`);
     notes.push(...br.notes);
     return {parts,notes,magnets:br.magnets*2,separate:true,hang:{span,drop,c,top:br.top,t,ps,knob,across,bracket:br.m}};
@@ -639,7 +641,7 @@
   function mister(o,enc){
     const rn=o.noz/2,f=[],notes=[],th=4;
     if(o.kind==='hatch'){
-      const R=enc.hatchR||Math.min(30,(o.hatchD||60)/2);if(!enc.hatchR)notes.push('Your enclosure has no feeding hatch yet. This cover is sized for the hatch opening you enter here.');
+      const R=enc.hatchR||Math.min(60,(o.hatchD||80)/2);if(!enc.hatchR)notes.push('Your enclosure has no feeding hatch yet. This cover is sized for the hatch opening you enter here.');
       f.push(prism(0,th,unite(circle(0,0,R+8,90),rrect(R+4,-6,R+18,6,4))),prism(th,th+4.5,subtract(circle(0,0,R-.2,90),circle(0,0,R-2,90))));
       const hs=holes(subtract(circle(0,0,R-4,60),circle(0,0,rn+th*.6+4,40)),'round',1.6,1.4,o.seed);if(hs.length&&o.vent==='yes')f.push(prism(-1,th+1,hs,'sub'));
       notes.push('Replaces the push-in cover of a plug hatch. The cone opens inwards, so the spray fans out over the enclosure.');
@@ -790,8 +792,8 @@
     f.push(upright(sil,th,0,py,ph-.01));
     if(o.cover==='yes'&&(o.shape==='round'||o.shape==='oval')){const gw=1.2;f.push(prism(ph-3,ph+1,subtract(offset(fp,-3),offset(fp,-3-gw)),'sub'));
       const a=(b.x1-b.x0)/2-3.6,bb=(b.y1-b.y0)/2-3.6,per=HP.perimeter?HP.perimeter(a,bb):Math.PI*(a+bb);notes.push(`Clear cover: roll a PET sheet (0.5–0.75 mm) ${(per+12).toFixed(0)} × ${(o.postH+10).toFixed(0)} mm into the groove, tape the seam, and add a printed or glass lid if you like.`)}
-    if(letters.length){if(o.colour==='two'){parts.push(part('moult-display-letters.stl',build([prism(ph,ph+.8,letters)]),'Colour 2'))}else f.push(prism(ph,ph+.8,letters))}
-    parts.unshift(part('moult-display.stl',build(f),o.colour==='two'?'Colour 1':'Main colour'));
+    if(letters.length){f.push(prism(ph,ph+.8,letters));if(o.colour==='two')notes.push(colourAt(ph,'the letters'))}
+    parts.unshift(part('moult-display.stl',build(f),'Main colour'));
     notes.push('Glue the shed skin onto the post with a small dot of PVA glue. It dries clear.');
     return {parts,notes,magnets:0};
   }
@@ -811,6 +813,7 @@
       default:return rrect(-w/2,-h/2,w/2,h/2,Math.min(4,h/4));
     }
   }
+  const colourAt=(z,what)=>`Two colours, one piece: in Creality Print drag the layer slider to ${(Math.round(z*100)/100).toFixed(2)} mm and add a filament change there (the + next to the slider), so ${what} print in your second colour. Nothing is loose, so no letter, dot or apostrophe can get lost.`;
   function nameplate(o){
     const lines=[o.t1,o.t2],cap=o.font==='caps',h=cap?o.th:o.th*1.5,sw=cap?Math.max(1.2,h*.16):Math.max(1.3,h*.11),T=text2D(lines,h,sw,cap?null:'script'),notes=[],parts=[];
     const logo=o.logo==='yes'?logoMark(Math.max(h*2.2,T.h*1.1)):null,gap=h*.6;
@@ -822,9 +825,9 @@
     let art=move(unite(letters,mark),0,dy);
     if(o.mode==='stencil'){art=stencil(move(outline,0,dy),art,Math.max(1.2,sw*.9));f.push(prism(-1,bt+1,art,'sub'));notes.push('Cut-through letters: small bridges keep the middles of letters like O and A in place.')}
     else if(o.mode==='engraved')f.push(prism(bt-.8,bt+1,art,'sub'));
-    else if(o.colour==='two'){parts.push(part('name-plate-letters.stl',build([prism(bt,bt+1,art)]),'Colour 2'));notes.push('Raised letters come as a second file so you can print them in another colour with the CFS.')}
+    else if(o.colour==='two'){f.push(prism(bt,bt+1,art));notes.push(colourAt(bt,'the raised letters'))}
     else f.push(prism(bt,bt+1,art));
-    if(o.border==='yes'){const bd=subtract(offset(move(outline,0,dy),-.8),offset(move(outline,0,dy),-2.2));if(o.colour==='two'&&o.mode==='raised')parts[0].m=build([prism(bt,bt+1,unite(art,bd))]);else if(o.mode==='raised'||o.mode==='engraved')f.push(o.mode==='raised'?prism(bt,bt+1,bd):prism(bt-.8,bt+1,bd,'sub'))}
+    if(o.border==='yes'){const bd=subtract(offset(move(outline,0,dy),-.8),offset(move(outline,0,dy),-2.2));if(o.mode==='raised'||o.mode==='engraved')f.push(o.mode==='raised'?prism(bt,bt+1,bd):prism(bt-.8,bt+1,bd,'sub'))}
     parts.unshift(part('name-plate.stl',build(f),parts.length?'Colour 1':'Main colour'));
     return {parts,notes,magnets:mt.magnets};
   }
@@ -873,12 +876,12 @@
     let art=unite(move(mk.mark,0,my),move(T.rings,0,ty));
     if(o.border==='yes')art=unite(art,subtract(offset(badge,-1),offset(badge,-1-Math.max(1.2,W*.025))));
     const o2=Object.assign({},o,{mount:o.mount==='none'||o.mount==='glue'?'magnet':o.mount}),mt=backMount(o2,badge,{min:2});notes.push(...mt.notes);
-    const art2=move(art,0,mt.dy),parts=[part('shiftys-emblem.stl',build(mt.f),'Colour 1'),part('shiftys-emblem-mark.stl',build([prism(mt.bt,mt.bt+1,art2)]),'Colour 2')];
+    const art2=move(art,0,mt.dy),parts=[part('shiftys-emblem.stl',build([...mt.f,prism(mt.bt,mt.bt+1,art2)]),'Main colour')];
     parts.push({file:'shiftys-logo.svg',text:()=>logoSVG({font:o.font}),role:'Logo'},{file:'shiftys-logo-wide.svg',text:()=>logoSVG({layout:'wide',font:o.font}),role:'Logo'});
-    notes.push('The mark comes as its own file. In Creality Print, add it to the badge as a part and give it a second CFS colour. The zip also has the logo as SVG files for labels and your shop.');
+    notes.push(colourAt(mt.bt,'the mark and the letters')+' The zip also has the logo as SVG files for labels and your shop.');
     return {parts,notes,magnets:mt.magnets};
   }
 
-  root.HabitatMore={SCRIPT,scriptLines,holes,PATTERNS,voronoi,text2D,stencil,logoMark,logoSVG,svgPath,backMount,upright,lathe,petal,
+  root.HabitatMore={colourAt,SCRIPT,scriptLines,holes,PATTERNS,voronoi,text2D,stencil,logoMark,logoSVG,svgPath,backMount,upright,lathe,petal,
     feeder,flyLid,ladder,bridge,texture,TEXTURES,tile,flower,FLOWERS,mister,moss,planter,bark,stack,moult,nameplate,transport,emblem};
 })(typeof window!=='undefined'?window:globalThis);

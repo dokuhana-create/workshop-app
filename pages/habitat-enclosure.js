@@ -76,6 +76,8 @@
   /* ---------- hatch ----------
      style 'magnet': lift-off cover held by two round magnets. 'plug': a cover with a ring that pushes into the hole. 'twist': a plug that locks with a quarter-ish turn. */
   function hatchOK(p){return p.hatch&&p.hatch!=='none'}
+  /* width of the raised ring round the hatch: room for the magnets, or just a rim for a plug or twist cover */
+  const hatchRim=p=>p.hatch==='magnet'?12:9;
   /* twist lock (bayonet): three lugs on the cover's plug drop through three notches in the hatch rim, then the
      cover turns 40° so the lugs slide under the rim. Lugs and rim meet on matching 45° slopes, so both print without
      supports. A small bump on the rim makes the cover click into place and holds it there; a stop ends the turn.
@@ -85,7 +87,7 @@
   const sectorU=a=>{let d=((a*180/Math.PI)%120+120)%120;return d>60?d-120:d};
   function hatchCut(f,h,p,Lt){
     const R=(p.dMagD||10)/2+.2,pd=(p.dMagH||3)+.2,boss=Math.max(pd+1.6,5);
-    f.push(prism(0,boss,subtract(circle(h.x,h.y,h.R+12),circle(h.x,h.y,h.R))));
+    f.push(prism(0,boss,subtract(circle(h.x,h.y,h.R+hatchRim(p)),circle(h.x,h.y,h.R))));
     if(p.hatch==='twist'){
       const deep=TW.LP+.3,top=boss-deep;
       f.push(varying(-1,boss+1,z=>polar(h.x,h.y,a=>{const r=twistRamp(sectorU(a));if(r==null)return h.R;return h.R+Math.max(0,Math.min(deep-r,z-(top+r)))},360),.2,'sub'));
@@ -133,18 +135,21 @@
     for(const c of o.corners||[]){f.push(prism(0,o.Lt+o.s,c.block));f.push(prism(o.Lt,o.Lt+o.s+1,c.pocket,'sub'))}
     if(o.slot)f.push(prism(-1,o.Lt+o.s+1,o.slot,'sub'));
     if(o.screws&&o.screws.length)f.push(prism(-1,o.Lt+1,o.screws.map(([x,y,r])=>circle(x,y,r,40)[0]),'sub'));
-    const mesh=offset(C,-ob-1.5),fits=(x,y,r)=>[[x-r,y],[x+r,y],[x,y-r],[x,y+r],[x-r*.7,y-r*.7],[x+r*.7,y-r*.7],[x-r*.7,y+r*.7],[x+r*.7,y+r*.7]].every(([u,v])=>G.inside(mesh,u,v));
+    const mesh=offset(C,-ob-4),fits=(x,y,r)=>[[x-r,y],[x+r,y],[x,y-r],[x,y+r],[x-r*.7,y-r*.7],[x+r*.7,y-r*.7],[x-r*.7,y+r*.7],[x+r*.7,y+r*.7]].every(([u,v])=>G.inside(mesh,u,v));
     /* light windows */
     let win=lightWindows(p,o.centre[0],o.centre[1],o.alongY);
     const innerR=offset(C,-ob),fitsW=(x,y,r)=>[...Array(16)].every((_,k)=>G.inside(innerR,x+r*Math.cos(k*TAU/16),y+r*Math.sin(k*TAU/16)));
+    /* with a hatch, the lamps move as far to one side as they fit, to leave the hatch the most room */
+    if(win&&hatchOK(p)){const px=o.alongY?0:1;let best=0;for(let sft=0;sft<400;sft+=2){if(win.centers.every(c=>{const q=[...c];q[px]+=sft;return fitsW(q[0],q[1],win.Rw+7.5)}))best=sft;else break}
+      if(best)win.centers=win.centers.map(c=>{const q=[...c];q[px]+=best;return q})}
     if(win){const ok=win.centers.filter(([x,y])=>fitsW(x,y,win.Rw+3.3));if(ok.length<win.centers.length)notes.push(`Only ${ok.length} light window${ok.length===1?'':'s'} fit this lid.`);win.centers=ok;if(!ok.length)win=null}
     /* hatch: where the person put it, else the nearest free spot */
     let hatch=null;
     if(hatchOK(p)){
-      const clear=(x,y,R)=>fits(x,y,R+13)&&(!win||win.centers.every(([cx,cy])=>Math.hypot(x-cx,y-cy)>win.Rw+4.5+R+13));
+      const rr=hatchRim(p)+1,clear=(x,y,R)=>fits(x,y,R+rr)&&(!win||win.centers.every(([cx,cy])=>Math.hypot(x-cx,y-cy)>win.Rw+7.5+R+rr));
       const want=[o.centre[0]+(+p.hatchX||0),o.centre[1]+(+p.hatchY||0)];
-      search:for(let R=Math.min(30,(p.hatchD||60)/2);R>=15;R-=3){
-        for(let r=0;r<200;r+=4)for(let k=0;k<(r?24:1);k++){const a=k/24*TAU,x=want[0]+r*Math.cos(a),y=want[1]+r*Math.sin(a);if(clear(x,y,R)){hatch={x,y,R};if(r>0)notes.push('The hatch was moved to the nearest spot where it fits.');break search}}
+      search:for(let R=Math.min(60,(p.hatchD||80)/2);R>=15;R-=3){
+        for(let r=0;r<200;r+=4)for(let k=0;k<(r?24:1);k++){const a=k/24*TAU,x=want[0]+r*Math.cos(a),y=want[1]+r*Math.sin(a);if(clear(x,y,R)){hatch={x,y,R};if(r>0)notes.push('The hatch was moved to the nearest spot where it fits.');if(R<Math.min(60,(p.hatchD||80)/2)-1)notes.push(`The hatch opening is ${2*R} mm across: that is the largest that fits here. Make the lid bigger, use fewer lamps, or move the hatch for a larger one.`);break search}}
       }
       if(!hatch)notes.push('There is no room for a feeding hatch here, so you open the enclosure by lifting the lid.');
       else hatchCut(f,hatch,p,o.Lt);
@@ -153,25 +158,25 @@
     if(win)for(const [cx,cy] of win.centers){
       /* a plain round opening; the clear disc lies over it on the flat rim around it (a recess for it would hang over thin air while printing) */
       if(win.mode==='insert'){f.push(prism(-1,o.Lt+1,circle(cx,cy,win.Rw),'sub'))}
-      else if(!preview){const pitch=p.hole+.6,Rin=win.Rw+3;for(let x=cx-Rin;x<cx+Rin;x+=pitch)for(let y=cy-Rin;y<cy+Rin;y+=pitch){const q=sq(x,y,p.hole);if(q.every(([u,v])=>Math.hypot(u-cx,v-cy)<Rin))hs.push(q)}}
+      else hs.push(...HP.lampSlots(cx,cy,win.Rw+3));
     }
     if(p.lidVent==='rings'){
       /* rings and spokes: concentric slots round the lamp (or the lid's middle), split by six spokes; the corners stay solid */
       const one=win&&win.centers.length===1,[cx,cy]=one?win.centers[0]:o.centre,pitch=p.hole+p.bar,sw=1.6;
       let Rmax=0;for(let r=4;r<2000;r+=.5){if([...Array(48)].every((_,k)=>G.inside(mesh,cx+r*Math.cos(k*TAU/48),cy+r*Math.sin(k*TAU/48))))Rmax=r;else break}
-      const Rmin=one?win.Rw+5.5:6,slots=[];
+      const Rmin=one?win.Rw+3+HP.LAMP_COLLAR:6,slots=[];
       for(let r0=Rmin;r0+p.hole<=Rmax-2;r0+=pitch){const r1=r0+p.hole;
         for(let j=0;j<6;j++){const b0=j*TAU/6,b1=b0+TAU/6,q=[],arc=(r,s)=>{const d=Math.asin(Math.min(.9,sw/r));const a0=b0+d,a1=b1-d,n=Math.max(3,Math.ceil((a1-a0)*r/1.5));for(let i=0;i<=n;i++){const t=s?a0+(a1-a0)*i/n:a1-(a1-a0)*i/n;q.push([cx+r*Math.cos(t),cy+r*Math.sin(t)])}};
           arc(r1,true);arc(r0,false);slots.push(q)}}
-      const keep=[];if(hatch)keep.push(circle(hatch.x,hatch.y,hatch.R+13,48)[0]);if(win&&!one)for(const [x,y] of win.centers)keep.push(circle(x,y,win.Rw+4.5,48)[0]);
+      const keep=[];if(hatch)keep.push(circle(hatch.x,hatch.y,hatch.R+hatchRim(p)+1,48)[0]);if(win&&!one)for(const [x,y] of win.centers)keep.push(circle(x,y,win.Rw+3+HP.LAMP_COLLAR,48)[0]);
       const cut=keep.length?subtract(slots,keep):slots;if(cut.length)f.push(prism(-1,o.Lt+1,cut,'sub'));
     }else if(!preview){
       const b=bbox(mesh),pitch=p.hole+p.bar;
       for(let x=b.x0;x<b.x1;x+=pitch)for(let y=b.y0;y<b.y1;y+=pitch){
         const q=sq(x,y,p.hole);
         if(!q.every(([u,v])=>G.inside(mesh,u,v)))continue;
-        if(hatch&&q.some(([u,v])=>Math.hypot(u-hatch.x,v-hatch.y)<hatch.R+13))continue;
-        if(win&&q.some(([u,v])=>win.centers.some(([cx,cy])=>Math.hypot(u-cx,v-cy)<win.Rw+4.5)))continue;
+        if(hatch&&q.some(([u,v])=>Math.hypot(u-hatch.x,v-hatch.y)<hatch.R+hatchRim(p)+1))continue;
+        if(win&&q.some(([u,v])=>win.centers.some(([cx,cy])=>Math.hypot(u-cx,v-cy)<win.Rw+3+HP.LAMP_COLLAR)))continue;
         hs.push(q);
       }
     }
