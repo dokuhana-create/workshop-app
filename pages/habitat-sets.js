@@ -35,10 +35,10 @@
       ['dish',{shape:'square'},1],['twig',{shape:'books',H:35,mount:'peg'},1],
       ['diorama',{kind:'books',n:6,size:22},3],['sculpt',{kind:'barnowl',size:55},3],['sculpt',{kind:'ammonite',size:60},3],['sculpt',{kind:'nautilus',size:45},3],
       ['tile',{texture:'planks'},3],['ledge',{shape:'classic',pattern:'scroll',under:'flat'},3]]},
-    geo:{name:'Geometric',group:'Themes',colours:'Matte white, grey or black, with one bright or metallic accent',note:'Facets, hexagons and clean lines.',pieces:[
-      ['ledge',{shape:'sharp',pattern:'solid',under:'wedge'},1],['bridge',{style:'zigzag',hstyle:'chain'},1],['ladder',{style:'zigzag',mount:'tie'},1],['twig',{shape:'hex',mount:'free'},1],
-      ['dish',{shape:'hex'},1],['plate',{shape:'hex',mode:'engraved'},1],
-      ['tile',{texture:'hex'},3],['feeder',{shape:'hex'},3],['mister',{shape:'hex'},3],['moss',{shape:'hex'},3],['stack',{kind:'foot',style:'block'},3],['emblem',{shape:'hex'},3]]},
+    geo:{name:'Geometric',group:'Themes',colours:'Matte white, grey or black, with one bright or metallic accent',note:'Facets, hexagons and clean lines, with a faceted gem as the centrepiece.',pieces:[
+      ['diorama',{kind:'gem',size:40},1],['ledge',{shape:'sharp',pattern:'solid',under:'wedge'},1],['bridge',{style:'zigzag',hstyle:'chain'},1],['ladder',{style:'zigzag',mount:'tie'},1],
+      ['twig',{shape:'hex',mount:'free'},1],['dish',{shape:'hex'},1],
+      ['diorama',{kind:'gem',size:26},3],['tile',{texture:'hex'},3],['feeder',{shape:'hex'},3],['mister',{shape:'hex'},3],['moss',{shape:'hex'},3]]},
     namekit:{name:'Name kit',group:'Keeper tools',colours:'Any two colours that suit the customer\'s mantis',note:'Everything with the mantis\'s name on it: name plates, a badge and a keepsake. Type the name once.',pieces:[
       ['plate',{shape:'scroll',mode:'raised'},1],['emblem',{shape:'round',named:1},1],
       ['plate',{shape:'leaf',mode:'raised'},2],['plate',{shape:'arch',mode:'raised'},2],

@@ -432,6 +432,21 @@
     if(o.accent==='yes')return [part('potions.stl',build(f),'Colour 1'),part('potions-corks.stl',build(acc),'Colour 2')];
     return [part('potions.stl',build([...f,...acc]))];
   }
+  /* a tall faceted gem (a stretched octahedron) standing on one facet, on a low hexagonal plinth. It is built by
+     slicing the solid at each layer; every facet leans at 55° or steeper, so it prints without supports */
+  function dioGem(o){
+    /* a triangular antiprism: a triangle at the bottom, the same triangle turned 60° at the top, joined by six facets */
+    const S=o.size,r=S*.42,hh=S*.95,V=[],E=[],PI=Math.PI,cos=Math.cos,sin=Math.sin;
+    for(let i=0;i<3;i++){const a=PI/2+i*2*PI/3;V.push([r*cos(a),r*sin(a),3])}
+    for(let i=0;i<3;i++){const a=PI/2+PI/3+i*2*PI/3;V.push([r*cos(a),r*sin(a),3+hh])}
+    for(let i=0;i<3;i++){E.push([V[i],V[(i+1)%3]],[V[3+i],V[3+(i+1)%3]],[V[i],V[3+i]],[V[i],V[3+(i+2)%3]])}
+    const zt=Math.max(...V.map(v=>v[2])),hull=pts=>{pts.sort((a,b)=>a[0]-b[0]||a[1]-b[1]);const cr=(o,a,b)=>(a[0]-o[0])*(b[1]-o[1])-(a[1]-o[1])*(b[0]-o[0]),lo=[],up=[];
+      for(const p of pts){while(lo.length>=2&&cr(lo[lo.length-2],lo[lo.length-1],p)<=0)lo.pop();lo.push(p)}for(const p of pts.slice().reverse()){while(up.length>=2&&cr(up[up.length-2],up[up.length-1],p)<=0)up.pop();up.push(p)}return lo.slice(0,-1).concat(up.slice(0,-1))};
+    const slice=z=>{const pts=[];for(const [a,b] of E){if((a[2]-z)*(b[2]-z)<=0&&a[2]!==b[2]){const t=(z-a[2])/(b[2]-a[2]);pts.push([a[0]+t*(b[0]-a[0]),a[1]+t*(b[1]-a[1])])}}
+      for(const v of V)if(Math.abs(v[2]-z)<1e-6)pts.push([v[0],v[1]]);const h=hull(pts);return h.length>=3?[h]:[]};
+    const hexR=S*.42,hex=[[...Array(6)].map((_,i)=>[hexR*Math.cos(i*Math.PI/3),hexR*Math.sin(i*Math.PI/3)])];
+    return [part('faceted-gem.stl',build([G.prism(0,3.05,hex),G.varying(3,zt-.05,z=>slice(Math.min(zt-.06,Math.max(3.01,z))),.25)]))];
+  }
   function dioOpenBook(o){
     const S=o.size,L=S*1.5,Tp=S*.14,n=60,top=[];
     for(let i=0;i<=n;i++){const x=-L/2+L*i/n,t=Math.abs(x)/(L/2);top.push([x,1.6+Tp*(.35+.65*Math.pow(Math.sin(Math.PI*Math.min(1,t*1.05)),.55))])}
@@ -482,7 +497,7 @@
     const T=HM.text2D(['20'],a*.3,Math.max(.9,a*.05));f.push(G.prism(h-.6,h+1,move(T.rings,x1,0),'sub'));
     return [part('dice.stl',build(f))];
   }
-  const DIORAMA={skull:'Skull',candles:'Candles',crystals:'Crystal cluster',tower:'Castle tower',chest:'Treasure chest',sword:'Sword in the stone',potions:'Potion bottles',openBook:'Open book',tombstone:'Tombstone',coffin:'Coffin',dice:'Dice (D6 and D20)',column:'Roman column',amphora:'Amphora',arch:'Ruined arch',mosaic:'Mosaic floor tile',pagoda:'Pagoda',torii:'Torii gate',books:'Stack of books',shelf:'Bookshelf',cottage:'Fairy cottage',mushroom:'Mushroom cluster'};
+  const DIORAMA={skull:'Skull',candles:'Candles',crystals:'Crystal cluster',tower:'Castle tower',chest:'Treasure chest',sword:'Sword in the stone',potions:'Potion bottles',openBook:'Open book',tombstone:'Tombstone',coffin:'Coffin',dice:'Dice (D6 and D20)',column:'Roman column',amphora:'Amphora',arch:'Ruined arch',mosaic:'Mosaic floor tile',pagoda:'Pagoda',torii:'Torii gate',books:'Stack of books',shelf:'Bookshelf',cottage:'Fairy cottage',mushroom:'Mushroom cluster',gem:'Faceted gem on a stand'};
   function diorama(o){
     const r=rnd(o.seed||1),k=o.kind,notes=[];let res;
     if(k==='column')res={parts:dioColumn(o,r),notes:[],magnets:0};
@@ -498,6 +513,7 @@
     else if(k==='chest')res={parts:dioChest(o),notes:o.accent==='yes'?['The straps and lock are a separate file, for a gold or silver filament.']:[],magnets:0};
     else if(k==='sword')res={parts:dioSword(o,r),notes:[],magnets:0};
     else if(k==='potions')res={parts:dioPotions(o),notes:['Translucent filament makes the bottles look filled.'],magnets:0};
+    else if(k==='gem')res={parts:dioGem(o),notes:['Prints as it stands, on its flat bottom facet; no supports.'],magnets:0};
     else if(k==='openBook')res={parts:dioOpenBook(o),notes:['Prints standing on its edge; lay it down open in the enclosure.'],magnets:0};
     else if(k==='coffin')res={parts:dioCoffin(o),notes:[],magnets:0};
     else if(k==='dice')res={parts:dioDice(o),notes:[],magnets:0};

@@ -27,16 +27,19 @@
     deco:{name:'Art deco',open:'stepped',stile:'lines',rail:'chevron',corner:'sunburst',crest:'ziggurat',finial:'stepped',foot:'block'},
     forest:{name:'Forest',open:'round',stile:'vine',rail:'leaves',corner:'oakleaf',crest:'branch',finial:'acorn',foot:'root'},
     library:{name:'Library',open:'round',stile:'books',rail:'books',corner:'openBook',crest:'cartouche',finial:'urn',foot:'bun'},
+    geo:{name:'Geometric',open:'octagon',stile:'lines',rail:'lattice',corner:'facets',crest:'ziggurat',finial:'stepped',foot:'block'},
     rustic:{name:'Rustic twig',open:'round',stile:'bark',rail:'bark',corner:'tree',crest:'branch',finial:'acorn',foot:'root'}
   };
   /* which frame goes with which style package */
-  const FOR={orchid:'orchid',temple:'greek',gothic:'gothic',fantasy:'fantasy',forest:'forest',library:'library',geo:'deco'};
+  const FOR={orchid:'orchid',temple:'greek',gothic:'gothic',fantasy:'fantasy',forest:'forest',library:'library',geo:'geo'};
   const styleFor=theme=>FOR[root.HABITAT_THEME?root.HABITAT_THEME(theme):theme]||'baroque';
 
   /* ---------- the window ---------- */
   function opening(kind,x0,y0,x1,y1){
     const w=x1-x0,h=y1-y0,mid=(x0+x1)/2;
     if(kind==='rect')return rrect(x0,y0,x1,y1,4);
+    /* a tall octagon: the corners cut off at 45°, crisp and modern */
+    if(kind==='octagon'){const c=min(w*.28,h*.2);return [[[x0+c,y0],[x1-c,y0],[x1,y0+c],[x1,y1-c],[x1-c,y1],[x0+c,y1],[x0,y1-c],[x0,y0+c]]]}
     /* a classical doorway: slightly narrower at the top, with "ears" (crossettes) at the top corners, and a deep
        lintel above it for the ornament */
     if(kind==='temple'){const yT=y1-min(h*.16,48),t=w*.05,e=3.5,eh=8;
@@ -122,6 +125,7 @@
       const vr=rot(stroke(vein,lw*.8),-.6,cx,cy),ax=cx+s*.28,ay=cy-s*.22;
       return U(subtract(leafR,offset(leafR,-lw)),intersect(vr,leafR),stroke([[[cx-L/2*Math.cos(.6)-s*.06,cy+L/2*Math.sin(.6)+s*.04],[cx-L/2*Math.cos(.6),cy+L/2*Math.sin(.6)]]],lw),
         subtract(ellipse(ax,ay,s*.06,s*.085,32),ellipse(ax,ay,s*.06-lw,s*.085-lw,32)),rect(ax-s*.075,ay+s*.04,ax+s*.075,ay+s*.075))}
+    if(kind==='facets'){/* nested triangles, as fine lines */const lw=max(.9,s*.045),o=[];for(const k of [1,.66,.33]){const r=s*.5*k,t=[[...Array(3)].map((_,i)=>[cx+r*cos(PI/2+i*2*PI/3),cy+r*sin(PI/2+i*2*PI/3)])];o.push(subtract(t,offset(t,-lw)))}return U(...o)}
     if(kind==='trefoil'){/* gothic tracery: a ring holding three lobes and a small centre, as fine lines */const lw=max(1,s*.05),r=s*.48,o=[subtract(circle(cx,cy,r,64),circle(cx,cy,r-lw,64))];
       for(let i=0;i<3;i++){const a=PI/2+i*2*PI/3,lx=cx+r*.42*cos(a),ly=cy+r*.42*sin(a);o.push(subtract(circle(lx,ly,r*.42,48),circle(lx,ly,r*.42-lw,48)))}
       o.push(circle(cx,cy,r*.1,24));return U(...o)}

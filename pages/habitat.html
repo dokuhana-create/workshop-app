@@ -3,20 +3,20 @@
 <script src="../shim.js"></script>
 <script src="../lib/clipper.js"></script>
 <script src="../lib/earcut.min.js"></script>
-<script src="../lib/geo.js?v=40"></script>
-<script src="habitat-parts.js?v=40"></script>
-<script src="habitat-enclosure.js?v=40"></script>
-<script src="habitat-more.js?v=40"></script>
-<script src="habitat-motifs.js?v=40"></script>
-<script src="habitat-keep.js?v=40"></script>
-<script src="../lib/sdf.js?v=40"></script>
-<script src="habitat-pots.js?v=40"></script>
-<script src="habitat-sculpt.js?v=40"></script>
-<script src="habitat-trim.js?v=40"></script>
-<script src="habitat-addons.js?v=40"></script>
-<script src="habitat-forms.js?v=40"></script>
-<script src="habitat-shapes.js?v=40"></script>
-<script src="habitat-sets.js?v=40"></script>
+<script src="../lib/geo.js?v=41"></script>
+<script src="habitat-parts.js?v=41"></script>
+<script src="habitat-enclosure.js?v=41"></script>
+<script src="habitat-more.js?v=41"></script>
+<script src="habitat-motifs.js?v=41"></script>
+<script src="habitat-keep.js?v=41"></script>
+<script src="../lib/sdf.js?v=41"></script>
+<script src="habitat-pots.js?v=41"></script>
+<script src="habitat-sculpt.js?v=41"></script>
+<script src="habitat-trim.js?v=41"></script>
+<script src="habitat-addons.js?v=41"></script>
+<script src="habitat-forms.js?v=41"></script>
+<script src="habitat-shapes.js?v=41"></script>
+<script src="habitat-sets.js?v=41"></script>
 <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Bricolage+Grotesque:opsz,wght@12..96,600;12..96,750&family=IBM+Plex+Mono:wght@500&family=IBM+Plex+Sans:wght@400;500;600&display=swap">
 <style>
 /* Same layout as the Resin Workshop: inputs on the left, the 3D preview and downloads beside them. */
@@ -1061,7 +1061,7 @@ Object.assign(ITEMS,{
   diorama:{group:'dio',keep:'diorama',name:'Diorama piece',fields:[['size','Size',30],['h','Height',60,{show:vis('kind',['column','amphora','arch','pagoda','torii','shelf','cottage','tower','tombstone'])}],['n','How many',3,{show:vis('kind',['books','mushroom'])}],['tiers','Roof tiers',3,{show:vis('kind','pagoda')}],['text','Name on it','RIP',{text:true,show:vis('kind','tombstone')}]],
     selects:[['kind','Piece',[['skull','Skull','Gothic and spooky'],['candles','Candles','Gothic and spooky'],['tombstone','Tombstone with a name','Gothic and spooky'],['coffin','Coffin','Gothic and spooky'],
       ['crystals','Crystal cluster','Fantasy and D&D'],['tower','Castle tower','Fantasy and D&D'],['chest','Treasure chest','Fantasy and D&D'],['sword','Sword in the stone','Fantasy and D&D'],['potions','Potion bottles','Fantasy and D&D'],['dice','Dice (D6 and D20)','Fantasy and D&D'],
-      ['column','Roman column','Ancient Greece and Rome'],['amphora','Amphora','Ancient Greece and Rome'],['arch','Ruined arch','Ancient Greece and Rome'],['mosaic','Mosaic floor tile','Ancient Greece and Rome'],
+      ['gem','Faceted gem on a stand','Geometric'],['column','Roman column','Ancient Greece and Rome'],['amphora','Amphora','Ancient Greece and Rome'],['arch','Ruined arch','Ancient Greece and Rome'],['mosaic','Mosaic floor tile','Ancient Greece and Rome'],
       ['pagoda','Pagoda','East Asian garden'],['torii','Torii gate','East Asian garden'],['books','Stack of books','Library'],['shelf','Bookshelf','Library'],['openBook','Open book','Library'],['cottage','Fairy cottage','Fairy wood'],['mushroom','Mushroom cluster','Fairy wood']]],
       ['style','Condition',[['broken','Ruined'],['intact','Whole']],{show:vis('kind',['column','arch','tower','tombstone'])}],['pattern','Mosaic',[['rosette','Rosette'],['meander','Greek key'],['waves','Waves'],['checker','Checkerboard']],{show:vis('kind','mosaic')}],
       ['accent','Accent file',[['no','No'],['yes','Yes, for a second colour, glow or UV filament']],{show:vis('kind',['mushroom','cottage','candles','crystals','chest','potions','coffin'])}],['font','Writing',[['caps','Capitals'],['script','Cursive']],{show:vis('kind','tombstone')}]],shuffle:true,mounts:['free','magnet','clip','glue','peg'],
@@ -1185,7 +1185,7 @@ function trimEnc(){const p=readEnc(),k=JSON.stringify(p);if(trimMemo.k===k)retur
 HabitatKeep.trim=o=>HabitatTrim.piece(Object.assign({},trimEnc(),o));
 /* the anatomical skull loads in the background; redraw when it arrives */
 let scanT;HabitatSculpt.onready=()=>{clearTimeout(scanT);scanT=setTimeout(()=>{if(typeof BMEMO!=='undefined')BMEMO.clear();if(state.tab==='acc'&&['sculpt','set'].includes(A.item))accCalc();else if(state.tab==='build')buildCalc()},200)};
-HabitatSculpt.setVersion('40');
+HabitatSculpt.setVersion('41');
 HabitatKeep.hanger=o=>HabitatForms.hanger(Object.assign({},trimEnc(),o));HabitatKeep.carry=o=>HabitatForms.carry(Object.assign({},trimEnc(),o));
 function encInfo(){
   const e=Object.assign({},DEF,state.enc||{}),bed=Math.max(e.bx||350,e.by||350),g=e.T+.6,band=g/2+2.4,o={e,bed,band,hatchR:e.hatch!=='none'?(state.encHatchR||Math.min(60,e.hatchD/2)):0};
