@@ -17,7 +17,7 @@
   const bez=(p0,p1,p2,p3,n)=>{const o=[];for(let i=0;i<=(n||24);i++){const t=i/(n||24),u=1-t;o.push([0,1].map(k=>u*u*u*p0[k]+3*u*u*t*p1[k]+3*u*t*t*p2[k]+t*t*t*p3[k]))}return o};
 
   const STYLES={
-    gothic:{name:'Gothic',open:'pointed',stile:'quatrefoil',rail:'arcade',corner:'bat',crest:'gable',finial:'spire',foot:'claw'},
+    gothic:{name:'Gothic',open:'pointed',stile:'quatrefoil',rail:'arcade',corner:'trefoil',crest:'gable',finial:'spire',foot:'claw'},
     baroque:{name:'Baroque filigree',open:'ogee',stile:'scroll',rail:'wave',corner:'curls',crest:'cartouche',finial:'urn',foot:'bun'},
     greek:{name:'Greek and Roman',open:'temple',stile:'flute',rail:'meander',corner:'laurel',crest:'pediment',finial:'urn',foot:'block'},
     vine:{name:'Woodland vines',open:'round',stile:'vine',rail:'leaves',corner:'rose',crest:'leafArch',finial:'acorn',foot:'root'},
@@ -106,6 +106,9 @@
     const detail=U(...ps.map(p=>subtract(offset(p,-lw),offset(p,-2*lw))),circle(cx,cy,s*.07,20));
     return {fill,detail};}
   function cornerArt(kind,cx,cy,s){
+    if(kind==='trefoil'){/* gothic tracery: a ring holding three lobes and a small centre, as fine lines */const lw=max(1,s*.05),r=s*.48,o=[subtract(circle(cx,cy,r,64),circle(cx,cy,r-lw,64))];
+      for(let i=0;i<3;i++){const a=PI/2+i*2*PI/3,lx=cx+r*.42*cos(a),ly=cy+r*.42*sin(a);o.push(subtract(circle(lx,ly,r*.42,48),circle(lx,ly,r*.42-lw,48)))}
+      o.push(circle(cx,cy,r*.1,24));return U(...o)}
     if(kind==='orchid'){const f=orchidF(cx,cy,s*.8,.15);return U(f.fill,leaf(cx-s*.05,cy-s*.18,s*.5,s*.17,-PI*.8))}
     if(kind==='curls'){const o=[spiral(cx,cy,s*.42,1.6,1,0),spiral(cx-s*.25,cy-s*.3,s*.25,1.4,-1,PI)];return U(stroke(o,max(1.2,s*.05)),leaf(cx-s*.1,cy+s*.15,s*.4,s*.16,.6))}
     if(kind==='sunburst'){const o=[];for(let i=0;i<9;i++){const a=PI*(i+.5)/9;o.push([[cx+s*.14*cos(a),cy-s*.2+s*.14*sin(a)],[cx+s*.5*cos(a),cy-s*.2+s*.5*sin(a)]])}return U(stroke(o,max(1.2,s*.05)),circle(cx,cy-s*.2,s*.12,32))}

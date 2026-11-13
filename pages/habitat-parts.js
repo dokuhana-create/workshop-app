@@ -159,7 +159,13 @@
       else if(o.shape==='hex')at=z=>ngon(0,0,(bot+(top-bot)*z/H)/Math.cos(Math.PI/6),6,Math.PI/6);
       else if(o.shape==='cone')at=z=>circle(0,0,bot+(top-bot)*z/H,96);
       else at=z=>polar(0,0,a=>(bot+(top-bot)*Math.pow(z/H,.6))*(1+wv(a+z*.04)),96);
-      if(o.shape==='column'){
+      if(o.shape==='candle'){
+        /* a gothic candlestick: a round foot, a turned baluster stem and a drip pan; the twig stands where the candle
+           would. Every step in the profile is 45° or less */
+        const rt=top+1.2,prof=z=>{const t=z/H;if(t<.12)return bot*.95-(z)*.6;if(t<.2)return rt+2.4+(.2-t)*H*.9;if(t<.42)return rt+.6+2.6*Math.sin(Math.PI*(t-.2)/.22);
+          if(t<.55)return rt;if(t<.68)return rt+(t-.55)*H*.9;if(t<.8)return rt+.13*H*.9-(t-.68)*H*.9*.6;return rt+.13*H*.9*.4+(t>.92?(t-.92)*H:0)};
+        f.push(varying(0,H,z=>circle(0,0,Math.max(rt,prof(z)),96),.3))}
+      else if(o.shape==='column'){
         /* a little Doric column: square plinth, a round base, a fluted shaft, a flaring capital under a square abacus.
            The capital flares at 45° to the abacus corners, so nothing overhangs */
         const rsh=top+2.5,hs=rsh+1.7,Re=hs*Math.SQRT2,zc=Math.max(10,H-2-(Re-rsh));

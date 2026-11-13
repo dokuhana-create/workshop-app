@@ -12,12 +12,12 @@
       ['ledge',{shape:'classic',pattern:'solid',under:'ribs'},1],['ladder',{style:'vine',mount:'tie'},1],['bridge',{style:'vine',hstyle:'vine'},1],
       ['dish',{shape:'fluted'},1],['twig',{shape:'column',mount:'peg'},1],['motif',{motif:'laurel',form:'plaque',base:'round'},1],
       ['sculpt',{kind:'torso',size:60},3],['sculpt',{kind:'lion',size:50},3],['diorama',{kind:'amphora'},3],['diorama',{kind:'mosaic',pattern:'meander'},3],['moss',{shape:'crescent'},3]]},
-    gothic:{name:'Gothic and vampiric',group:'Themes',colours:'Black, deep purple or blood red, with silver or bone white',note:'Pointed arches, roses, candles and old stone, with a vampire\'s graveyard and a collector\'s curiosities.',pieces:[
-      ['ledge',{shape:'classic',pattern:'rings',under:'ribs'},1],['bridge',{style:'gothic',hstyle:'rope'},1],['flower',{kind:'rose'},1],['diorama',{kind:'candles',accent:'yes'},1],
-      ['motif',{motif:'gothicWindow',form:'plaque',base:'arch'},1],['dish',{shape:'hex'},1],['plate',{shape:'scroll',mode:'stencil'},1],
-      ['sculpt',{kind:'angel',size:70},3],['sculpt',{kind:'raven',size:45},3],['sculpt',{kind:'bat',size:80},3],['sculpt',{kind:'real',size:32},3],['sculpt',{kind:'moth',size:70},3],
-      ['diorama',{kind:'tombstone',style:'intact',mount:'free'},3],['diorama',{kind:'coffin',accent:'yes'},3],['ladder',{style:'chain',mount:'tie'},3],['tile',{texture:'brick'},3],
-      ['motif',{motif:'roseWindow',form:'stencil',base:'round'},3],['motif',{motif:'bat',form:'ornament'},3],['ledge',{shape:'moon',pattern:'nouveau',under:'flat'},3],['emblem',{shape:'shield'},3]]},
+    gothic:{name:'Gothic and vampiric',group:'Themes',colours:'Black or deep purple, with silver, bone white or blood red',note:'Pointed arches, tracery, roses and candlelight, with a praying angel; Deluxe adds a vampire\'s raven, skull, bat and moth, a tombstone and a coffin.',pieces:[
+      ['sculpt',{kind:'angel',size:70},1],['ledge',{shape:'classic',pattern:'rings',under:'ribs'},1],['bridge',{style:'gothic',hstyle:'rope'},1],['ladder',{style:'chain',mount:'tie'},1],
+      ['flower',{kind:'rose'},1],['diorama',{kind:'candles',accent:'yes'},1],['dish',{shape:'hex'},1],['twig',{shape:'candle',H:45,mount:'peg'},1],
+      ['motif',{motif:'roseWindow',form:'stencil',base:'round'},1],
+      ['sculpt',{kind:'raven',size:45},3],['sculpt',{kind:'real',size:32},3],['sculpt',{kind:'bat',size:80},3],['sculpt',{kind:'moth',size:70},3],
+      ['diorama',{kind:'tombstone',style:'intact',mount:'free'},3],['diorama',{kind:'coffin',accent:'yes'},3],['flower',{kind:'rose',R:18},3]]},
     fantasy:{name:'Fantasy and medieval',group:'Themes',colours:'Castle grey and dragon green or red, with gold',note:'A castle tower, a dragon, a treasure chest and a sword in the stone, for D&D and fantasy fans.',pieces:[
       ['diorama',{kind:'tower',style:'intact'},1],['diorama',{kind:'chest',accent:'yes'},1],['motif',{motif:'dragon',form:'plaque',base:'shield'},1],['ledge',{shape:'tiered',pattern:'solid',under:'D'},1],
       ['bridge',{style:'straight',hstyle:'swag'},1],['ladder',{style:'chain',mount:'tie'},1],['plate',{shape:'banner',mode:'raised'},1],
@@ -70,7 +70,7 @@
     'Keeper tools':{tiers:{front:'smooth',top:'flat',tiers:'2'},pot:{shape:'round',surface:'smooth',form:'belly'},wall:{shape:'round',surface:'smooth',form:'belly'}}};
   const PT={orchid:{tiers:{front:'petals',top:'pointed'},pot:{surface:'petals',form:'belly'},wall:{surface:'petals',form:'tulip'}},
     temple:{tiers:{front:'flutes',top:'flat'},pot:{surface:'flutes',form:'urn'},wall:{surface:'flutes',form:'urn'}},
-    gothic:{tiers:{front:'flutes',top:'pointed'},pot:{shape:'square',surface:'flutes',form:'urn'},wall:{shape:'square',surface:'flutes',form:'urn'}},
+    gothic:{tiers:{front:'flutes',top:'pointed'},pot:{shape:'hex',surface:'flutes',form:'urn'},wall:{shape:'hex',surface:'flutes',form:'urn'}},
     fantasy:{tiers:{front:'rock',top:'battlements'},pot:{shape:'pebble',surface:'rock',form:'belly'},wall:{shape:'pebble',surface:'rock',form:'belly'}},
     forest:{tiers:{front:'bark',tiers:'3',layout:'cornerL'},pot:{shape:'pebble',surface:'bark',form:'belly'},wall:{shape:'pebble',surface:'bark',form:'belly'}},
     library:{tiers:{front:'knit',top:'battlements'},pot:{shape:'square',surface:'knit',form:'straight'},wall:{shape:'square',surface:'knit',form:'straight'}},
