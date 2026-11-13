@@ -29,11 +29,12 @@
       ['dish',{shape:'leaf'},1],['twig',{shape:'stump',H:35,mount:'peg'},1],['diorama',{kind:'mushroom',accent:'yes',n:3},1],
       ['sculpt',{kind:'pinecone',size:45},3],['sculpt',{kind:'stagbeetle',size:80},3],['ledge',{shape:'tiered',pattern:'rings',under:'wedge'},3],['ledge',{shape:'leaf',pattern:'solid',under:'D'},3],
       ['ladder',{style:'vine',mount:'tie'},3],['moss',{shape:'kidney'},3],['tile',{texture:'bark'},3],['feeder',{shape:'pebble'},3],['mister',{shape:'pebble'},3]]},
-    library:{name:'Library',group:'Themes',colours:'Walnut brown with oxblood, bottle green and gold book spines',note:'Bookshelves, book stacks, an open book and candles, like a scholar\'s study.',pieces:[
+    library:{name:'Library',group:'Themes',colours:'Walnut or mahogany brown, with oxblood, bottle green and gold book spines',note:'A scholar\'s reading room: bookshelves, stacks of books, an open book and candlelight, with a library ladder.',pieces:[
       ['diorama',{kind:'shelf',mount:'free'},1],['diorama',{kind:'books',n:4},1],['diorama',{kind:'openBook'},1],['diorama',{kind:'candles',accent:'yes'},1],
-      ['ledge',{shape:'classic',pattern:'solid',under:'ribs'},1],['ladder',{style:'rope',mount:'tie'},1],['plate',{shape:'scroll',mode:'raised'},1],
-      ['diorama',{kind:'books',n:6,size:22},3],['diorama',{kind:'shelf',h:50,mount:'free'},3],['sculpt',{kind:'barnowl',size:55},3],['sculpt',{kind:'ammonite',size:60},3],['sculpt',{kind:'nautilus',size:45},3],
-      ['motif',{motif:'books',form:'plaque',base:'arch'},3],['bridge',{style:'straight',hstyle:'swag'},3],['tile',{texture:'planks'},3],['dish',{shape:'round'},3]]},
+      ['ledge',{shape:'classic',pattern:'solid',under:'ribs'},1],['ladder',{style:'rope',mount:'tie'},1],['bridge',{style:'straight',hstyle:'swag'},1],
+      ['dish',{shape:'square'},1],['twig',{shape:'books',H:35,mount:'peg'},1],
+      ['diorama',{kind:'books',n:6,size:22},3],['sculpt',{kind:'barnowl',size:55},3],['sculpt',{kind:'ammonite',size:60},3],['sculpt',{kind:'nautilus',size:45},3],
+      ['tile',{texture:'planks'},3],['ledge',{shape:'classic',pattern:'scroll',under:'flat'},3]]},
     geo:{name:'Geometric',group:'Themes',colours:'Matte white, grey or black, with one bright or metallic accent',note:'Facets, hexagons and clean lines.',pieces:[
       ['ledge',{shape:'sharp',pattern:'solid',under:'wedge'},1],['bridge',{style:'zigzag',hstyle:'chain'},1],['ladder',{style:'zigzag',mount:'tie'},1],['twig',{shape:'hex',mount:'free'},1],
       ['dish',{shape:'hex'},1],['plate',{shape:'hex',mode:'engraved'},1],
@@ -72,7 +73,7 @@
     gothic:{tiers:{front:'flutes',top:'pointed'},pot:{shape:'hex',surface:'flutes',form:'urn'},wall:{shape:'hex',surface:'flutes',form:'urn'}},
     fantasy:{tiers:{front:'rock',top:'battlements'},pot:{shape:'pebble',surface:'rock',form:'belly'},wall:{shape:'pebble',surface:'rock',form:'belly'}},
     forest:{tiers:{front:'bark',tiers:'3',layout:'cornerL'},pot:{shape:'pebble',surface:'bark',form:'belly'},wall:{shape:'pebble',surface:'bark',form:'belly'}},
-    library:{tiers:{front:'knit',top:'battlements'},pot:{shape:'square',surface:'knit',form:'straight'},wall:{shape:'square',surface:'knit',form:'straight'}},
+    library:{tiers:{front:'spines',top:'flat'},pot:{shape:'square',surface:'spines',form:'straight'},wall:{shape:'square',surface:'spines',form:'straight'}},
     geo:{tiers:{front:'facets',tiers:'3'},pot:{shape:'hex',surface:'facets',form:'straight'},wall:{shape:'hex',surface:'facets',form:'straight'}}};
   root.HABITAT_PLANTS=k=>{k=root.HABITAT_THEME(k);const s=S[k],g=PG[s.group]||PG.Themes,t=PT[k]||{},o={};for(const part of ['tiers','pot','wall'])o[part]=Object.assign({},g[part],t[part]||{});return o};
 })(typeof window!=='undefined'?window:globalThis);

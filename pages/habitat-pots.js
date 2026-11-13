@@ -44,11 +44,16 @@
       const df=wr(u-L/2),qf=df/w,fr=qf*qf<1?amp*sqrt(1-qf*qf)*(.45+.55*t)-.45*Math.exp(-((df/1.1)**2))*(.3+.7*t):0;
       const db=wr(u),wb=w*.8,qb=db/wb,bk=qb*qb<1?.62*amp*sqrt(1-qb*qb)*(.45+.55*t):0;
       return (max(fr,bk)-amp)*edge(z,H)}},
+    /* book spines: a row of rounded spines of different widths, each with two raised bands */
+    spines:{name:'Book spines',amp:2.2,d:(u,z,c)=>{const H=c.H||60,C=c.C||0;let i=0,a=0,w=0;const wd=k=>9+7*H2(k,0,c.seed+21);
+      if(C){const n=Math.max(4,Math.round(C/12.5)),tot=[...Array(n)].reduce((t,_,k)=>t+wd(k),0),uu=((u%C)+C)%C*tot/C;for(i=0;i<n;i++){w=wd(i);if(a+w>uu)break;a+=w}return sp(uu-a,w,z,H)}
+      const uu=((u%400)+400)%400;for(i=0;i<60;i++){w=wd(i);if(a+w>uu)break;a+=w}return sp(uu-a,w,z,H)}},
     bamboo:{name:'Bamboo',amp:3.1,lam:10,d:(u,z,c,L)=>{const v=2*frac(u/L)-1,node=frac(z/22+.5*H2(floor(u/L),0,c.seed));
       return 2*(sqrt(max(0,1-v*v))-1)-1.1*max(0,1-abs(node-.5)/.04)}},
     facets:{name:'Low-poly facets',amp:3,lam:20,d:(u,z,c,L)=>{const v=2*frac((u+z*.35)/L)-1;return -3*abs(v)}},
     knit:{name:'Knitted',amp:1.9,lam:7,d:(u,z,c,L)=>{const v=2*frac(u/L)-1,w=frac(z/6+abs(v)*.5);return -1.6*(abs(v)**1.5)-.5*abs(w-.5)}}
   };
+  function sp(x,w,z,H){const v=2*x/w-1,body=2.2*(sqrt(max(0,1-v*v))-1),b1=abs(z-H*.18)<1.6||abs(z-H*.78)<1.6?.6:0;return (body+b1*sqrt(max(0,1-v*v)))*edge(z,H)}
   /* fade a pattern out towards the rim and the foot, so both stay soft and round */
   function edge(z,H){if(!H)return 1;const a=clamp(z/5,0,1),b=clamp((H-z)/6,0,1);return a*a*(3-2*a)*(b*b*(3-2*b))}
   const surfFn=(kind,ctx)=>{const s=SURF[kind]||SURF.smooth;if(!s.lam)return (u,z)=>s.d(u,z,ctx);const L=ctx.C?ctx.C/max(1,round(ctx.C/s.lam)):s.lam;return (u,z)=>s.d(u,z,ctx,L)};

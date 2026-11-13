@@ -161,7 +161,12 @@
       else if(o.shape==='hex')at=z=>ngon(0,0,(bot+(top-bot)*z/H)/Math.cos(Math.PI/6),6,Math.PI/6);
       else if(o.shape==='cone')at=z=>circle(0,0,bot+(top-bot)*z/H,96);
       else at=z=>polar(0,0,a=>(bot+(top-bot)*Math.pow(z/H,.6))*(1+wv(a+z*.04)),96);
-      if(o.shape==='stump'){
+      if(o.shape==='books'){
+        /* three books stacked, each a little smaller and turned, with the page block set back under the covers */
+        const nb=Math.max(3,Math.round(H/7)),dims=[...Array(nb)].map((_,k)=>[34-k*2.4,25-k*1.6,H/nb]),rotR=(q,a)=>q.map(r=>r.map(([x,y])=>[x*Math.cos(a)-y*Math.sin(a),x*Math.sin(a)+y*Math.cos(a)]));let z=0,i=0;
+        for(const [L,W,t] of dims){const a=[0,.12,-.08,.1,-.06,.08,0][i++%7],cov=rotR(G.rrect(-L/2,-W/2,L/2,W/2,.8),a),pg=rotR(G.rect(-L/2+1,-W/2+.2,L/2-1,W/2-1),a);
+          f.push(prism(z,z+.8,cov),prism(z+.79,z+t-.79,pg),prism(z+t-.8,z+t,cov));z+=t}}
+      else if(o.shape==='stump'){
         /* a tree stump: bark grooves round it and roots spreading at the foot, flaring at 45° or less */
         const rt=top+3.4,wv2=wobble(o.seed||3,.05,3);
         f.push(varying(0,H,z=>polar(0,0,a=>{const fl=Math.max(0,1-z/7);return rt*(1+wv2(a))+7*fl*Math.pow(.5+.5*Math.cos(5*a+1),2)+.5*Math.sin(17*a)},72),.8))}

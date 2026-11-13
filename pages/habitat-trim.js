@@ -26,10 +26,11 @@
     fantasy:{name:'Castle gate',gate:true,open:'round',stile:'stones',rail:'stones',corner:'shield',crest:'battlement',finial:'crystal',foot:'claw',key:true},
     deco:{name:'Art deco',open:'stepped',stile:'lines',rail:'chevron',corner:'sunburst',crest:'ziggurat',finial:'stepped',foot:'block'},
     forest:{name:'Forest',open:'round',stile:'vine',rail:'leaves',corner:'oakleaf',crest:'branch',finial:'acorn',foot:'root'},
+    library:{name:'Library',open:'round',stile:'books',rail:'books',corner:'openBook',crest:'cartouche',finial:'urn',foot:'bun'},
     rustic:{name:'Rustic twig',open:'round',stile:'bark',rail:'bark',corner:'tree',crest:'branch',finial:'acorn',foot:'root'}
   };
   /* which frame goes with which style package */
-  const FOR={orchid:'orchid',temple:'greek',gothic:'gothic',fantasy:'fantasy',forest:'forest',library:'baroque',geo:'deco'};
+  const FOR={orchid:'orchid',temple:'greek',gothic:'gothic',fantasy:'fantasy',forest:'forest',library:'library',geo:'deco'};
   const styleFor=theme=>FOR[root.HABITAT_THEME?root.HABITAT_THEME(theme):theme]||'baroque';
 
   /* ---------- the window ---------- */
@@ -60,6 +61,10 @@
     /* place a point given (along, across) */
     const P=(a,c)=>vert?[x0+c,y0+a]:[x0+a,y0+c];
     const line=pts=>pts.map(([a,c])=>P(a,c));
+    if(kind==='books'){/* a row of book spines of different widths and heights, each with a band near the top */const o=[];let a=0;
+      while(a<L-3){const bw=min(L-a,max(2.6,T*.28+R()*T*.32)),hh=T*(.62+R()*.32),lw2=max(.8,lw*.75),p=[[a,0],[a+bw,0],[a+bw,hh],[a,hh]].map(([u,v])=>P(u,v));
+        o.push(subtract([p],offset([p],-lw2)),stroke([line([[a,hh*.78],[a+bw,hh*.78]])],lw2));a+=bw+.6}
+      return U(...o)}
     if(kind==='quatrefoil'){const s=T*.8,n=max(1,Math.floor(L/(s*1.25))),g=(L-n*s)/(n+1),o=[];
       for(let i=0;i<n;i++){const [cx,cy]=P(g+s/2+i*(s+g),T/2),r=s/2;o.push(subtract(U(circle(cx-r*.45,cy,r*.5,32),circle(cx+r*.45,cy,r*.5,32),circle(cx,cy-r*.45,r*.5,32),circle(cx,cy+r*.45,r*.5,32)),
         U(circle(cx-r*.45,cy,r*.5-lw,32),circle(cx+r*.45,cy,r*.5-lw,32),circle(cx,cy-r*.45,r*.5-lw,32),circle(cx,cy+r*.45,r*.5-lw,32))))}return U(...o)}

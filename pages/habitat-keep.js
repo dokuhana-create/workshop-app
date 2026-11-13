@@ -286,12 +286,14 @@
     return {outline:a,detail:[],th:6};
   }
   function dioBooks(o,r){
+    /* a stack of books: each has a hard cover top and bottom and a page block set back 1 mm on three sides (the
+       spine side stays flush); the books turn a little against each other but always stand on the one below */
     const n=Math.max(2,Math.min(7,o.n|0)),f=[];let prev=null,z=0;
-    for(let i=0;i<n;i++){const L=o.size*(1.1-r()*.25),W=L*(.62+r()*.12),t=2.5+r()*2.5;let b=rot(rrect(-L/2,-W/2,L/2,W/2,.5),(r()-.5)*.6);
-      b=move(b,(r()-.5)*3,(r()-.5)*3);if(prev)b=intersect(b,prev);if(!b.length)break;
-      /* page block: a recessed band on three sides, the spine stays full */
-      f.push(prism(z,z+t,b));
-      prev=b;z+=t}
+    for(let i=0;i<n;i++){const L=o.size*(1.1-r()*.12)*Math.pow(.9,i),W=L*(.64+r()*.08),t=3+r()*2.5,a=(r()-.5)*.3,dx=(r()-.5)*1.5,dy=(r()-.5)*1.5;
+      const pl=q=>move(rot(q,a),dx,dy);let cov=pl(rrect(-L/2,-W/2,L/2,W/2,.8)),pg=pl(rect(-L/2+1,-W/2+.2,L/2-1,W/2-1));
+      if(prev){cov=intersect(cov,prev);pg=intersect(pg,prev)}if(!cov.length)break;
+      f.push(prism(z,z+.8,cov),prism(z+.79,z+t-.79,pg.length?pg:cov),prism(z+t-.8,z+t,cov));
+      prev=cov;z+=t}
     return [part('book-stack.stl',build(f))];
   }
   function dioShelf(o,r){
