@@ -18,12 +18,12 @@
       ['motif',{motif:'roseWindow',form:'stencil',base:'round'},1],
       ['sculpt',{kind:'raven',size:45},3],['sculpt',{kind:'real',size:32},3],['sculpt',{kind:'bat',size:80},3],['sculpt',{kind:'moth',size:70},3],
       ['diorama',{kind:'tombstone',style:'intact',mount:'free'},3],['diorama',{kind:'coffin',accent:'yes'},3],['flower',{kind:'rose',R:18},3]]},
-    fantasy:{name:'Fantasy and medieval',group:'Themes',colours:'Castle grey and dragon green or red, with gold',note:'A castle tower, a dragon, a treasure chest and a sword in the stone, for D&D and fantasy fans.',pieces:[
-      ['diorama',{kind:'tower',style:'intact'},1],['diorama',{kind:'chest',accent:'yes'},1],['motif',{motif:'dragon',form:'plaque',base:'shield'},1],['ledge',{shape:'tiered',pattern:'solid',under:'D'},1],
-      ['bridge',{style:'straight',hstyle:'swag'},1],['ladder',{style:'chain',mount:'tie'},1],['plate',{shape:'banner',mode:'raised'},1],
-      ['diorama',{kind:'sword'},3],['motif',{motif:'castle',form:'plaque',base:'arch'},3],['motif',{motif:'swordShield',form:'cutout',mount:'free'},3],['diorama',{kind:'crystals',accent:'yes'},3],
-      ['diorama',{kind:'potions',accent:'yes'},3],['diorama',{kind:'dice'},3],['motif',{motif:'d20',form:'plaque',base:'hex'},3],['sculpt',{kind:'amethyst',size:60},3],['sculpt',{kind:'barnowl',size:55},3],
-      ['diorama',{kind:'tower',style:'broken',h:50},3],['motif',{motif:'scroll',form:'plaque',base:'square'},3],['tile',{texture:'stone'},3],['emblem',{shape:'shield'},3]]},
+    fantasy:{name:'Fantasy and medieval',group:'Themes',colours:'Castle grey or sandstone, with dragon green or royal red, and gold',note:'A castle gate and tower, a sword in the stone and a treasure chest; Deluxe adds crystals, potions, an owl and a castle wall.',pieces:[
+      ['diorama',{kind:'tower',style:'intact'},1],['diorama',{kind:'sword'},1],['diorama',{kind:'chest',accent:'yes'},1],
+      ['ledge',{shape:'classic',pattern:'solid',under:'wedge'},1],['bridge',{style:'straight',hstyle:'chain'},1],['ladder',{style:'chain',mount:'tie'},1],
+      ['dish',{shape:'shield'},1],['twig',{shape:'tower',H:40,mount:'peg'},1],
+      ['diorama',{kind:'crystals',accent:'yes'},3],['diorama',{kind:'potions',accent:'yes'},3],['sculpt',{kind:'amethyst',size:60},3],['sculpt',{kind:'barnowl',size:55},3],
+      ['tile',{texture:'stone'},3],['ledge',{shape:'tiered',pattern:'solid',under:'D'},3]]},
     forest:{name:'Forest',group:'Themes',colours:'Bark brown, moss green and mushroom cream',note:'Bark, fungus shelves, moss and fallen leaves, where a dead-leaf mantis disappears.',pieces:[
       ['ledge',{shape:'fungus',pattern:'solid',under:'D'},1],['bark',{style:'organic'},1],['bridge',{style:'branch',hstyle:'branch'},1],['ladder',{style:'bark',mount:'tie'},1],
       ['twig',{shape:'rock',mount:'free'},1],['dish',{shape:'pebble'},1],['plate',{shape:'leaf',mode:'stencil'},1],

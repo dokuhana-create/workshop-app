@@ -23,7 +23,7 @@
     vine:{name:'Woodland vines',open:'round',stile:'vine',rail:'leaves',corner:'rose',crest:'leafArch',finial:'acorn',foot:'root'},
     orchid:{name:'Orchid',open:'round',stile:'vine',rail:'leaves',corner:'orchid',crest:'orchidSpray',finial:'bud',foot:'bun'},
     nouveau:{name:'Art nouveau',open:'round',stile:'whiplash',rail:'whiplash',corner:'tulip',crest:'fan',finial:'bud',foot:'bun'},
-    fantasy:{name:'Castle and dungeon',open:'round',stile:'stones',rail:'stones',corner:'dragon',crest:'battlement',finial:'crystal',foot:'claw',key:true},
+    fantasy:{name:'Castle gate',gate:true,open:'round',stile:'stones',rail:'stones',corner:'shield',crest:'battlement',finial:'crystal',foot:'claw',key:true},
     deco:{name:'Art deco',open:'stepped',stile:'lines',rail:'chevron',corner:'sunburst',crest:'ziggurat',finial:'stepped',foot:'block'},
     rustic:{name:'Rustic twig',open:'round',stile:'bark',rail:'bark',corner:'tree',crest:'branch',finial:'acorn',foot:'root'}
   };
@@ -106,6 +106,9 @@
     const detail=U(...ps.map(p=>subtract(offset(p,-lw),offset(p,-2*lw))),circle(cx,cy,s*.07,20));
     return {fill,detail};}
   function cornerArt(kind,cx,cy,s){
+    if(kind==='shield'){/* a heater shield with a chevron, as fine lines */const lw=max(1,s*.05),w=s*.42,h=s*.5;
+      const out=[[ [cx-w,cy+h*.45],[cx+w,cy+h*.45],...Array.from({length:21},(_,i)=>{const t=i/20;return [cx+w*(1-t*t),cy+h*.45-h*t]}),...Array.from({length:21},(_,i)=>{const t=1-i/20;return [cx-w*(1-t*t),cy+h*.45-h*t]}) ]];
+      return U(subtract(out,offset(out,-lw)),stroke([[[cx-w*.75,cy-h*.2],[cx,cy+h*.2],[cx+w*.75,cy-h*.2]]],lw))}
     if(kind==='trefoil'){/* gothic tracery: a ring holding three lobes and a small centre, as fine lines */const lw=max(1,s*.05),r=s*.48,o=[subtract(circle(cx,cy,r,64),circle(cx,cy,r-lw,64))];
       for(let i=0;i<3;i++){const a=PI/2+i*2*PI/3,lx=cx+r*.42*cos(a),ly=cy+r*.42*sin(a);o.push(subtract(circle(lx,ly,r*.42,48),circle(lx,ly,r*.42-lw,48)))}
       o.push(circle(cx,cy,r*.1,24));return U(...o)}
@@ -141,7 +144,7 @@
       o.push([pts]);raised.push(stroke([[[W*.1,y+ch*.2],[W*.9,y+ch*.2]]],lw))}
     else if(kind==='sunrays'){o.push(circle(m,y,ch*.45,64));for(let i=0;i<13;i++){const a=PI*i/12;o.push([[[m+ch*.4*cos(a-.1),y+ch*.4*sin(a-.1)],[m+ch*cos(a),y+ch*sin(a)],[m+ch*.4*cos(a+.1),y+ch*.4*sin(a+.1)]]])}
       raised.push(...[MO.motif('sun',ch*.5)].map(a=>move(a.fill,m,y+ch*.02)))}
-    else if(kind==='battlement'){const n=max(3,round(W/28)),u=W/(2*n-1);for(let i=0;i<n;i++)o.push(rect(i*2*u,y-1,i*2*u+u,y+ch*.45));o.push(rect(m-ch*.35,y-1,m+ch*.35,y+ch*.85),[[[m-ch*.42,y+ch*.85],[m+ch*.42,y+ch*.85],[m,y+ch*1.2]]])}
+    else if(kind==='battlement'){const n=max(3,round(W/28)),u=W/(2*n-1);o.push(rect(0,y-1,W,y+ch*.22));for(let i=0;i<n;i++)o.push(rect(i*2*u,y-1,i*2*u+u,y+ch*.45));raised.push(subtract(rect(3,y+2,W-3,y+ch*.22-2),rect(4.2,y+3.2,W-4.2,y+ch*.22-3.2)));o.push(rect(m-ch*.35,y-1,m+ch*.35,y+ch*.85),[[[m-ch*.42,y+ch*.85],[m+ch*.42,y+ch*.85],[m,y+ch*1.2]]])}
     else if(kind==='ziggurat'){for(let i=0;i<4;i++){const hw=W*(.3-i*.07);o.push(rect(m-hw,y-1,m+hw,y+ch*(i+1)*.24))}for(let i=0;i<7;i++){const a=PI*(i+1)/8;raised.push(stroke([[[m+ch*.14*cos(a),y+ch*.3+ch*.14*sin(a)],[m+ch*.9*cos(a),y+ch*.3+ch*.9*sin(a)]]],lw*.8))}raised.push(circle(m,y+ch*.3,ch*.1,32))}
     else if(kind==='branch'){const pts=[];for(let i=0;i<=30;i++){const t=i/30;pts.push([W*.05+W*.9*t,y+ch*.55*sin(t*PI)+ch*.06*sin(t*19)])}o.push(stroke([pts],ch*.14));
       for(const t of [.25,.45,.7]){const x=W*.05+W*.9*t,yy=y+ch*.55*sin(t*PI);o.push(stroke([[[x,yy],[x+ch*.3,yy+ch*.45]]],ch*.07),leaf(x+ch*.3,yy+ch*.45,ch*.3,ch*.14,1.1))}}

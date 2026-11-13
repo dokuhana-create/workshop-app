@@ -391,7 +391,7 @@
     const bx=PR+.3+3.3;let buttons=0;
     if(bx+2.6<=xd1){const zs=[zR0+14,zR1-14];for(const z of zs)f.push(prism(off-1,off+4.5,circle(bx,z,1.5,24),'sub'));buttons=zs.length}
     /* the window opening in the front layer: the theme's shape inside the pane, 3 mm of pane held all round */
-    const ox0=PL+3,ox1=PR-3,oz0=zR0+3.3,oz1=zR1-3.3;
+    const gi=st&&st.gate?11:0,ox0=PL+3+gi,ox1=PR-3-gi,oz0=zR0+3.3,oz1=zR1-3.3-(gi?15:0);
     const win=st?TR.opening(st.open,ox0,oz0,ox1,oz1):G.rrect(ox0,oz0,ox1,oz1,6);
     f.push(prism(off+dR-.01,Z1+1,win,'sub'));
     /* knob hole on the free side, at mid height */
@@ -401,9 +401,14 @@
     let art=[];
     if(st){const lw=1.2,face=G.rrect(xh+cR+2,zd0+2,xd1-2,zd1-2,2),keep=subtract(face,offset(win,1.2));
       art.push(subtract(offset(win,2.6),offset(win,1.4)));
+      if(st.gate){/* a gate arch: voussoir stones round the arch and a keystone at the top */const R0=(ox1-ox0)/2,acx=(ox0+ox1)/2,acy=oz1-R0,r1=R0+1.4,r2=R0+12,n=11,ln=[];
+        art.push(intersect(subtract(G.circle(acx,acy,r2+1.2,160),G.circle(acx,acy,r2,160)),G.rect(ox0-30,acy,ox1+30,oz1+40)),G.rect(ox0-r2+R0-1.2,acy-1.2,ox0-r2+R0+.01+(r2-R0)+1.2,acy).length?subtract(G.rect(acx-r2-1.2,acy-1.2,acx-R0-1.4,acy),[]):[],subtract(G.rect(acx+R0+1.4,acy-1.2,acx+r2+1.2,acy),[]));
+        for(let i=1;i<n;i++){const a=Math.PI*i/n;if(Math.abs(a-Math.PI/2)<.12)continue;ln.push([[acx+r1*Math.cos(a),acy+r1*Math.sin(a)],[acx+(r2+.6)*Math.cos(a),acy+(r2+.6)*Math.sin(a)]])}
+        art.push(G.stroke(ln,1));const k=.1,kp=[[acx+r1*Math.cos(Math.PI/2-k),acy+r1*Math.sin(Math.PI/2-k)],[acx+(r2+4)*Math.cos(Math.PI/2-k*1.4),acy+(r2+4)*Math.sin(Math.PI/2-k*1.4)],[acx+(r2+4)*Math.cos(Math.PI/2+k*1.4),acy+(r2+4)*Math.sin(Math.PI/2+k*1.4)],[acx+r1*Math.cos(Math.PI/2+k),acy+r1*Math.sin(Math.PI/2+k)]];
+        art.push(subtract([kp],offset([kp],-1)))}
       /* corner art: in the largest round space beside the top of the window, found by search */
       const segD=(px,py,rings)=>{let d=1e9;for(const r of rings)for(let i=0;i<r.length;i++){const [ax,ay]=r[i],[bx_,by_]=r[(i+1)%r.length],vx=bx_-ax,vy=by_-ay,L2=vx*vx+vy*vy||1,t=Math.max(0,Math.min(1,((px-ax)*vx+(py-ay)*vy)/L2));d=Math.min(d,Math.hypot(px-ax-t*vx,py-ay-t*vy))}return d};
-      if(st.open!=='rect'){let best=null;const w=ox1-ox0;
+      if(st.open!=='rect'&&!st.gate){let best=null;const w=ox1-ox0;
         for(let i=st.open==='temple'?24:0;i<=24;i++)for(let j=0;j<=24;j++){const px=ox0-4+(w*.5+4)*i/24,py=oz1+2-(w*.6)*j/24;if(!G.inside(keep,px,py))continue;const dd=segD(px,py,keep);if(!best||dd>best[2])best=[px,py,dd]}
         if(best&&best[2]>5){const sz=best[2]*1.8,mid=(ox0+ox1)/2,one=Math.abs(best[0]-mid)<sz*.6;for(const [cx,fl] of one?[[mid,false]]:[[best[0],false],[ox0+ox1-best[0],true]]){let a=TR.cornerArt(st.corner,cx,best[1],sz);if(fl)a=a.map(r=>r.map(([x,y])=>[2*cx-x,y]).reverse());art.push(a)}}}
       const sx0=PR+.8,sx1=xd1-2.2;if(sx1-sx0>4.5)art.push(TR.pattern(st.stile,sx0,zd0+16,sx1,zd1-16,.9,7));
