@@ -29,6 +29,7 @@
     else if(kind==='square')r=rrect(-L/2,0,L/2,W,Math.min(L,W)*.18);
     else if(kind==='pebble'){const w=wobble(seed||1,.14,5);r=polar(0,W/2,a=>{const c=Math.cos(a),s=Math.sin(a),e=1/Math.sqrt(c*c/(L*L/4)+s*s/(W*W/4));return e*(1+w(a))})}
     else if(kind==='leaf'){const o=[],n=60;for(let i=0;i<=n;i++){const t=i/n,hw=(W/2)*Math.pow(Math.sin(Math.PI*t),.85);o.push([-L/2+L*t,hw])}for(let i=n-1;i>0;i--){const t=i/n,hw=(W/2)*Math.pow(Math.sin(Math.PI*t),.85)*.92;o.push([-L/2+L*t,-hw])}r=[o.map(([x,y])=>[x,y+W/2])]}
+    else if(kind==='fluted'){/* a round dish with fine flutes round its side, like a classical patera */r=polar(0,W/2,a=>{const c=Math.cos(a),s=Math.sin(a),e=1/Math.sqrt(c*c/(L*L/4)+s*s/(W*W/4));return e-1.1*(.5+.5*Math.cos(32*a))},256)}
     else if(kind==='flower'){/* six soft petals round an oval */r=polar(0,W/2,a=>{const c=Math.cos(a),s=Math.sin(a),e=1/Math.sqrt(c*c/(L*L/4)+s*s/(W*W/4));return e*(.9+.1*Math.cos(6*a))},180)}
     else r=rrect(-L/2,0,L/2,W,3);
     return fit(r);
@@ -158,7 +159,13 @@
       else if(o.shape==='hex')at=z=>ngon(0,0,(bot+(top-bot)*z/H)/Math.cos(Math.PI/6),6,Math.PI/6);
       else if(o.shape==='cone')at=z=>circle(0,0,bot+(top-bot)*z/H,96);
       else at=z=>polar(0,0,a=>(bot+(top-bot)*Math.pow(z/H,.6))*(1+wv(a+z*.04)),96);
-      if(o.shape==='cylinder'){f.push(prism(0,H,at(0)),prism(0,3,circle(0,0,bot*.9,96)))}else f.push(varying(0,H,at,.6));
+      if(o.shape==='column'){
+        /* a little Doric column: square plinth, a round base, a fluted shaft, a flaring capital under a square abacus.
+           The capital flares at 45° to the abacus corners, so nothing overhangs */
+        const rsh=top+2.5,hs=rsh+1.7,Re=hs*Math.SQRT2,zc=Math.max(10,H-2-(Re-rsh));
+        f.push(prism(0,3,G.rrect(-rsh-3.2,-rsh-3.2,rsh+3.2,rsh+3.2,.8)),varying(3,5,z=>circle(0,0,rsh+1.6-(z-3)*.8,96),.25),
+          prism(5,zc,polar(0,0,a=>rsh-.8*(.5+.5*Math.cos(16*a)),160)),varying(zc,H-2,z=>{const r=rsh+(z-zc);return intersect(circle(0,0,r,96),rect(-hs,-hs,hs,hs))},.3),prism(H-2,H,rect(-hs,-hs,hs,hs)))}
+      else if(o.shape==='cylinder'){f.push(prism(0,H,at(0)),prism(0,3,circle(0,0,bot*.9,96)))}else f.push(varying(0,H,at,.6));
       const z0=o.mount==='peg'?PEG.depth+1.5:2;
       f.push(prism(z0,H+1,circle(0,0,rs),'sub'));
       if(o.mount==='peg')f.push(prism(-1,PEG.depth,circle(0,0,PEG.sock),'sub'));

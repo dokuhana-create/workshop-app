@@ -19,7 +19,7 @@
   const STYLES={
     gothic:{name:'Gothic',open:'pointed',stile:'quatrefoil',rail:'arcade',corner:'bat',crest:'gable',finial:'spire',foot:'claw'},
     baroque:{name:'Baroque filigree',open:'ogee',stile:'scroll',rail:'wave',corner:'curls',crest:'cartouche',finial:'urn',foot:'bun'},
-    greek:{name:'Greek and Roman',open:'rect',stile:'flute',rail:'meander',corner:'laurel',crest:'pediment',finial:'urn',foot:'block'},
+    greek:{name:'Greek and Roman',open:'temple',stile:'flute',rail:'meander',corner:'laurel',crest:'pediment',finial:'urn',foot:'block'},
     vine:{name:'Woodland vines',open:'round',stile:'vine',rail:'leaves',corner:'rose',crest:'leafArch',finial:'acorn',foot:'root'},
     orchid:{name:'Orchid',open:'round',stile:'vine',rail:'leaves',corner:'orchid',crest:'orchidSpray',finial:'bud',foot:'bun'},
     nouveau:{name:'Art nouveau',open:'round',stile:'whiplash',rail:'whiplash',corner:'tulip',crest:'fan',finial:'bud',foot:'bun'},
@@ -35,6 +35,10 @@
   function opening(kind,x0,y0,x1,y1){
     const w=x1-x0,h=y1-y0,mid=(x0+x1)/2;
     if(kind==='rect')return rrect(x0,y0,x1,y1,4);
+    /* a classical doorway: slightly narrower at the top, with "ears" (crossettes) at the top corners, and a deep
+       lintel above it for the ornament */
+    if(kind==='temple'){const yT=y1-min(h*.16,48),t=w*.05,e=3.5,eh=8;
+      return [[[x0,y0],[x1,y0],[x1-t,yT-eh],[x1-t+e,yT-eh],[x1-t+e,yT],[x0+t-e,yT],[x0+t-e,yT-eh],[x0+t,yT-eh]]]}
     if(kind==='moon')return ellipse(mid,(y0+y1)/2,w/2,h/2,160);
     if(kind==='stepped'){const s=min(w,h)*.06;return [[[x0,y0],[x1,y0],[x1,y1-3*s],[x1-s,y1-3*s],[x1-s,y1-2*s],[x1-2*s,y1-2*s],[x1-2*s,y1-s],[x1-3*s,y1-s],[x1-3*s,y1],
       [x0+3*s,y1],[x0+3*s,y1-s],[x0+2*s,y1-s],[x0+2*s,y1-2*s],[x0+s,y1-2*s],[x0+s,y1-3*s],[x0,y1-3*s]]]}

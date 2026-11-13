@@ -7,12 +7,11 @@
       ['ladder',{style:'vine',mount:'tie'},1],['bridge',{style:'branch',hstyle:'branch'},1],['dish',{shape:'flower'},1],['plate',{shape:'leaf',mode:'raised'},1],
       ['flower',{kind:'sakura',R:16},3],['flower',{kind:'peony',R:22},3],['feeder',{shape:'flower'},3],
       ['mister',{shape:'flower'},3],['twig',{shape:'cone',mount:'peg'},1]]},
-    temple:{name:'Ancient temple',group:'Themes',colours:'Marble white and terracotta, with moss green or gold',note:'Greek and Roman: marble columns, an arch, laurels and a mosaic floor, like a temple gone quietly wild.',pieces:[
-      ['diorama',{kind:'column',style:'intact',h:70},1],['diorama',{kind:'column',style:'broken'},1],['diorama',{kind:'arch',style:'broken',mount:'free'},1],['diorama',{kind:'mosaic',pattern:'meander'},1],
-      ['ledge',{shape:'classic',pattern:'solid',under:'ribs'},1],['motif',{motif:'laurel',form:'plaque',base:'round'},1],['plate',{shape:'scroll',mode:'engraved',font:'caps'},1],
-      ['sculpt',{kind:'torso',size:60},3],['sculpt',{kind:'lion',size:50},3],['motif',{motif:'temple',form:'plaque',base:'square'},3],['motif',{motif:'owl',form:'cutout',mount:'free'},3],
-      ['motif',{motif:'helmet',form:'plaque',base:'shield'},3],['motif',{motif:'ionic',form:'plaque',base:'arch'},3],['motif',{motif:'lyre',form:'ornament'},3],['diorama',{kind:'amphora'},3],
-      ['diorama',{kind:'column',style:'broken',size:22,h:40},3],['diorama',{kind:'mosaic',pattern:'rosette'},3],['tile',{texture:'stone'},3],['moss',{shape:'crescent'},3]]},
+    temple:{name:'Ancient temple',group:'Themes',colours:'Marble white or sandstone, with terracotta, moss green or gold',note:'Greek and Roman: marble columns, a ruined arch and ivy, like a temple gone quietly wild.',pieces:[
+      ['diorama',{kind:'arch',style:'broken',mount:'free'},1],['diorama',{kind:'column',style:'intact',h:70},1],['diorama',{kind:'column',style:'broken'},1],
+      ['ledge',{shape:'classic',pattern:'solid',under:'ribs'},1],['ladder',{style:'vine',mount:'tie'},1],['bridge',{style:'vine',hstyle:'vine'},1],
+      ['dish',{shape:'fluted'},1],['twig',{shape:'column',mount:'peg'},1],['motif',{motif:'laurel',form:'plaque',base:'round'},1],
+      ['sculpt',{kind:'torso',size:60},3],['sculpt',{kind:'lion',size:50},3],['diorama',{kind:'amphora'},3],['diorama',{kind:'mosaic',pattern:'meander'},3],['moss',{shape:'crescent'},3]]},
     gothic:{name:'Gothic and vampiric',group:'Themes',colours:'Black, deep purple or blood red, with silver or bone white',note:'Pointed arches, roses, candles and old stone, with a vampire\'s graveyard and a collector\'s curiosities.',pieces:[
       ['ledge',{shape:'classic',pattern:'rings',under:'ribs'},1],['bridge',{style:'gothic',hstyle:'rope'},1],['flower',{kind:'rose'},1],['diorama',{kind:'candles',accent:'yes'},1],
       ['motif',{motif:'gothicWindow',form:'plaque',base:'arch'},1],['dish',{shape:'hex'},1],['plate',{shape:'scroll',mode:'stencil'},1],

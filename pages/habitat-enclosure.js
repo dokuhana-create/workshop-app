@@ -404,8 +404,8 @@
       /* corner art: in the largest round space beside the top of the window, found by search */
       const segD=(px,py,rings)=>{let d=1e9;for(const r of rings)for(let i=0;i<r.length;i++){const [ax,ay]=r[i],[bx_,by_]=r[(i+1)%r.length],vx=bx_-ax,vy=by_-ay,L2=vx*vx+vy*vy||1,t=Math.max(0,Math.min(1,((px-ax)*vx+(py-ay)*vy)/L2));d=Math.min(d,Math.hypot(px-ax-t*vx,py-ay-t*vy))}return d};
       if(st.open!=='rect'){let best=null;const w=ox1-ox0;
-        for(let i=0;i<=24;i++)for(let j=0;j<=24;j++){const px=ox0-4+(w*.5)*i/24,py=oz1+2-(w*.6)*j/24;if(!G.inside(keep,px,py))continue;const dd=segD(px,py,keep);if(!best||dd>best[2])best=[px,py,dd]}
-        if(best&&best[2]>5){const sz=best[2]*1.8;for(const [cx,fl] of [[best[0],false],[ox0+ox1-best[0],true]]){let a=TR.cornerArt(st.corner,cx,best[1],sz);if(fl)a=a.map(r=>r.map(([x,y])=>[2*cx-x,y]).reverse());art.push(a)}}}
+        for(let i=st.open==='temple'?24:0;i<=24;i++)for(let j=0;j<=24;j++){const px=ox0-4+(w*.5+4)*i/24,py=oz1+2-(w*.6)*j/24;if(!G.inside(keep,px,py))continue;const dd=segD(px,py,keep);if(!best||dd>best[2])best=[px,py,dd]}
+        if(best&&best[2]>5){const sz=best[2]*1.8,mid=(ox0+ox1)/2,one=Math.abs(best[0]-mid)<sz*.6;for(const [cx,fl] of one?[[mid,false]]:[[best[0],false],[ox0+ox1-best[0],true]]){let a=TR.cornerArt(st.corner,cx,best[1],sz);if(fl)a=a.map(r=>r.map(([x,y])=>[2*cx-x,y]).reverse());art.push(a)}}}
       const sx0=PR+.8,sx1=xd1-2.2;if(sx1-sx0>4.5)art.push(TR.pattern(st.stile,sx0,zd0+16,sx1,zd1-16,.9,7));
       art=intersect(U2(art),offset(keep,-.6));
       if(art.length)f.push(prism(Z1-.8,Z1+1,art,'sub'))}
