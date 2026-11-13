@@ -95,9 +95,63 @@
       notes:[`A pot with a flat back, ${round(2*Rx)} mm wide and ${round(H)} mm tall. Press ${xs.length} magnet${xs.length>1?'s':''} into the back and put ${xs.length>1?'two more':'another'} on the outside of the panel to hold it. Prints upright without supports.`,'A few clay balls in the bottom keep the roots out of the wet.']};
   }
 
+
+  /* ---------- flowing terraces, like rice fields on a hillside ----------
+     The terraces follow wavy contour lines around a starting place: the back wall, a back corner, one side, or a
+     hill somewhere in the middle. Each terrace is a soil pocket held by a low rounded bank; widths and heights vary,
+     and the banks never meet in sharp corners. Each pocket goes down to the floor, so the planter is only thin walls. */
+  function flowTiers(o,info){
+    const sd=S(),e=info.e||{},rectE=e.shape==='rect',W=rectE?e.W:Math.min(e.W,e.D||e.W)*.7,D=rectE?e.D:Math.min(e.W,e.D||e.W)*.7;
+    const g=(e.T||3)+.6,ob=g/2+2.4,Sb=e.S||40,n=Math.max(2,Math.min(5,+o.tiers||3)),wall=Math.max(1.6,o.wall||2.2),fl=2.4,seed=o.seed||1;
+    const Wp=W-2*ob-1,Df=D-2*ob-1,nt=rectE&&info.Eh?info.Eh-ob+.75:0,lay=o.layout||'back',R=(i,s)=>H2(i,s,seed*1.37);
+    const bed=info.bed||350,m=o.mods&&o.mods!=='auto'?+o.mods:Math.max(1,Math.ceil(Wp/(bed-10))),Mw=(Wp-(m-1))/m,pct=(o.pct||60)/100;
+    /* where the terraces start, and how far they reach */
+    const hill=[Wp*(.3+.4*R(1,1)),Df*(.28+.12*R(2,1))];
+    const LAY={back:{phi:(x,y)=>y,R:Df*pct},side:{phi:x=>x,R:Wp*pct},cornerL:{phi:(x,y)=>Math.hypot(x,y*1.15),R:Math.hypot(Wp,Df)*pct*.85},
+      cornerR:{phi:(x,y)=>Math.hypot(Wp-x,y*1.15),R:Math.hypot(Wp,Df)*pct*.85},point:{phi:(x,y)=>Math.hypot(x-hill[0],(y-hill[1])*1.1),R:Math.min(Wp,Df)*pct*.75}};
+    const L=LAY[lay]||LAY.back,phi=L.phi,Rr=Math.max(n*16,L.R);
+    /* band widths and step heights vary; the highest terrace is the one at the start */
+    const wts=[...Array(n)].map((_,k)=>.7+.6*R(k,3)),sw=wts.reduce((a,b)=>a+b,0),B=[];let acc=0;for(let k=0;k<n;k++){acc+=wts[k]/sw*Rr;B.push(acc)}
+    /* rice-field steps are low: on average about half the even planter's, each one different */
+    const steps=[...Array(n)].map((_,k)=>(o.step||30)*.45*(.55+.9*R(k,5))),T=[];let t=Sb-2.4+(o.up||20)*.5;for(let k=n-1;k>=0;k--){T[k]=t;t+=steps[k]}
+    const Tmax=Math.min(T[0],Sb+(e.H||300)*.55);if(T[0]>Tmax){const sc=(Tmax-T[n-1])/(T[0]-T[n-1]||1);for(let k=0;k<n;k++)T[k]=T[n-1]+(T[k]-T[n-1])*sc}
+    /* each contour line wanders on its own, so the terraces widen and narrow */
+    const A=k=>Math.min(14,(k?B[k]-B[k-1]:B[0])*.38);
+    const cell=1,GX=Math.ceil(Wp/cell)+3,GY=Math.ceil(Df/cell)+3,grid=[...Array(n)].map((_,k)=>{const g=new Float32Array(GX*GY);
+      for(let j=0;j<GY;j++)for(let i=0;i<GX;i++){const x=(i-1)*cell,y=(j-1)*cell;g[j*GX+i]=B[k]+A(k)*sd.fbm(x/55,y/55,k*3.1,seed*5+k,3)*1.6}return g});
+    const bnd=(k,x,y)=>{if(k<0)return -1e9;const u=clamp(x/cell+1,0,GX-1.001),v=clamp(y/cell+1,0,GY-1.001),i=floor(u),j=floor(v),a=u-i,b=v-j,G=grid[k],q=j*GX+i;
+      return (G[q]*(1-a)+G[q+1]*a)*(1-b)+(G[q+GX]*(1-a)+G[q+GX+1]*a)*b};
+    const sk=SURF[o.front]||SURF.smooth,amp=sk.amp||0,sf=surfFn(o.front||'smooth',{C:0,H:T[0],seed});
+    const parts=[];
+    for(let j=0;j<m;j++){
+      const first=j===0,last=j===m-1,X0=j*(Mw+1);
+      /* x, y, z here are in the module's own frame; X is across the whole planter */
+      const terr=k=>(x,y,z)=>{const X=x+X0,p=phi(X,y);return smax(smax(p-(bnd(k,X,y)+sf(X+y,z)),z-T[k],3),-z,.25)};
+      const box=(x,y,z)=>smax(smax(-x,x-Mw,.6),smax(-y,y-Df,.6),.6);
+      let f=sd.both(sd.union(...[...Array(n)].map((_,k)=>terr(k))),box);
+      const pocket=k=>(x,y,z)=>{const X=x+X0,p=phi(X,y);let d=smax(k?bnd(k-1,X,y)+wall-p:-1e9,p-(bnd(k,X,y)-wall-amp),1.5);
+        d=smax(d,smax(smax(wall-x,x-(Mw-wall),1),smax(wall-y,y-(Df-wall),1),1),1);return smax(d,fl-z,1.2)};
+      f=sd.scut(1.4,f,...[...Array(n)].map((_,k)=>pocket(k)));
+      if(nt>0){const cs=[];if(first)cs.push(sd.box(nt/2-.5,nt/2-.5,60,nt/2+.5,nt/2+.5,200));if(last)cs.push(sd.box(Mw-nt/2+.5,nt/2-.5,60,nt/2+.5,nt/2+.5,200));if(cs.length)f=sd.cut(f,...cs)}
+      /* drain holes wherever a pocket floor is */
+      const hs=[];for(let x=wall+5;x<Mw-wall-4;x+=12)for(let y=wall+5;y<Df-wall-4;y+=12)if([...Array(n)].some((_,k)=>pocket(k)(x,y,fl+1)<-2.5))hs.push(sd.cylZ(x,y,1.05,-1,fl+.5));
+      if(hs.length)f=sd.cut(f,...hs);
+      const mm=sd.mesh(f,[-1,-1,Mw+1,Df+1,T[0]+3],o.preview?1.6:.7);
+      parts.push({file:m>1?`terraced-planter-${j+1}-of-${m}.stl`:'terraced-planter.stl',role:j?'Second file':'Main colour',m:mm});
+    }
+    const where={back:'along the back wall',side:'from the left wall',cornerL:'from the back left corner',cornerR:'from the back right corner',point:'around a hill'}[lay];
+    const notes=[`${n} flowing terraces ${where}, ${T.map(round).join(', ')} mm tall from the highest down, each a soil pocket behind a low rounded bank. Shuffle for a different layout.`,
+      'Fill every pocket with a few clay balls and then soil; plant the high terraces with trailing plants so they spill over the banks. The floor beyond the last bank stays free for gravel, sand or moss.',
+      'Prints upright without supports, as thin walls only. Drain holes in each pocket let water through to the base.'];
+    if(m>1)notes.push(`It comes in ${m} modules that stand side by side.`);
+    if(!rectE)notes.push('Made for rectangular enclosures; for this shape it is a free-standing planter of a matching size.');
+    return {parts,notes,magnets:0,Mw};
+  }
+
   /* ---------- the tiered back planter ----------
      Pots in steps along the back wall, with soft rounded rims; each tier's front carries the surface. */
   function tiers(o,info){
+    if(o.layout&&o.layout!=='even')return flowTiers(o,info);
     const sd=S(),HE=root.HabitatEnclosure,e=info.e||{},rectE=e.shape==='rect',W=rectE?e.W:Math.min(e.W,e.D||e.W)*.7,D=rectE?e.D:Math.min(e.W,e.D||e.W)*.7;
     const g=(e.T||3)+.6,ob=g/2+2.4,Sb=e.S||40,n=Math.max(2,Math.min(3,+o.tiers||2)),wall=Math.max(1.6,o.wall||2.2),fl=2.4;
     const Wp=W-2*ob-1,Dfloor=D-2*ob-1,Dp=Math.max(30*n,Math.min(Dfloor-25,Dfloor*(o.pct||60)/100)),nt=rectE&&info.Eh?info.Eh-ob+.75:0;
@@ -128,7 +182,7 @@
     notes.push('Put a thin layer of clay balls in each tier, then soil. Fill the floor in front with aquarium gravel, sand or moss: the planter keeps the two apart.');
     notes.push('Prints upright without supports. Drain holes in each floor let water through to the base.');
     if(!rectE)notes.push('Made for rectangular enclosures; for this shape it is a free-standing planter of a matching size.');
-    return {parts,notes,magnets:0};
+    return {parts,notes,magnets:0,Mw};
   }
 
   root.HabitatPots={SURF,FORM,pot,wallPot,tiers};

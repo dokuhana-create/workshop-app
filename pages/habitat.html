@@ -3,20 +3,20 @@
 <script src="../shim.js"></script>
 <script src="../lib/clipper.js"></script>
 <script src="../lib/earcut.min.js"></script>
-<script src="../lib/geo.js?v=29"></script>
-<script src="habitat-parts.js?v=29"></script>
-<script src="habitat-enclosure.js?v=29"></script>
-<script src="habitat-more.js?v=29"></script>
-<script src="habitat-motifs.js?v=29"></script>
-<script src="habitat-keep.js?v=29"></script>
-<script src="../lib/sdf.js?v=29"></script>
-<script src="habitat-pots.js?v=29"></script>
-<script src="habitat-sculpt.js?v=29"></script>
-<script src="habitat-trim.js?v=29"></script>
-<script src="habitat-addons.js?v=29"></script>
-<script src="habitat-forms.js?v=29"></script>
-<script src="habitat-shapes.js?v=29"></script>
-<script src="habitat-sets.js?v=29"></script>
+<script src="../lib/geo.js?v=30"></script>
+<script src="habitat-parts.js?v=30"></script>
+<script src="habitat-enclosure.js?v=30"></script>
+<script src="habitat-more.js?v=30"></script>
+<script src="habitat-motifs.js?v=30"></script>
+<script src="habitat-keep.js?v=30"></script>
+<script src="../lib/sdf.js?v=30"></script>
+<script src="habitat-pots.js?v=30"></script>
+<script src="habitat-sculpt.js?v=30"></script>
+<script src="habitat-trim.js?v=30"></script>
+<script src="habitat-addons.js?v=30"></script>
+<script src="habitat-forms.js?v=30"></script>
+<script src="habitat-shapes.js?v=30"></script>
+<script src="habitat-sets.js?v=30"></script>
 <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Bricolage+Grotesque:opsz,wght@12..96,600;12..96,750&family=IBM+Plex+Mono:wght@500&family=IBM+Plex+Sans:wght@400;500;600&display=swap">
 <style>
 /* Same layout as the Resin Workshop: inputs on the left, the 3D preview and downloads beside them. */
@@ -1005,9 +1005,10 @@ Object.assign(ITEMS,{
   bark:{group:'climb',more:'bark',name:'Cork bark holder',fields:[['bw','Bark width',80],['bh','Bark height',100],['bk','Bark thickness',15]],
     selects:[['style','Style',[['classic','Two hooks'],['minimal','One hook'],['cradle','Side cradle'],['organic','Organic plate']]],['open','Back plate',[['yes','See-through cells'],['no','Solid']]]],shuffle:true,mounts:['magnet','clip','glue'],
     hint:'Holds a piece of cork bark flat against a wall, as a climbing and hiding surface. A shelf takes its weight, and hooks or side clamps keep it from tipping forward.'},
-  tiers:{group:'plants',keep:'tiers',name:'Tiered back planter',fields:[['up','Front tier above the substrate',20],['step','Each tier higher by',30],['pct','Depth (% of the floor)',60],['wall','Wall',2]],
-    selects:[['tiers','Tiers',[['2','Two'],['3','Three']]],['front','Front of each tier',Object.entries(HabitatPots.SURF).map(([k,v])=>[k,v.name])],['top','Top edge',[['flat','Straight'],['arches','Arches'],['pointed','Pointed'],['battlements','Battlements'],['waves','Waves']]],['mods','Pieces',[['auto','As many as the bed needs'],['1','One'],['2','Two modules'],['3','Three modules']]]],mounts:[],
-    hint:'Pots in steps along the back wall, sized to your enclosure: fill the tiers with soil and plants, and the floor in front with aquarium gravel, sand or moss.'},
+  tiers:{group:'plants',keep:'tiers',name:'Tiered planter',fields:[['up','Lowest tier above the substrate',20],['step','Each tier higher by (on average)',30],['pct','Reach (% of the floor)',60],['wall','Wall',2]],shuffle:true,
+    selects:[['layout','Layout',[['even','Even rows along the back'],['back','Flowing terraces from the back'],['cornerL','Flowing terraces from the back left corner'],['cornerR','Flowing terraces from the back right corner'],['side','Flowing terraces from the left side'],['point','Flowing terraces around a hill']]],
+      ['tiers','Tiers',[['2','Two'],['3','Three'],['4','Four (flowing only)'],['5','Five (flowing only)']]],['front','Front of each tier',Object.entries(HabitatPots.SURF).map(([k,v])=>[k,v.name])],['top','Top edge',[['flat','Straight'],['arches','Arches'],['pointed','Pointed'],['battlements','Battlements'],['waves','Waves']]],['mods','Pieces',[['auto','As many as the bed needs'],['1','One'],['2','Two modules'],['3','Three modules']]]],mounts:[],
+    hint:'Pots in steps, sized to your enclosure: even rows along the back, or flowing terraces like rice fields on a hillside, starting from the back, a corner, a side or a hill. Fill the tiers with soil and plants, and the floor beyond with aquarium gravel, sand or moss. Shuffle for a new layout.'},
   planter:{group:'plants',more:'planter',name:'Hanging planter',fields:[['L','Width',70],['D','Depth',35],['H','Height',50],['wall','Wall',2],['taper','Narrower at the bottom (%)',20,{show:s=>s.shape!=='cone'}]],
     selects:[['shape','Shape',[['halfround','Half round'],['halfhex','Half hexagon'],['facet','Faceted'],['scallop','Scalloped'],['pebble','Pebble'],['square','Rounded box'],['cone','Cone']]]],shuffle:true,mounts:['magnet','clip','glue'],drain:true,
     hint:'A pocket planter with a flat back, for the wall or the mesh. Good for air plants, pothos or fittonia cuttings.'},
@@ -1174,7 +1175,7 @@ function trimEnc(){const p=readEnc(),k=JSON.stringify(p);if(trimMemo.k===k)retur
 HabitatKeep.trim=o=>HabitatTrim.piece(Object.assign({},trimEnc(),o));
 /* the anatomical skull loads in the background; redraw when it arrives */
 let scanT;HabitatSculpt.onready=()=>{clearTimeout(scanT);scanT=setTimeout(()=>{if(typeof BMEMO!=='undefined')BMEMO.clear();if(state.tab==='acc'&&['sculpt','set'].includes(A.item))accCalc();else if(state.tab==='build')buildCalc()},200)};
-HabitatSculpt.setVersion('29');
+HabitatSculpt.setVersion('30');
 HabitatKeep.hanger=o=>HabitatForms.hanger(Object.assign({},trimEnc(),o));HabitatKeep.carry=o=>HabitatForms.carry(Object.assign({},trimEnc(),o));
 function encInfo(){
   const e=Object.assign({},DEF,state.enc||{}),bed=Math.max(e.bx||350,e.by||350),g=e.T+.6,band=g/2+2.4,o={e,bed,band,hatchR:e.hatch!=='none'?(state.encHatchR||Math.min(30,e.hatchD/2)):0};
@@ -1420,7 +1421,7 @@ function buildScene(des){
           items.push({tris:place0(q.m.tris,(x,y,z)=>[cx+x*c-y*s_,cy+x*s_+y*c,z-zt]),color:col})}}}}
   for(const d of des){if(!d.r||d.p.key!=='tiers')continue;const ps=d.r.parts.filter(q=>q.m);if(!ps.length)continue;
     if(e.shape==='rect'){const ob=(e.T+.6)/2+2.4,m=ps.length;let off=0;
-      const ws=ps.map(q=>{const t=q.m.tris;let a=1e9,b=-1e9;for(let i=0;i<t.length;i+=3){a=Math.min(a,t[i]);b=Math.max(b,t[i])}return b-a});
+      const ws=ps.map(q=>{if(d.r.Mw)return d.r.Mw;const t=q.m.tris;let a=1e9,b=-1e9;for(let i=0;i<t.length;i+=3){a=Math.min(a,t[i]);b=Math.max(b,t[i])}return b-a});
       ps.slice().reverse().forEach((q,j)=>{const w=ws[m-1-j],x0=ob+.5+off;items.push({tris:place0(q.m.tris,(x,y,z)=>[x0+w-x,e.D-ob-.5-y,z+2.4]),color:c1});off+=w+1})}
     else{const q=ps[0],t=q.m.tris;let a=[1e9,1e9],b=[-1e9,-1e9];for(let i=0;i<t.length;i+=3)for(let k=0;k<2;k++){a[k]=Math.min(a[k],t[i+k]);b[k]=Math.max(b[k],t[i+k])}
       items.push({tris:place0(t,(x,y,z)=>[(a[0]+b[0])/2-x,yBack-8-(y-a[1]),z+2.4]),color:c1})}
