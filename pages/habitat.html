@@ -3,20 +3,20 @@
 <script src="../shim.js"></script>
 <script src="../lib/clipper.js"></script>
 <script src="../lib/earcut.min.js"></script>
-<script src="../lib/geo.js?v=33"></script>
-<script src="habitat-parts.js?v=33"></script>
-<script src="habitat-enclosure.js?v=33"></script>
-<script src="habitat-more.js?v=33"></script>
-<script src="habitat-motifs.js?v=33"></script>
-<script src="habitat-keep.js?v=33"></script>
-<script src="../lib/sdf.js?v=33"></script>
-<script src="habitat-pots.js?v=33"></script>
-<script src="habitat-sculpt.js?v=33"></script>
-<script src="habitat-trim.js?v=33"></script>
-<script src="habitat-addons.js?v=33"></script>
-<script src="habitat-forms.js?v=33"></script>
-<script src="habitat-shapes.js?v=33"></script>
-<script src="habitat-sets.js?v=33"></script>
+<script src="../lib/geo.js?v=34"></script>
+<script src="habitat-parts.js?v=34"></script>
+<script src="habitat-enclosure.js?v=34"></script>
+<script src="habitat-more.js?v=34"></script>
+<script src="habitat-motifs.js?v=34"></script>
+<script src="habitat-keep.js?v=34"></script>
+<script src="../lib/sdf.js?v=34"></script>
+<script src="habitat-pots.js?v=34"></script>
+<script src="habitat-sculpt.js?v=34"></script>
+<script src="habitat-trim.js?v=34"></script>
+<script src="habitat-addons.js?v=34"></script>
+<script src="habitat-forms.js?v=34"></script>
+<script src="habitat-shapes.js?v=34"></script>
+<script src="habitat-sets.js?v=34"></script>
 <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Bricolage+Grotesque:opsz,wght@12..96,600;12..96,750&family=IBM+Plex+Mono:wght@500&family=IBM+Plex+Sans:wght@400;500;600&display=swap">
 <style>
 /* Same layout as the Resin Workshop: inputs on the left, the 3D preview and downloads beside them. */
@@ -967,12 +967,12 @@ $('encDl').onclick=async()=>{
 for(const k in encIds)$(encIds[k]).addEventListener('input',()=>{if(k!=='species'){$('preset').value='keep';encChanged()}});
 
 /* ---------- accessories ---------- */
-const SHAPES={round:'Round',oval:'Oval',pebble:'Pebble',hex:'Hexagon',square:'Rounded square',cylinder:'Cylinder',rock:'Rock',cone:'Cone',fungus:'Bracket fungus',lobed:'Lobed fungus',tiered:'Tiered fungus, three shelves',leaf:'Leaf',moon:'Half moon',classic:'Rounded rectangle',sharp:'Square corners',cloud:'Cloud'};
+const SHAPES={flower:'Flower',round:'Round',oval:'Oval',pebble:'Pebble',hex:'Hexagon',square:'Rounded square',cylinder:'Cylinder',rock:'Rock',cone:'Cone',fungus:'Bracket fungus',lobed:'Lobed fungus',tiered:'Tiered fungus, three shelves',leaf:'Leaf',moon:'Half moon',classic:'Rounded rectangle',sharp:'Square corners',cloud:'Cloud'};
 const RANDOM=['pebble','rock','fungus','lobed','tiered'];
 const MOUNT={free:'Stands on its own',peg:'Floor peg',magnet:'Magnets',clip:'Pin rail',tie:'Tied to the lid mesh',hook:'Hook over a branch',stem:'Stem for a twig holder',panel:'In a tile panel',holder:'Pins into twig holders'};
 const LIGHT_LINK='<a href="https://insektenliebe.com/en/?p=158875" target="_blank" rel="noopener">Repto Compact LED</a>';
 const ITEMS={
-  dish:{group:'food',name:'Pearl dish',fields:[['L','Length',75],['W','Width',60],['depth','Depth',14],['wall','Wall',2.4]],shapes:['round','oval','pebble','hex'],mounts:['free','peg','magnet','clip'],
+  dish:{group:'food',name:'Pearl dish',fields:[['L','Length',75],['W','Width',60],['depth','Depth',14],['wall','Wall',2.4]],shapes:['round','oval','pebble','hex','flower'],mounts:['free','peg','magnet','clip'],
     hint:'A shallow dish for water gel pearls such as Aqua Pearls Calcium. Its stepped inner edge lets feeder insects and small nymphs climb in and out. Replace the pearls every few days, since they go mouldy in a warm, humid enclosure.'},
   pot:{group:'plants',keep:'pot',name:'Plant pot',fields:[['L','Length',85],['W','Width',70],['H','Height',70],['wall','Wall',2.2]],shapes:['round','oval','pebble','hex','square'],
     selects:[['surface','Surface',Object.entries(HabitatPots.SURF).map(([k,v])=>[k,v.name])],['form','Form',Object.entries(HabitatPots.FORM).map(([k,v])=>[k,v.name])]],mounts:['peg','free'],drain:true,
@@ -1185,7 +1185,7 @@ function trimEnc(){const p=readEnc(),k=JSON.stringify(p);if(trimMemo.k===k)retur
 HabitatKeep.trim=o=>HabitatTrim.piece(Object.assign({},trimEnc(),o));
 /* the anatomical skull loads in the background; redraw when it arrives */
 let scanT;HabitatSculpt.onready=()=>{clearTimeout(scanT);scanT=setTimeout(()=>{if(typeof BMEMO!=='undefined')BMEMO.clear();if(state.tab==='acc'&&['sculpt','set'].includes(A.item))accCalc();else if(state.tab==='build')buildCalc()},200)};
-HabitatSculpt.setVersion('33');
+HabitatSculpt.setVersion('34');
 HabitatKeep.hanger=o=>HabitatForms.hanger(Object.assign({},trimEnc(),o));HabitatKeep.carry=o=>HabitatForms.carry(Object.assign({},trimEnc(),o));
 function encInfo(){
   const e=Object.assign({},DEF,state.enc||{}),bed=Math.max(e.bx||350,e.by||350),g=e.T+.6,band=g/2+2.4,o={e,bed,band,hatchR:e.hatch!=='none'?(state.encHatchR||Math.min(60,e.hatchD/2)):0};
@@ -1218,7 +1218,7 @@ function itemDesign1(key,over,mount,seed,sc){
   const it=ITEMS[key],o={mount,md:Math.max(4,+$('magD').value||10),mh:Math.max(1,+$('magH').value||3),seed,drain:A.drain,kind:A.kind in (it.kinds||{})?A.kind:'ring'};
   const fields=it.kinds?it.kinds[o.kind].fields:it.fields,v=over?{}:(A.v[key]||{});
   for(const [k,,dv,x] of fields){const q=v[k];o[k]=x&&x.text?(q??dv):(q>0||((k==='taper'||k==='n')&&q===0)?q:dv)}
-  if(it.shapes){o.shape=it.shapes.includes(A.shape[key])&&!over?A.shape[key]:it.shapes[0];if(o.shape==='round')o.W=o.L}
+  if(it.shapes)o.shape=it.shapes.includes(A.shape[key])&&!over?A.shape[key]:it.shapes[0];
   for(const [k,,opts] of it.selects||[])o[k]=(!over&&((A.sel||{})[key]||{})[k])||opts[0][0];
   if(over)Object.assign(o,over);
   if(['pot','wallpot','tiers'].includes(key)&&o.preview==null)o.preview=POT_FINAL?0:1;

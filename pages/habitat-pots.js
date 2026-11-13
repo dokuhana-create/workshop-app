@@ -37,7 +37,13 @@
       return -2.4*abs(n)*1.6+.4*sd.fbm(u/1.4,z/1.4,0,c.seed+4,2)}},
     flutes:{name:'Fluted',amp:1.8,lam:10,d:(u,z,c,L)=>-1.8*(.5-.5*cos(TAU*u/L))*edge(z,c.H)},
     swirl:{name:'Swirl',amp:3.3,lam:26,d:(u,z,c,L)=>2.2*sin(TAU*(u+z*.55)/L)*edge(z,c.H)-1.1},
-    petals:{name:'Petals',amp:3,lam:24,d:(u,z,c,L)=>{const v=2*frac((u+(floor(z/((c.H||60)/3))%2)*L/2)/L)-1;return 3*(sqrt(max(0,1-v*v))-1)*(.35+.65*clamp(z/(c.H||60),0,1))}},
+    /* petals: two rows of tall, pointed petals, the back row peeping between the front one, each with a soft midrib,
+       closing to a point at the rim like a flower bud opening */
+    petals:{name:'Petals',amp:2.8,lam:30,d:(u,z,c,L)=>{const H=c.H||60,t=clamp(z/H,0,1),wr=x=>{const q=((x%L)+L*1.5)%L-L/2;return q};
+      const w=.6*L*Math.pow(sin(PI*min(1,.04+t*.98)),.75)+.01,amp=2.8;
+      const df=wr(u-L/2),qf=df/w,fr=qf*qf<1?amp*sqrt(1-qf*qf)*(.45+.55*t)-.45*Math.exp(-((df/1.1)**2))*(.3+.7*t):0;
+      const db=wr(u),wb=w*.8,qb=db/wb,bk=qb*qb<1?.62*amp*sqrt(1-qb*qb)*(.45+.55*t):0;
+      return (max(fr,bk)-amp)*edge(z,H)}},
     bamboo:{name:'Bamboo',amp:3.1,lam:10,d:(u,z,c,L)=>{const v=2*frac(u/L)-1,node=frac(z/22+.5*H2(floor(u/L),0,c.seed));
       return 2*(sqrt(max(0,1-v*v))-1)-1.1*max(0,1-abs(node-.5)/.04)}},
     facets:{name:'Low-poly facets',amp:3,lam:20,d:(u,z,c,L)=>{const v=2*frac((u+z*.35)/L)-1;return -3*abs(v)}},

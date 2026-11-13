@@ -2,11 +2,11 @@
    3 = deluxe (2 counts as deluxe too). Options override the item's defaults; sizes scale with the chosen pack size. */
 (function(root){
   const S={
-    orchid:{name:'Orchid and flowers',group:'Themes',colours:'Orchid pink or white, with leaf green',note:'Orchids, blossoms and leafy vines, made for an orchid mantis.',pieces:[
-      ['flower',{kind:'orchid'},1],['flower',{kind:'moth',R:20},1],['ledge',{shape:'leaf',pattern:'vine',under:'D'},1],['ladder',{style:'vine',mount:'tie'},1],['dish',{shape:'oval'},1],['plate',{shape:'leaf',mode:'raised'},1],
-      ['flower',{kind:'dendrobium',R:18},3],['flower',{kind:'sakura',R:15},3],['flower',{kind:'lotus',R:18},3],['flower',{kind:'peony',R:22},3],['flower',{kind:'magnolia',R:22},3],
-      ['bridge',{style:'branch',hstyle:'branch'},3],['feeder',{shape:'flower'},3],['mister',{shape:'flower'},3],['tile',{texture:'leaves'},3],['moult',{shape:'leaf',post:'leaf'},3],['emblem',{shape:'leaf'},3],
-      ['motif',{motif:'tulip',form:'plaque',base:'arch'},3],['motif',{motif:'rose',form:'plaque',base:'oval'},3]]},
+    orchid:{name:'Orchid and flowers',group:'Themes',colours:'Blush pink or white, with leaf green; a second colour for the petal relief',note:'Moth orchids, blossoms and leafy vines in soft petal forms, made for an orchid mantis.',pieces:[
+      ['flower',{kind:'orchid',R:30,stemL:90,mount:'stem'},1],['flower',{kind:'orchid'},1],['flower',{kind:'moth',R:20},1],['ledge',{shape:'leaf',pattern:'solid',under:'wedge'},1],
+      ['ladder',{style:'vine',mount:'tie'},1],['bridge',{style:'branch',hstyle:'branch'},1],['dish',{shape:'flower'},1],['plate',{shape:'leaf',mode:'raised'},1],
+      ['flower',{kind:'sakura',R:16},3],['flower',{kind:'peony',R:22},3],['feeder',{shape:'flower'},3],
+      ['mister',{shape:'flower'},3],['moult',{shape:'leaf',post:'leaf'},3],['twig',{shape:'cone',mount:'peg'},1]]},
     temple:{name:'Ancient temple',group:'Themes',colours:'Marble white and terracotta, with moss green or gold',note:'Greek and Roman: marble columns, an arch, laurels and a mosaic floor, like a temple gone quietly wild.',pieces:[
       ['diorama',{kind:'column',style:'intact',h:70},1],['diorama',{kind:'column',style:'broken'},1],['diorama',{kind:'arch',style:'broken',mount:'free'},1],['diorama',{kind:'mosaic',pattern:'meander'},1],
       ['ledge',{shape:'classic',pattern:'solid',under:'ribs'},1],['motif',{motif:'laurel',form:'plaque',base:'round'},1],['plate',{shape:'scroll',mode:'engraved',font:'caps'},1],
@@ -69,7 +69,7 @@
      pot (shape, surface, form). Group first, then the styles that differ from their group. */
   const PG={Themes:{tiers:{front:'smooth',top:'flat',tiers:'2'},pot:{shape:'round',surface:'smooth',form:'belly'},wall:{shape:'round',surface:'smooth',form:'belly'}},
     'Keeper tools':{tiers:{front:'smooth',top:'flat',tiers:'2'},pot:{shape:'round',surface:'smooth',form:'belly'},wall:{shape:'round',surface:'smooth',form:'belly'}}};
-  const PT={orchid:{tiers:{front:'petals',top:'arches'},pot:{surface:'petals',form:'tulip'},wall:{surface:'petals',form:'tulip'}},
+  const PT={orchid:{tiers:{front:'petals',top:'pointed'},pot:{surface:'petals',form:'belly'},wall:{surface:'petals',form:'tulip'}},
     temple:{tiers:{front:'flutes',top:'flat'},pot:{surface:'flutes',form:'urn'},wall:{surface:'flutes',form:'urn'}},
     gothic:{tiers:{front:'flutes',top:'pointed'},pot:{shape:'square',surface:'flutes',form:'urn'},wall:{shape:'square',surface:'flutes',form:'urn'}},
     fantasy:{tiers:{front:'rock',top:'battlements'},pot:{shape:'pebble',surface:'rock',form:'belly'},wall:{shape:'pebble',surface:'rock',form:'belly'}},

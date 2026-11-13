@@ -21,13 +21,14 @@
     baroque:{name:'Baroque filigree',open:'ogee',stile:'scroll',rail:'wave',corner:'curls',crest:'cartouche',finial:'urn',foot:'bun'},
     greek:{name:'Greek and Roman',open:'rect',stile:'flute',rail:'meander',corner:'laurel',crest:'pediment',finial:'urn',foot:'block'},
     vine:{name:'Woodland vines',open:'round',stile:'vine',rail:'leaves',corner:'rose',crest:'leafArch',finial:'acorn',foot:'root'},
+    orchid:{name:'Orchid',open:'round',stile:'vine',rail:'leaves',corner:'orchid',crest:'orchidSpray',finial:'bud',foot:'bun'},
     nouveau:{name:'Art nouveau',open:'round',stile:'whiplash',rail:'whiplash',corner:'tulip',crest:'fan',finial:'bud',foot:'bun'},
     fantasy:{name:'Castle and dungeon',open:'round',stile:'stones',rail:'stones',corner:'dragon',crest:'battlement',finial:'crystal',foot:'claw',key:true},
     deco:{name:'Art deco',open:'stepped',stile:'lines',rail:'chevron',corner:'sunburst',crest:'ziggurat',finial:'stepped',foot:'block'},
     rustic:{name:'Rustic twig',open:'round',stile:'bark',rail:'bark',corner:'tree',crest:'branch',finial:'acorn',foot:'root'}
   };
   /* which frame goes with which style package */
-  const FOR={orchid:'nouveau',temple:'greek',gothic:'gothic',fantasy:'fantasy',forest:'vine',library:'baroque',geo:'deco'};
+  const FOR={orchid:'orchid',temple:'greek',gothic:'gothic',fantasy:'fantasy',forest:'vine',library:'baroque',geo:'deco'};
   const styleFor=theme=>FOR[root.HABITAT_THEME?root.HABITAT_THEME(theme):theme]||'baroque';
 
   /* ---------- the window ---------- */
@@ -93,7 +94,15 @@
   }
 
   /* corner ornaments for the space beside the top of the window */
+  /* a moth orchid seen from the front: three pointed sepals, two broad petals, the lip and the column.
+     fill is its outline; detail is a fine line just inside each petal and the column, for raised relief */
+  function orchidF(cx,cy,s,a){a=a||0;const P2=PI/2,ps=[leaf(cx,cy,s*.52,s*.2,a+P2),leaf(cx,cy,s*.46,s*.19,a-P2-.72),leaf(cx,cy,s*.46,s*.19,a-P2+.72),
+      leaf(cx,cy,s*.5,s*.4,a+P2+1.15),leaf(cx,cy,s*.5,s*.4,a+P2-1.15),leaf(cx,cy,s*.32,s*.22,a-P2)];
+    const fill=U(...ps,circle(cx,cy,s*.1,24)),lw=max(.9,s*.03);
+    const detail=U(...ps.map(p=>subtract(offset(p,-lw),offset(p,-2*lw))),circle(cx,cy,s*.07,20));
+    return {fill,detail};}
   function cornerArt(kind,cx,cy,s){
+    if(kind==='orchid'){const f=orchidF(cx,cy,s*.8,.15);return U(f.fill,leaf(cx-s*.05,cy-s*.18,s*.5,s*.17,-PI*.8))}
     if(kind==='curls'){const o=[spiral(cx,cy,s*.42,1.6,1,0),spiral(cx-s*.25,cy-s*.3,s*.25,1.4,-1,PI)];return U(stroke(o,max(1.2,s*.05)),leaf(cx-s*.1,cy+s*.15,s*.4,s*.16,.6))}
     if(kind==='sunburst'){const o=[];for(let i=0;i<9;i++){const a=PI*(i+.5)/9;o.push([[cx+s*.14*cos(a),cy-s*.2+s*.14*sin(a)],[cx+s*.5*cos(a),cy-s*.2+s*.5*sin(a)]])}return U(stroke(o,max(1.2,s*.05)),circle(cx,cy-s*.2,s*.12,32))}
     const m=MO.motif(kind,s);return move(m.fill,cx,cy-s/2);
@@ -112,6 +121,14 @@
       raised.push(subtract([[[W*.08,y+4],[W*.92,y+4],[m,y+ch*.7-4]]],[[[W*.08+lw*2.5,y+4+lw],[W*.92-lw*2.5,y+4+lw],[m,y+ch*.7-4-lw*2]]]))}
     else if(kind==='leafArch'){const pts=[];for(let i=0;i<=40;i++){const t=i/40;pts.push([W*.1+W*.8*t,y+ch*.75*sin(t*PI)])}o.push(offset(stroke([pts],ch*.18),1));
       for(let i=1;i<10;i++){const t=i/10,x=W*.1+W*.8*t,yy=y+ch*.75*sin(t*PI);o.push(leaf(x,yy,ch*.4,ch*.17,PI/2+(t-.5)*2+(i%2?.6:-.6)))}}
+    else if(kind==='orchidSpray'){
+      /* an arching spray of moth orchids over the window: a stem from the left, flowers getting smaller towards the
+         right, two buds at its tip, and a pair of broad leaves at its foot */
+      const P=t=>[W*.16+W*.68*t,y+ch*(.2+.7*sin(PI*min(1,t*1.05)))];const pts=[];for(let i=0;i<=40;i++)pts.push(P(i/40));
+      o.push(stroke([pts],max(3,ch*.08)),rect(W*.12,y-1,W*.88,y+3));
+      o.push(leaf(W*.17,y+2,ch*.8,ch*.3,PI*.05),leaf(W*.17,y+2,ch*.65,ch*.26,PI*.93));
+      [[.3,.86],[.48,.76],[.65,.64],[.8,.5]].forEach(([t,k],i)=>{const [x,yy]=P(t),f=orchidF(x,yy-ch*.06,ch*k,(i-1.5)*.12);o.push(f.fill);raised.push(f.detail)});
+      for(const t of [.9,.97]){const [x,yy]=P(t);o.push(ellipse(x,yy,ch*.07,ch*.05,24))}}
     else if(kind==='fan'){o.push(ellipse(m,y,W*.24,ch,96));for(let i=0;i<11;i++){const a=PI*(i+.5)/11;raised.push(stroke([[[m+ch*.12*cos(a),y+2+ch*.12*sin(a)],[m+W*.21*cos(a),y+2+ch*.85*sin(a)]]],lw))}raised.push(circle(m,y+2,ch*.08,32))}
     else if(kind==='roof'){const pts=[[-3,y],[W+3,y]];for(let i=0;i<=40;i++){const t=i/40,x=W+3-(W+6)*t,d=abs(x-m)/(W/2+3);pts.push([x,y+ch*.25+ch*.55*(1-d)**1.8+(d>.9?(d-.9)*ch*1.8:0)])}
       o.push([pts]);raised.push(stroke([[[W*.1,y+ch*.2],[W*.9,y+ch*.2]]],lw))}

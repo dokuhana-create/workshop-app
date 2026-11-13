@@ -29,6 +29,7 @@
     else if(kind==='square')r=rrect(-L/2,0,L/2,W,Math.min(L,W)*.18);
     else if(kind==='pebble'){const w=wobble(seed||1,.14,5);r=polar(0,W/2,a=>{const c=Math.cos(a),s=Math.sin(a),e=1/Math.sqrt(c*c/(L*L/4)+s*s/(W*W/4));return e*(1+w(a))})}
     else if(kind==='leaf'){const o=[],n=60;for(let i=0;i<=n;i++){const t=i/n,hw=(W/2)*Math.pow(Math.sin(Math.PI*t),.85);o.push([-L/2+L*t,hw])}for(let i=n-1;i>0;i--){const t=i/n,hw=(W/2)*Math.pow(Math.sin(Math.PI*t),.85)*.92;o.push([-L/2+L*t,-hw])}r=[o.map(([x,y])=>[x,y+W/2])]}
+    else if(kind==='flower'){/* six soft petals round an oval */r=polar(0,W/2,a=>{const c=Math.cos(a),s=Math.sin(a),e=1/Math.sqrt(c*c/(L*L/4)+s*s/(W*W/4));return e*(.9+.1*Math.cos(6*a))},180)}
     else r=rrect(-L/2,0,L/2,W,3);
     return fit(r);
   }
