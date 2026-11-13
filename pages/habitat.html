@@ -3,20 +3,20 @@
 <script src="../shim.js"></script>
 <script src="../lib/clipper.js"></script>
 <script src="../lib/earcut.min.js"></script>
-<script src="../lib/geo.js?v=34"></script>
-<script src="habitat-parts.js?v=34"></script>
-<script src="habitat-enclosure.js?v=34"></script>
-<script src="habitat-more.js?v=34"></script>
-<script src="habitat-motifs.js?v=34"></script>
-<script src="habitat-keep.js?v=34"></script>
-<script src="../lib/sdf.js?v=34"></script>
-<script src="habitat-pots.js?v=34"></script>
-<script src="habitat-sculpt.js?v=34"></script>
-<script src="habitat-trim.js?v=34"></script>
-<script src="habitat-addons.js?v=34"></script>
-<script src="habitat-forms.js?v=34"></script>
-<script src="habitat-shapes.js?v=34"></script>
-<script src="habitat-sets.js?v=34"></script>
+<script src="../lib/geo.js?v=35"></script>
+<script src="habitat-parts.js?v=35"></script>
+<script src="habitat-enclosure.js?v=35"></script>
+<script src="habitat-more.js?v=35"></script>
+<script src="habitat-motifs.js?v=35"></script>
+<script src="habitat-keep.js?v=35"></script>
+<script src="../lib/sdf.js?v=35"></script>
+<script src="habitat-pots.js?v=35"></script>
+<script src="habitat-sculpt.js?v=35"></script>
+<script src="habitat-trim.js?v=35"></script>
+<script src="habitat-addons.js?v=35"></script>
+<script src="habitat-forms.js?v=35"></script>
+<script src="habitat-shapes.js?v=35"></script>
+<script src="habitat-sets.js?v=35"></script>
 <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Bricolage+Grotesque:opsz,wght@12..96,600;12..96,750&family=IBM+Plex+Mono:wght@500&family=IBM+Plex+Sans:wght@400;500;600&display=swap">
 <style>
 /* Same layout as the Resin Workshop: inputs on the left, the 3D preview and downloads beside them. */
@@ -136,7 +136,7 @@ h3{font:600 15px var(--body);margin:0 0 6px}
           <label class="f rectOnly">Corners<select id="corners"></select></label>
           <label class="f rectOnly">Corner posts<select id="frame"></select></label>
           <label class="f rectOnly">Lid fixing<select id="lidScrews"></select></label>
-          <label class="f rectOnly">Magnets for a front frame<select id="frameMags"></select></label>
+          <label class="f rectOnly">Magnets for a name plaque<select id="frameMags"></select></label>
           <label class="f" hidden>Display tower<select id="tiers"></select></label>
           <label class="f"><span id="Wlab">Width (mm)</span><input id="W" type="number" min="60" step="5"></label>
           <label class="f" id="Dwrap">Depth (mm)<input id="D" type="number" min="60" step="5"></label>
@@ -170,6 +170,7 @@ h3{font:600 15px var(--body);margin:0 0 6px}
           <label class="f roundOnly">Wall<select id="roundWall"></select></label>
           <label class="f swingF">Door catch<select id="doorCatch"></select></label>
           <label class="f" hidden>Door window<select id="doorWin"></select></label>
+          <label class="f swingF">Door style<select id="doorStyle"></select></label>
           <label class="f lockF">Door lock<select id="lock"></select></label>
           <label class="f notRound">Panel thickness (mm)<input id="T" type="number" min="1.5" max="6" step="0.5"></label>
           <label class="f">Mesh hole (mm)<input id="hole" type="number" min="1" max="5" step="0.1"></label>
@@ -290,7 +291,7 @@ h3{font:600 15px var(--body);margin:0 0 6px}
           <label class="f">Wall pieces held by<select id="bMount"></select></label>
           <label class="f">Writing<select id="bFont"></select></label>
           <label class="f">Name<input id="bName" type="text" maxlength="24"></label>
-          <label class="f">Frame and trim<select id="bTrim"></select></label>
+          <label class="f">Door and trim style<select id="bTrim"></select></label>
           <label class="f">Trim pieces<select id="bTrimWhat"></select></label>
           <label class="f">Plants<select id="bPlants"></select></label>
           <label class="f">Wall decoration<select id="bWalls"></select></label>
@@ -542,7 +543,7 @@ const SPECIES=[
 ];
 const MATS={petg:{name:'PETG',rho:1.27},asa:{name:'ASA',rho:1.07},pla:{name:'PLA',rho:1.24}};
 const PANEL={clear:'Clear acrylic',mesh:'Printed mesh',tiles:'Swappable tiles (mesh or clear)',solid:'Printed solid wall'};
-const DEF={frameMags:'none',frame:'normal',lidScrews:'none',lidVent:'grid',frontVent:'none',doorWin:'recess',species:'orchidF',body:65,W:200,D:200,H:300,S:40,T:3,hole:1.6,bar:1.2,front:'clear',back:'clear',left:'mesh',right:'mesh',bx:350,by:350,bz:350,mat:'petg',dMagD:10,dMagH:3,shape:'rect',ts:.75,pegs:'grid',rails:'yes',lw:'none',lwD:90,lwN:1,cols:3,rows:3,lock:'none',sides:6,corners:'square',polyFront:'clear',polyWalls:'frontclear',roundWall:'sheet',doorCatch:'magnet',hatch:'plug',hatchD:80,hatchX:0,hatchY:0,tiers:'1'};
+const DEF={doorStyle:'plain',frameMags:'none',frame:'normal',lidScrews:'none',lidVent:'grid',frontVent:'none',doorWin:'recess',species:'orchidF',body:65,W:200,D:200,H:300,S:40,T:3,hole:1.6,bar:1.2,front:'swingWindow',back:'clear',left:'mesh',right:'mesh',bx:350,by:350,bz:350,mat:'petg',dMagD:10,dMagH:3,shape:'rect',ts:.75,pegs:'grid',rails:'yes',lw:'none',lwD:90,lwN:1,cols:3,rows:3,lock:'none',sides:6,corners:'square',polyFront:'clear',polyWalls:'frontclear',roundWall:'sheet',doorCatch:'magnet',hatch:'plug',hatchD:80,hatchX:0,hatchY:0,tiers:'1'};
 const E=Object.assign({},DEF,state.enc||{});
 /* v32 keeps the rectangular enclosure (sliding or swing door) and the nursery cabinet; older saved shapes fall back */
 if(!['rect','nursery'].includes(E.shape))Object.assign(E,{shape:'rect',W:200,D:200,H:300});
@@ -557,8 +558,8 @@ opt($('mat'),Object.entries(MATS).map(([k,m])=>[k,m.name]));
 opt($('eShape'),[['rect','Rectangular'],['nursery','Keeper tool: nursery cabinet with drawers for nymphs']]);
 opt($('lock'),[['none','None'],['pin','Lock pin through the door (takes a mini padlock)']]);
 const PRESETS={keep:['Keep my settings',null],
-  standard:['Standard: sliding acrylic door',{shape:'rect',W:200,D:200,H:300,S:40,front:'clear',back:'clear',left:'mesh',right:'mesh',corners:'square',tiers:'1'},'The classic enclosure. The door slides up through the lid.'],
-  cabinet:['Cabinet: swing door with a window',{shape:'rect',W:200,D:200,H:300,S:40,front:'swingWindow',back:'clear',left:'mesh',right:'mesh',corners:'square',tiers:'1'},'Add a front frame in your theme on the Build tab, or under Accessories, Frame and trim.'],
+  cabinet:['Standard: swing door with a window',{shape:'rect',W:200,D:200,H:300,S:40,front:'swingWindow',back:'clear',left:'mesh',right:'mesh',corners:'square',tiers:'1'},'Pick a theme on the Build tab: the door takes its style.'],
+  standard:['Plain: sliding acrylic door',{shape:'rect',W:200,D:200,H:300,S:40,front:'clear',back:'clear',left:'mesh',right:'mesh',corners:'square',tiers:'1'},'The plain enclosure: the door slides up through the lid. The themed doors need the swing door.'],
   nursery:['Keeper tool: nursery cabinet for nymphs',{shape:'nursery',W:80,H:100,D:100,cols:3,rows:3},null]};
 opt($('preset'),Object.entries(PRESETS).map(([k,v])=>[k,v[0]]));
 $('preset').onchange=()=>{const pr=PRESETS[$('preset').value];if(!pr||!pr[1])return;for(const [k,v] of Object.entries(pr[1]))if(encIds[k])$(encIds[k]).value=v;
@@ -589,6 +590,7 @@ $('preset').onchange=()=>{const pr=PRESETS[$('preset').value];if(!pr||!pr[1])ret
     out.textContent='';const lines=[`${o.name||'?'} · ${o.contact||''}`,`${o.shape}, ${o.W}×${o.D}×${o.H} mm · ${(SETS[o.theme]||{}).name||o.theme}`,`${o.deliv==='ship'?'Shipping':'Pick up'} · estimate ${o.price||'?'}`,o.msg?`“${o.msg}”`:'','Loaded into Enclosure and Build. Check the sizes, then make the files.'];
     for(const l of lines.filter(Boolean)){const d=document.createElement('div');d.textContent=l;out.append(d)}};}
 opt($('tiers'),[['1','One'],['2','Two, stacked'],['3','Three, stacked']]);
+opt($('doorStyle'),[['plain','Plain, rounded window'],...Object.entries(HabitatTrim.STYLES).map(([k,v])=>[k,v.name])]);
 opt($('corners'),[['square','Square'],['rounded','Rounded']]);
 opt($('polyFront'),[['clear','Sliding, clear acrylic'],['mesh','Sliding, printed mesh']]);
 opt($('polyWalls'),[['frontclear','Printed mesh'],['clear','Clear acrylic'],['alt','Alternating clear and mesh']]);
@@ -605,7 +607,7 @@ opt($('pegs'),[['none','None'],['grid','Pegs for accessories']]);
 opt($('rails'),[['no','None'],['yes','On printed mesh panels']]);
 opt($('lw'),[['none','None'],['fine','Lamp seats, with finer printed mesh under the lamps'],['insert','Lamp seats, with openings for a clear disc or fine fabric']]);
 const LW_HINT={none:'',insert:'Each lamp gets a round opening with a flat rim around it. Lay a clear disc (PET or acrylic, up to 1 mm thick) over the opening, which lets about 90 % of the light through, or lay fine fabric mesh (tulle or insect netting) under it, about 70 %. The lamp seat on top holds the disc in place. Feeders can\'t get through either.',fine:'Under each lamp the mesh has thinner 0.6 mm bars with the same hole size, so feeders stay in and more light gets through.'};
-const encIds={species:'species',body:'body',W:'W',D:'D',H:'H',S:'S',T:'T',hole:'hole',bar:'bar',front:'pFront',back:'pBack',left:'pLeft',right:'pRight',bx:'bx',by:'by',bz:'bz',mat:'mat',dMagD:'dMagD',dMagH:'dMagH',shape:'eShape',tiers:'tiers',ts:'ts',pegs:'pegs',rails:'rails',lw:'lw',lwD:'lwD',lwN:'lwN',sides:'sides',corners:'corners',polyFront:'polyFront',polyWalls:'polyWalls',roundWall:'roundWall',doorCatch:'doorCatch',hatch:'hatch',hatchD:'hatchD',hatchX:'hatchX',hatchY:'hatchY',cols:'cols',rows:'nRows',lock:'lock',frame:'frame',lidScrews:'lidScrews',lidVent:'lidVent',frontVent:'frontVent',doorWin:'doorWin',frameMags:'frameMags'};
+const encIds={species:'species',body:'body',W:'W',D:'D',H:'H',S:'S',T:'T',hole:'hole',bar:'bar',front:'pFront',back:'pBack',left:'pLeft',right:'pRight',bx:'bx',by:'by',bz:'bz',mat:'mat',dMagD:'dMagD',dMagH:'dMagH',shape:'eShape',tiers:'tiers',ts:'ts',pegs:'pegs',rails:'rails',lw:'lw',lwD:'lwD',lwN:'lwN',sides:'sides',corners:'corners',polyFront:'polyFront',polyWalls:'polyWalls',roundWall:'roundWall',doorCatch:'doorCatch',hatch:'hatch',hatchD:'hatchD',hatchX:'hatchX',hatchY:'hatchY',cols:'cols',rows:'nRows',lock:'lock',frame:'frame',lidScrews:'lidScrews',lidVent:'lidVent',frontVent:'frontVent',doorWin:'doorWin',frameMags:'frameMags',doorStyle:'doorStyle'};
 for(const k in encIds)$(encIds[k]).value=E[k];
 
 function recommend(){
@@ -703,10 +705,11 @@ function rectModel(p,pv){
   let sw=null;
   if(d.swing){sw=HE.swingDoor({fbW,pH,T:p.T,postX:d.a-(d.g/2+.5),s:d.s,lockZ:d.lockZ},p,pv);
     if(!sw.ok)notes.push('The enclosure is too narrow or low for a swing door. Make it wider and taller, or use a sliding door.');
-    else{parts.push({name:'Front frame with hinge clips',file:'front-frame-swing.stl',tris:place(sw.frameM.tris,(x,y,z)=>[x,-z,y])},{name:'Swing door',file:`swing-door-${sw.mesh?'mesh':'window'}.stl`,tris:place(sw.doorM.tris,(x,y,z)=>[x,-z,y])});
+    else{parts.push({name:'Front frame with hinge clips',file:'front-frame-swing.stl',tris:place(sw.frameM.tris,(x,y,z)=>[x,-z,y])},{name:'Swing door',file:`swing-door-${sw.mesh?'mesh':'window'}.stl`,tris:place(sw.doorM.tris,sw.faceDown?(x,y,z)=>[x,z,-y]:(x,y,z)=>[x,-z,y])});
+      if(sw.knob)parts.push({name:'Door knob',file:'door-knob.stl',tris:place(sw.knob.tris)});
       const e=d.g/2+.5,toW=t=>{const o=new Float32Array(t.length);for(let j=0;j<t.length;j+=9)for(const [v,w] of [[0,0],[1,2],[2,1]]){o[j+w*3]=e+t[j+v*3];o[j+w*3+1]=-d.g/2+.3-t[j+v*3+1];o[j+w*3+2]=d.S+t[j+v*3+2]}return o};
       items.push({tris:toW(sw.frameM.tris),color:c.frame},{tris:toW(sw.doorM.tris),color:sw.mesh?c.mesh:c.frame,alpha:sw.mesh?.85:1});
-      if(sw.win)cut.push([sw.recess?`Door window, acrylic ${fmt(p.T,1)} mm, sits in the recess in the door`:'Door window, acrylic 2–3 mm, glued over the outside of the opening',`${fmt(sw.win[0],1)} × ${fmt(sw.win[1],1)}`]);
+      if(sw.win)cut.push([sw.recess?`Door window, acrylic ${fmt(p.T,1)} mm, goes into the door from the inside`:'Door window, acrylic 2–3 mm, glued over the outside of the opening',`${fmt(sw.win[0],1)} × ${fmt(sw.win[1],1)}`]);
       if(sw.buttons)parts.push({name:'Door window button',n:sw.buttons,file:`door-button-print-${sw.buttons}.stl`,tris:place(sw.button.tris)});
       if(sw.turn){const proud=d.g/2-.3+sw.front-d.a,px=d.W-3,reach=px-(e+sw.edge)+6,dep=HE.latchDepth(d),hub=Math.max(.6,proud+.4),btn=HE.turnButton(hub,dep-.5,[5,Math.max(10,reach)]);
         parts.push({name:'Door turn latch',file:'door-turn-latch.stl',tris:place(btn.tris)});
@@ -731,7 +734,7 @@ function rectModel(p,pv){
   for(const q of tp){const {nx,ny}=q.tiles;rd+=`\n${q.label} tile panel, seen from inside (M = mesh tile, C = clear acrylic):\n`;
     for(let j=ny-1;j>=0;j--){let row='  ';for(let i=0;i<nx;i++)row+=(q.states[i*ny+j]==='m'?'M':'C')+' ';rd+=row+'\n'}}
   if(sw&&sw.ok){rd+=`\nSwing door: the rod along the door's edge snaps into the three clips on the frame from the front. ${sw.catchM?`Catch: 4 round magnets, ${p.dMagD} x ${p.dMagH} mm (2 in the rim, 2 in the door).`:sw.turn?'Catch: push the turn latch into the hole in the front of the right-hand corner post, at the height of the door. Turn it over the door edge to close, upright to open.':'Catch: the printed rib on the rim clicks into the groove in the door.'}\n`;
-    if(sw.recess)rd+=`Door window: lay the door face up, tuck the hinge-side edge of the acrylic under the sloped lip, press the pane into the recess and turn the ${sw.buttons} buttons over its other edge.\n`;}
+    if(sw.recess)rd+=`Door window: lay the door face down, tuck the hinge-side edge of the acrylic under the sloped lip on the inside, press the pane into the recess and turn the ${sw.buttons} buttons over its other edge. The door prints face down too, so its front comes out smooth.\nDoor knob: push its peg into the hole near the free edge of the door.\n`;}
   if(lid.screw)rd+=`\nLid screws: put the lid on, then turn a screw into each corner post through the hole in the lid. Hand-tight is enough; a coin fits the slot.\n`;
   if(base.vents)rd+=`\nAir slots: the base has ${base.vents.n} slots low in the front. Keep the substrate below them, at most ${Math.max(0,Math.round(base.vents.z0-d.f))} mm deep.\n`;
   rd+=`\nAssembly: dry-fit the posts in the base sockets, slide ${d.swing?'the front frame, ':''}the back and side panels into the grooves, put the lid on${d.swing?', then snap the door onto the hinge clips':', then drop the front door in through the slot in the lid'}.\n`;
@@ -1033,9 +1036,6 @@ Object.assign(ITEMS,{
   plate:{group:'decor',more:'nameplate',name:'Name plate',fields:[['t1','Name','Shifty',{text:true}],['t2','Second line','',{text:true}],['th','Letter height',10]],
     selects:[['font','Writing',[['script','Cursive'],['caps','Capitals']]],['mode','Letters',[['stencil','Stencil, cut through'],['raised','Raised'],['engraved','Engraved']]],['shape','Plate shape',[['rounded','Rounded rectangle'],['oval','Oval'],['banner','Banner'],['leaf','Leaf'],['hex','Hexagon'],['arch','Arch'],['cloud','Cloud'],['tag','Luggage tag'],['scroll','Scroll']]],['logo','Shifty\'s mark',[['no','No'],['yes','Yes']]],['border','Border',[['yes','Yes'],['no','No']]],['colour','Colours',[['two','Two colours (raised letters)'],['one','One colour']]]],shuffle:true,mounts:['magnet','clip','glue'],
     hint:'A name plate in joined-up handwriting or in capitals. Cut-through letters show the light or the acrylic behind them; small bridges hold the loops of letters like o, e and a in place. Letters: A–Z, a–z, 0–9, umlauts and \' - . , / : + ! & #. For cursive, a letter height of 8 mm or more keeps the loops open.'},
-  moult:{group:'decor',more:'moult',name:'Moult display',fields:[['t1','Name','Shifty',{text:true}],['t2','Second line','L5 3.11.26',{text:true}],['th','Letter height',6],['L','Plinth length',70],['W','Plinth depth',50],['ph','Plinth height',6],['postH','Post height',60]],
-    selects:[['font','Writing',[['script','Cursive'],['caps','Capitals']]],['shape','Plinth',[['round','Round'],['oval','Oval'],['hex','Hexagon'],['square','Square'],['pebble','Pebble'],['leaf','Leaf'],['log','Log slice']]],['post','Post',[['branch','Twig'],['stake','Plain stake'],['ring','Ring'],['leaf','Leaf'],['fork','Fork']]],['cover','Groove for a clear cover',[['no','No'],['yes','Yes (round and oval)']]],['colour','Colours',[['two','Two colours'],['one','One colour']]]],shuffle:true,mounts:[],
-    hint:'A little stand for a shed skin, with the mantis\'s name and the moult on the plinth (L5 is the fifth instar). Keep one for each moult as a growth record, or add a clear cover against dust.'},
   emblem:{group:'decor',more:'emblem',name:'Shifty\'s emblem',fields:[['size','Size',60],['name','Name on the badge','Shifty\'s',{text:true}]],
     selects:[['font','Writing',[['script','Cursive'],['caps','Capitals']]],['shape','Badge',[['round','Round'],['shield','Shield'],['hex','Hexagon'],['oval','Oval'],['leaf','Leaf'],['square','Square']]],['text','Name',[['yes','Yes'],['no','Mark only']]],['border','Border',[['yes','Yes'],['no','No']]]],mounts:['magnet','clip','glue'],
     hint:'Your maker\'s mark: a mantis face with a sideways glance, for the front of every enclosure you sell. It prints in two colours, and the download also has the logo as SVG files for labels, stickers and your shop.'},
@@ -1077,11 +1077,11 @@ Object.assign(ITEMS,{
     hint:'Two brackets that hang a shallow enclosure on the wall like a picture: a hook goes under the back of the base, another over the back of the lid, and the bracket screws to the wall through two keyholes. Sized from the Enclosure tab. Only for shallow enclosures with little substrate.'},
   carry:{group:'addon',keep:'carry',name:'Carrying handle',fields:[],mounts:['free'],
     hint:'A handle for taking an enclosure to fairs, the vet or a customer: two side straps reach under the base, and a handle bar pushes onto them above the lid. Sized from the Enclosure tab.'},
-  trim:{group:'addon',keep:'trim',name:'Frame and trim in a style',fields:[['name','Name on the frame','',{text:true,show:vis('piece',['all','top','frame'])}]],
-    selects:[['style','Style',Object.entries(HabitatTrim.STYLES).map(([k,v])=>[k,v.name])],['piece','Pieces',[['all','Front frame, finials and feet'],['top','Front frame and finials'],['frame','Front frame only'],['finials','Finials only'],['feet','Feet only']]],
-      ['crest','Crest on top',[['yes','Yes'],['no','No']],{show:vis('piece',['all','top','frame'])}],['colour','Colours',[['one','One'],['two','Two: frame and filigree']],{show:vis('piece',['all','top','frame'])}],['font','Writing',[['script','Cursive'],['caps','Capitals']],{show:vis('piece',['all','top','frame'])}]],
-    mounts:['magnet','glue'],
-    hint:'Dresses the enclosure in a style. The front frame sits in front of the clear front, with a shaped window (a pointed gothic arch, a round arch, a moon gate, a stepped deco top and so on), filigree in the corners, a patterned base with the name, and a crest on top. Finials go on the top corners and feet under the bottom corners. Sized from the Enclosure tab (the frame fits rectangular enclosures). The frame prints flat; a tall frame comes in two halves with puzzle joints.'},
+  trim:{group:'addon',keep:'trim',name:'Door style, crest and trim',fields:[['name','Name on the plaque','',{text:true,show:vis('piece',['all','plaque'])}]],
+    selects:[['style','Style',Object.entries(HabitatTrim.STYLES).map(([k,v])=>[k,v.name])],['piece','Pieces',[['all','Crest, name plaque, finials and feet'],['top','Crest and finials'],['crest','Crest only'],['plaque','Name plaque only'],['finials','Finials only'],['feet','Feet only']]],
+      ['font','Writing',[['script','Cursive'],['caps','Capitals']],{show:vis('piece',['all','plaque'])}]],
+    mounts:['magnet'],
+    hint:'Dresses the enclosure in a style without ever getting in the way of the door. The door itself carries the style (Enclosure, Walls and door, Door style): its window takes the style\'s shape, with engraved ornament round it. Here you get the rest: a crest that stands on the front edge of the lid on two pegs, a name plaque on magnets across the front of the base, finials for the top corners and feet for the bottom corners. Everything prints flat or upright without supports.'},
   sculpt:{group:'dio',keep:'sculpt',name:'Real specimen or statue (3D scan)',fields:[['size','Size (mm): the note below says what it measures',50]],
     selects:[['kind','Piece',HabitatSculpt.OPTIONS],['print','Printing',[['auto','No supports needed (fills under overhangs)'],['full','Full detail, with tree supports']]],
       ['detail','Detail',[['normal','Normal'],['fine','Fine (slower to make)']]]],shuffle:true,mounts:['free','magnet','glue'],
@@ -1180,12 +1180,12 @@ let trimMemo={k:'',v:null};
 function trimEnc(){const p=readEnc(),k=JSON.stringify(p);if(trimMemo.k===k)return trimMemo.v;
   let mn=[1e9,1e9,1e9],mx=[-1e9,-1e9,-1e9];try{for(const it of encModel(p,true).items){const t=it.tris;for(let i=0;i<t.length;i+=3)for(let a=0;a<3;a++){if(t[i+a]<mn[a])mn[a]=t[i+a];if(t[i+a]>mx[a])mx[a]=t[i+a]}}}catch(e){mn=[0,0,0];mx=[p.W,p.D||p.W,p.S+p.H+2.4]}
   const v={rect:p.shape==='rect',W:Math.round((mx[0]-mn[0])*10)/10,Htot:Math.round((mx[2]-Math.max(0,mn[2]))*10)/10,S:p.S,Hwin:p.S+p.H,Lt:2.4,bed:[p.bx||350,p.by||350],box:[mn,mx]};
-  if(v.rect){const d=rectDims(p);v.cornerX=[-mn[0],p.W-mn[0]];v.frontY=-d.E;v.clipReach=d.Eh-d.band;{const lx=HE.lugX(d),zt=d.S+d.H+d.Lt-HE.LUG.zc;v.topMags=[[lx-mn[0],zt],[d.W-lx-mn[0],zt]]}v.blocked=d.latch||d.lockZ!=null;v.frameMags=p.frameMags==='yes';v.lidScrews=p.lidScrews==='screws';v.screw=HE.screwSpec(d.slim);v.finSpots=HE.screwSpots(d,{lidScrews:'screws'})}
+  if(v.rect){const d=rectDims(p);v.cornerX=[-mn[0],p.W-mn[0]];v.frontY=-d.E;v.clipReach=d.Eh-d.band;v.ztop=p.S+p.H+2.4;v.lidCrest={W:p.W,E:d.E,xs:HE.crestX(d),C:HE.CREST,ok:p.doorStyle!=='plain'};v.plaque={W:p.W,E:d.E,S:p.S};v.blocked=d.latch||d.lockZ!=null;v.frameMags=p.frameMags==='yes';v.lidScrews=p.lidScrews==='screws';v.screw=HE.screwSpec(d.slim);v.finSpots=HE.screwSpots(d,{lidScrews:'screws'})}
   trimMemo={k,v};return v}
 HabitatKeep.trim=o=>HabitatTrim.piece(Object.assign({},trimEnc(),o));
 /* the anatomical skull loads in the background; redraw when it arrives */
 let scanT;HabitatSculpt.onready=()=>{clearTimeout(scanT);scanT=setTimeout(()=>{if(typeof BMEMO!=='undefined')BMEMO.clear();if(state.tab==='acc'&&['sculpt','set'].includes(A.item))accCalc();else if(state.tab==='build')buildCalc()},200)};
-HabitatSculpt.setVersion('34');
+HabitatSculpt.setVersion('35');
 HabitatKeep.hanger=o=>HabitatForms.hanger(Object.assign({},trimEnc(),o));HabitatKeep.carry=o=>HabitatForms.carry(Object.assign({},trimEnc(),o));
 function encInfo(){
   const e=Object.assign({},DEF,state.enc||{}),bed=Math.max(e.bx||350,e.by||350),g=e.T+.6,band=g/2+2.4,o={e,bed,band,hatchR:e.hatch!=='none'?(state.encHatchR||Math.min(60,e.hatchD/2)):0};
@@ -1312,16 +1312,21 @@ const INTERIOR=['dish','feeder','twig','ledge','ladder','bridge','flower','bark'
 const FLOORFIRST=['dish','feeder','twig','pot','moss','moult'];
 const B=Object.assign({plants:'tiered',walls:'calm',trim:'match',trimWhat:'all',theme:'orchid',pack:'3',size:'m',mount:'magnet',font:'script',name:'Shifty',must:{dish:1,pot:1,twig:1,wall:1,deco:1},off:{},extra:[],seed:1},state.build||{});
 /* v32: seven themes, two packs; settings saved before then are mapped across */
+if(B.trimWhat==='frame')B.trimWhat='all';
 if(B.v!==32){B.v=32;B.theme=HABITAT_THEME(B.theme);B.pack=+B.pack>1?'3':'1';B.off={};if(B.trim!=='match'&&B.trim!=='none'&&!HabitatTrim.STYLES[B.trim])B.trim='match'}
 if(B.mount==='glue')B.mount='magnet';
 for(const k of ['must','off'])B[k]=B[k]||{};B.extra=B.extra||[];
-const saveB=()=>{state.build=B;persist()};
+const saveB=()=>{state.build=B;persist();syncDoor()};
+setTimeout(syncDoor,0);
+/* the door wears the build's style: keep the Enclosure tab's door style in step with it */
+function syncDoor(){const el=$('doorStyle');if(!el)return;const want=B.trim==='none'?'plain':B.trim==='match'?HabitatTrim.styleFor(B.theme):B.trim;
+  if(HabitatTrim.STYLES[want]||want==='plain'){if(el.value!==want){el.value=want;encChanged();if(typeof BMEMO!=='undefined')BMEMO.clear()}}}
 (()=>{const s=$('bTheme'),gs={};for(const [k,t] of Object.entries(SETS)){const g=t.group||'Other';if(!gs[g]){gs[g]=document.createElement('optgroup');gs[g].label=g;s.append(gs[g])}const o=document.createElement('option');o.value=k;o.textContent=t.name;gs[g].append(o)}})();
 opt($('bPack'),[['1','Essentials'],['3','Deluxe']]);opt($('bSize'),[['m','Standard'],['s','Small, for nymphs'],['l','Large, for big species']]);
 opt($('bMount'),[['magnet','Magnets'],['clip','Pin rails']]);opt($('bTrim'),[['match','Matching the style'],['none','None'],...Object.entries(HabitatTrim.STYLES).map(([k,v])=>[k,v.name])]);
 opt($('bPlants'),[['tiered','Tiered planter and a wall pot'],['pots','A pot and a wall pot'],['theme','As the style has them']]);
 opt($('bWalls'),[['calm','One piece at most'],['none','None'],['full','Everything in the style']]);
-opt($('bTrimWhat'),[['all','Front frame, finials and feet'],['top','Front frame and finials'],['frame','Front frame only'],['small','Finials and feet only']]);opt($('bFont'),[['script','Cursive'],['caps','Capitals']]);
+opt($('bTrimWhat'),[['all','Crest, name plaque, finials and feet'],['top','Crest and finials'],['plaque','Name plaque only'],['small','Finials and feet only']]);opt($('bFont'),[['script','Cursive'],['caps','Capitals']]);
 (()=>{const s=$('bAdd');for(const g in GROUPS){const og=document.createElement('optgroup');og.label=GROUPS[g];for(const k of INTERIOR)if(ITEMS[k]&&ITEMS[k].group===g){const o=document.createElement('option');o.value=k;o.textContent=ITEMS[k].name;og.append(o)}if(og.children.length)s.append(og)}})();
 for(const [id,k] of [['bPlants','plants'],['bWalls','walls'],['bTheme','theme'],['bPack','pack'],['bSize','size'],['bMount','mount'],['bFont','font'],['bName','name'],['bTrim','trim'],['bTrimWhat','trimWhat']]){const el=$(id);el.value=B[k];el.addEventListener(el.tagName==='SELECT'?'change':'input',()=>{B[k]=el.value;saveB();buildSetup()})}
 $('bShuffle').onclick=()=>{B.seed=(B.seed||1)+1;saveB();buildCalc()};
@@ -1375,7 +1380,7 @@ function buildSetup(){
   const box=$('bPieces');box.innerHTML='<legend>In this build</legend>';
   for(const p of buildPieces()){const lab=document.createElement('label'),c=document.createElement('input');c.type='checkbox';c.checked=!B.off[p.id];
     c.onchange=()=>{if(c.checked)delete B.off[p.id];else B.off[p.id]=1;saveB();buildSetup()};
-    const t=(p.key==='trim'?'Frame and trim: '+HabitatTrim.STYLES[p.ov.style].name:pieceName(p.key,p.ov))+(p.src==='must'?' (added so the build has '+MUST.find(m=>m[0]===p.why)[1].toLowerCase()+')':p.src==='extra'?' (added by you)':'');lab.append(c,' '+t);
+    const t=(p.key==='trim'?'Door style and trim: '+HabitatTrim.STYLES[p.ov.style].name:pieceName(p.key,p.ov))+(p.src==='must'?' (added so the build has '+MUST.find(m=>m[0]===p.why)[1].toLowerCase()+')':p.src==='extra'?' (added by you)':'');lab.append(c,' '+t);
     if(p.src==='extra'){const x=document.createElement('button');x.type='button';x.className='btn';x.textContent='Remove';x.style.padding='2px 8px';x.style.marginLeft='auto';x.onclick=ev=>{ev.preventDefault();B.extra.splice(p.i,1);for(const k in B.off)if(k[0]==='x')delete B.off[k];saveB();buildSetup()};lab.append(x)}
     box.append(lab)}
   buildCalc();
@@ -1429,6 +1434,8 @@ function buildScene(des){
     for(const q of d.r.parts)if(q.at==='bottom'&&q.m){const t=q.m.tris;let z1=0;for(let i=2;i<t.length;i+=3)z1=Math.max(z1,t[i]);lift=Math.max(lift,z1-5)}
     for(const q of d.r.parts){if(!q.m||q.at==='loose')continue;const col=q.role==='Colour 2'?c2:c1;
       if(q.at==='front')items.push({tris:place0(q.m.tris,(x,y,z)=>[mn[0]+x,(te.frontY??mn[1]-1)-z,y]),color:col});
+      else if(q.at==='crest'&&te.lidCrest){const c=te.lidCrest;items.push({tris:place0(q.m.tris,(x,y,z)=>[x-c.E,-c.E+c.C.y1-z,te.ztop+y]),color:col})}
+      else if(q.at==='plaque'&&te.plaque){const c=te.plaque;items.push({tris:place0(q.m.tris,(x,y,z)=>[x-c.E+3,-c.E-z,4+y]),color:col})}
       else if(q.at==='top'){if(!te.rect)continue;for(const [cx,cy] of te.finSpots||[[mn[0]+8,mn[1]+8],[mx[0]-8,mn[1]+8],[mn[0]+8,mx[1]-8],[mx[0]-8,mx[1]-8]])items.push({tris:place0(q.m.tris,(x,y,z)=>[x+cx,y+cy,z+mx[2]]),color:col})}
       else if(q.at==='bottom'){if(!te.rect)continue;const t=q.m.tris;let z1=0;for(let i=2;i<t.length;i+=3)z1=Math.max(z1,t[i]);const zt=z1-5;
         for(const [cx,cy,a] of [[mn[0]+15,mn[1]+15,0],[mx[0]-15,mn[1]+15,1],[mx[0]-15,mx[1]-15,2],[mn[0]+15,mx[1]-15,3]]){const c=[1,0,-1,0][a],s_=[0,1,0,-1][a];

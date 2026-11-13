@@ -257,13 +257,42 @@
     return {parts:[{file:`foot-${k}.stl`,role:'Main colour',m:build(f),at:'bottom',count:4}],notes,magnets:0};
   }
 
+  /* ---------- the crest on the lid (v35) ----------
+     A flat plaque in the style's crest shape that stands on the front edge of the lid's cornice. Two square pegs on its
+     lower edge push into the slots in the lid (they come with a themed door style). Printed flat, relief up. */
+  function lidCrest(o){
+    const st=STYLES[o.style]||STYLES.baroque,c=o.lidCrest,Wc=c.W+2*c.E,ch=min(Wc*.22,46),lw=max(1.3,Wc*.007),bt=c.C.y1-c.C.y0,notes=[];
+    const cr=crest(st.crest,Wc,0,ch,lw),pegs=c.xs.map(x=>x+c.E),pk=c.C.peg/2;
+    const bar=rrect(pegs[0]-8,0,pegs[1]+8,3.2,1.2);
+    const body=intersect(U(cr.fill,bar),rect(-50,0,Wc+50,ch*3)),f=[prism(0,bt,body),prism(0,bt,U(...pegs.map(x=>rrect(x-pk,-c.C.len,x+pk,.5,.6))))];
+    if(cr.raised&&cr.raised.length){const r=intersect(cr.raised,offset(body,-.8));if(r.length)f.push(prism(bt,bt+1,r))}
+    notes.push('Crest: push its two pegs into the slots on the front edge of the lid. It prints flat on its back.');
+    if(!c.ok)notes.push('The lid only gets the crest slots with a themed door style (Enclosure, Walls and door, Door style).');
+    return {parts:[{file:'lid-crest.stl',role:'Main colour',m:build(f),at:'crest'}],notes,magnets:0};
+  }
+  /* ---------- the name plaque on the plinth (v35) ----------
+     A low plaque across the front of the base, below the door, with the style's running pattern and the name. Two
+     magnets in its back meet the pockets in the plinth's front corners. */
+  function plaque(o){
+    const st=STYLES[o.style]||STYLES.baroque,q=o.plaque,W=q.W+2*q.E-6,H=max(20,q.S-8),bt=2.4,oh=1.2,lw=max(1.3,W*.007),notes=[];
+    const body=rrect(0,0,W,H,3),art=[subtract(offset(body,-1.6),offset(body,-2.8))];
+    let rail=pattern(st.rail,6,4.5,W-6,H-4.5,lw,5);
+    if(o.name&&o.name.trim()){const th=min(H*.5,W*.1),t=HM.text2D([o.name.trim()],th,max(1.4,th*.13),o.font||'script'),tr=move(t.rings,W/2,H/2),pad=offset(tr,4);rail=subtract(rail,pad);art.push(tr)}
+    art.push(rail);
+    const md=o.md||10,mh=o.mh||3,mags=[[q.E-3,q.S/2-4],[q.W+q.E-3,q.S/2-4]],pd=max(mh+.2,bt+oh),ros=U(...mags.map(([x,y])=>circle(x,y,md/2+3.2,48)));
+    const deco=subtract(intersect(U(...art),offset(body,-1.2)),offset(ros,1));
+    const f=[prism(0,bt,body),prism(bt,bt+oh,deco),prism(bt,pd+.6,ros),...mags.map(([x,y])=>prism(-1,pd,G.mag(x,y,md),'sub'))];
+    notes.push(`Name plaque: 2 magnets ${md} x ${mh} mm pressed into its back, and 2 in the pockets in the front corners of the base (Enclosure, Size, Magnets for a name plaque). It prints flat on its back.`);
+    return {parts:[{file:'name-plaque.stl',role:'Main colour',m:build(f),at:'plaque'}],notes,magnets:2};
+  }
   function piece(o){
     const which=o.piece||'all',out={parts:[],notes:[],magnets:0};
     const add=r=>{out.parts.push(...r.parts);out.notes.push(...r.notes);out.magnets+=r.magnets};
-    if(['frame','all','top'].includes(which)){if(o.rect)add(frame(o));else out.notes.push('The front frame fits rectangular enclosures only; finials and feet fit any.')}
-    if(['finials','all','top','small'].includes(which))add(finial(Object.assign({},o,{h:o.fh||max(22,min(40,o.W*.13))})));
+    if(['all','top','crest'].includes(which)){if(o.rect&&o.lidCrest)add(lidCrest(o));else out.notes.push('The lid crest fits rectangular enclosures only; finials and feet fit any.')}
+    if(['all','plaque'].includes(which)&&o.rect&&o.plaque)add(plaque(o));
+    if(['finials','all','top','small'].includes(which))add(finial(Object.assign({},o,{h:o.fh||max(22,min(40,(o.lidCrest?o.lidCrest.W:o.W)*.13))})));
     if(['feet','all','small'].includes(which))add(foot(Object.assign({},o,{h:o.ft||22})));
     return out;
   }
-  root.HabitatTrim={STYLES,FOR,styleFor,frame,finial,foot,piece,opening};
+  root.HabitatTrim={STYLES,FOR,styleFor,frame,finial,foot,piece,opening,pattern,cornerArt,crest};
 })(typeof window!=='undefined'?window:globalThis);

@@ -91,13 +91,13 @@ const DEFAULT={shop:"Shifty's",email:'',cur:'CHF',base:{rect:79,cabinet:119,nurs
 let CFG=DEFAULT;try{const m=location.hash.match(/cfg=([^&]+)/);if(m)CFG=Object.assign({},DEFAULT,JSON.parse(decodeURIComponent(escape(atob(m[1].replace(/-/g,'+').replace(/_/g,'/')))))) }catch(e){}
 const $=id=>document.getElementById(id);
 const SPECIES=[['orchidF',[65,[200,200,300]]],['orchidM',[30,[120,120,180]]],['orchidN',[15,[100,100,150]]],['deroF',[90,[300,200,300]]],['deroM',[75,[200,200,250]]],['deroN',[25,[120,120,150]]],['other',[50,[160,160,240]]]];
-const SHAPES=[['rect','M8 10h48v46H8z M8 10l6-4h48l-6 4 M56 10l6-4v46l-6 4'],['cabinet','M10 58V20q22-18 44 0v38z M10 58h44 M20 58V26q12-10 24 0v32'],['nursery','M8 8h48v48H8z M24 8v48 M40 8v48 M8 24h48 M8 40h48']];
+const SHAPES=[['cabinet','M10 58V20q22-18 44 0v38z M10 58h44 M20 58V26q12-10 24 0v32'],['rect','M8 10h48v46H8z M8 10l6-4h48l-6 4 M56 10l6-4v46l-6 4'],['nursery','M8 8h48v48H8z M24 8v48 M40 8v48 M8 24h48 M8 40h48']];
 const T={
 de:{title:'Gestalte dein Terrarium',lead:'Wähle Tier, Form, Grösse, Stil und Extras. Rechts siehst du sofort den Preis. Am Schluss sendest du die Bestellung per E-Mail; ich melde mich mit Bildern und dem genauen Angebot.',
  s1:'1. Dein Tier',s1s:'Die Grösse richtet sich danach, wie viel Platz das Tier zum Klettern und Häuten braucht.',animal:'Tier',
  s2:'2. Form',s2s:'Alle durchsichtigen Wände sind aus Acryl oder PET, nichts Durchsichtiges ist gedruckt.',
  s3:'3. Grösse',s3s:'Standard passt für ausgewachsene Tiere; klein für Jungtiere.',cols:'Schubladen nebeneinander',rows:'Schubladen übereinander',
- s4:'4. Stil',s4s:'Ein Stilpaket bringt passende Einrichtung mit: Blumen, Äste, Futternapf, Deko.',theme:'Stil',pack:'Paket',trim:'Passender Zierrahmen',trims:'Front, Eckaufsätze und Füsse im gleichen Stil.',
+ s4:'4. Stil',s4s:'Ein Stilpaket bringt passende Einrichtung mit: Blumen, Äste, Futternapf, Deko.',theme:'Stil',pack:'Paket',trim:'Passende Verzierung',trims:'Aufsatz auf dem Deckel, Namensschild, Eckaufsätze und Füsse im gleichen Stil.',
  s5:'5. Extras',lamp:'Pflanzenlampe mit Timer',lamps:'Runde 9-cm-Lampe mit 3/9/12-h-Timer und Dimmer, in einem Halter auf dem Deckel.',lock:'Türschloss',locks:'Ein Sicherungsstift, passend für ein Mini-Vorhängeschloss: gut bei Kindern und Katzen.',
  plate:'Namensschild',plates:'Mit dem Namen deines Tiers, in Schreibschrift.',pname:'Name auf dem Schild',
  s6:'6. Deine Angaben',name:'Dein Name',contact:'E-Mail oder Telefon',deliv:'Lieferung',msg:'Wünsche oder Fragen',
@@ -105,15 +105,15 @@ de:{title:'Gestalte dein Terrarium',lead:'Wähle Tier, Form, Grösse, Stil und E
  pick:'Abholen',ship:'Versand',copied:'Kopiert. Füge den Code in deine Nachricht ein.',noMail:'Kopiere den Bestellcode und schicke ihn mir per Nachricht.',need:'Bitte gib deinen Namen und eine Kontaktmöglichkeit an.',
  sizes:{s:'Klein',m:'Standard',l:'Gross'},packs:{0:'Ohne Einrichtung',1:'Grundausstattung',2:'Komplettset',3:'Deluxe'},
  species:{orchidF:'Orchideenmantis, Weibchen',orchidM:'Orchideenmantis, Männchen',orchidN:'Orchideenmantis, Jungtier',deroF:'Grosse Totes Blatt, Weibchen',deroM:'Grosse Totes Blatt, Männchen',deroN:'Grosse Totes Blatt, Jungtier',other:'Andere Mantis oder Insekt'},
- shapes:{rect:['Klassisch','Rechteckig, Schiebetür aus Acryl'],cabinet:['Schrank','Hoch, mit Flügeltür und Fenster; der Zierrahmen passt zum Stil'],book:['Buch im Regal','Ein grosses antikes Buch; der Deckel ist die Tür'],corner:['Eckterrarium','Viertelkreis für eine Regal- oder Zimmerecke'],
+ shapes:{rect:['Schlicht','Schiebetür aus Acryl, ohne Stil'],cabinet:['Mit Flügeltür','Die Tür trägt den Stil: Fensterform und Verzierung'],book:['Buch im Regal','Ein grosses antikes Buch; der Deckel ist die Tür'],corner:['Eckterrarium','Viertelkreis für eine Regal- oder Zimmerecke'],
   dome:['Glashauskuppel','Facettierte Kuppel wie ein Gewächshaus'],cage:['Viktorianischer Vogelkäfig','Runder Gitterkäfig mit Glockendach'],round:['Rund','Runde, klare Wand'],hexcell:['Wabe für die Wand','Sechseckige Zelle, mehrere als Wabe'],
   tower:['Turm','Drei Terrarien übereinander'],showcase:['Vitrine','Rundum durchsichtig, für Ausstellungen'],nursery:['Kinderzimmer-Schrank','Schubladen für Jungtiere']},
- total:'Total',base:'Terrarium',packL:'Stilpaket',trimL:'Zierrahmen',lampL:'Lampe',lockL:'Schloss',plateL:'Namensschild',shipL:'Versand',subj:'Terrarium-Bestellung',dims:'Innenmasse etwa'},
+ total:'Total',base:'Terrarium',packL:'Stilpaket',trimL:'Verzierung im Stil',lampL:'Lampe',lockL:'Schloss',plateL:'Namensschild',shipL:'Versand',subj:'Terrarium-Bestellung',dims:'Innenmasse etwa'},
 en:{title:'Design your enclosure',lead:'Choose the animal, shape, size, style and extras; the price updates on the right. At the end, send the order by e-mail, and I\'ll get back to you with pictures and the exact quote.',
  s1:'1. Your animal',s1s:'The size follows how much room the animal needs to climb and moult.',animal:'Animal',
  s2:'2. Shape',s2s:'Every clear wall is acrylic or PET sheet; nothing see-through is printed.',
  s3:'3. Size',s3s:'Standard suits adults; small is for nymphs.',cols:'Drawers across',rows:'Drawers down',
- s4:'4. Style',s4s:'A style pack brings matching furnishings: flowers, branches, a feeding dish, decorations.',theme:'Style',pack:'Pack',trim:'Matching decorative frame',trims:'Front, corner finials and feet in the same style.',
+ s4:'4. Style',s4s:'A style pack brings matching furnishings: flowers, branches, a feeding dish, decorations.',theme:'Style',pack:'Pack',trim:'Matching trim',trims:'A crest on the lid, a name plaque, corner finials and feet in the same style.',
  s5:'5. Extras',lamp:'Plant lamp with timer',lamps:'A round 9 cm lamp with a 3/9/12 h timer and dimmer, in a seat on the lid.',lock:'Door lock',locks:'A locking pin that takes a mini padlock: good with children and cats.',
  plate:'Name plate',plates:'With your pet\'s name in cursive.',pname:'Name on the plate',
  s6:'6. Your details',name:'Your name',contact:'E-mail or phone',deliv:'Delivery',msg:'Wishes or questions',
@@ -121,11 +121,11 @@ en:{title:'Design your enclosure',lead:'Choose the animal, shape, size, style an
  pick:'Pick up',ship:'Shipping',copied:'Copied. Paste the code into your message.',noMail:'Copy the order code and send it to me in a message.',need:'Please add your name and a way to reach you.',
  sizes:{s:'Small',m:'Standard',l:'Large'},packs:{0:'No furnishings',1:'Essentials',2:'Full set',3:'Deluxe'},
  species:{orchidF:'Orchid mantis, adult female',orchidM:'Orchid mantis, adult male',orchidN:'Orchid mantis, nymph',deroF:'Giant dead leaf mantis, female',deroM:'Giant dead leaf mantis, male',deroN:'Giant dead leaf mantis, nymph',other:'Another mantis or insect'},
- shapes:{rect:['Classic','Rectangular, sliding acrylic door'],cabinet:['Cabinet','Tall, with a swing door and a window; the front frame matches your style'],book:['Book on the shelf','A big antique book; the cover is the door'],corner:['Corner enclosure','A quarter circle for a shelf or room corner'],
+ shapes:{rect:['Plain','Sliding acrylic door, no theme'],cabinet:['Swing door','The door carries the style: window shape and ornament'],book:['Book on the shelf','A big antique book; the cover is the door'],corner:['Corner enclosure','A quarter circle for a shelf or room corner'],
   dome:['Glass-house dome','A faceted dome like a greenhouse'],cage:['Victorian birdcage','A round cage with a bell-shaped top'],round:['Round','A round clear wall'],hexcell:['Honeycomb wall cell','A hexagonal cell; several make a honeycomb'],
   tower:['Tower','Three enclosures stacked'],showcase:['Show case','Clear all round, for fairs'],nursery:['Nursery cabinet','Drawers for nymphs']},
- total:'Total',base:'Enclosure',packL:'Style pack',trimL:'Decorative frame',lampL:'Lamp',lockL:'Lock',plateL:'Name plate',shipL:'Shipping',subj:'Enclosure order',dims:'Inside about'}};
-let L='de';const st={species:'orchidF',shape:'rect',size:'m'};
+ total:'Total',base:'Enclosure',packL:'Style pack',trimL:'Matching trim',lampL:'Lamp',lockL:'Lock',plateL:'Name plate',shipL:'Shipping',subj:'Enclosure order',dims:'Inside about'}};
+let L='de';const st={species:'orchidF',shape:'cabinet',size:'m'};
 const fmt=v=>`${CFG.cur} ${(Math.round(v*100)/100).toFixed(2)}`;
 function dimsOf(){const box=SPECIES.find(s=>s[0]===st.species)[1][1],k={s:.8,m:1,l:1.25}[st.size],r=v=>Math.round(v*k/5)*5;
   if(st.shape==='nursery')return {W:80,H:100,D:100};

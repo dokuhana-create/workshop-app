@@ -233,14 +233,13 @@
     const m=base(rectC(d),{gw:d.g,wall:2.4,S:d.S,s:d.s,f:d.f,join:'miter',corners:rectCorners(d,p.corners==='rounded'),rounded:!d.E&&p.corners==='rounded',subs},p);m.vents=v;return m}
   /* the cornice plate: the lid's top runs out to the plinth line, chamfered top and bottom */
   function lidInset(z){if(z<.8)return .8-z;if(z>1.6)return z-1.6;return 0}
-  /* where a front frame's top magnets sit: in lugs under the cornice, in front of the front corner blocks */
-  const lugX=d=>(-d.E+2.4+1.2)/2;
-  const LUG={zc:2.4+6.3,h:2.4+12.4};
+  /* where a crest stands on the lid: two square pegs go into slots in small blocks under the front of the cornice */
+  const crestX=d=>[d.W/2-d.W*.22,d.W/2+d.W*.22];
+  const CREST={y0:1,y1:5,peg:4,len:7};
   function cornice(d,p){
-    const r=p.corners==='rounded'?6:2,ob=d.g/2+2.4,f=[varying(0,2.4,z=>plRect(d,lidInset(z),r),.2)];
-    if(p.frameMags==='yes'){const md=p.dMagD||10,mh=p.dMagH||3;
-      for(const xc of [lugX(d),d.W-lugX(d)]){const x0=Math.max(xc-6.6,-d.E+1.2),x1=Math.min(xc+6.6,d.W+d.E-1.2);
-        f.push(prism(1,LUG.h,rect(x0,-d.E+.01,x1,-d.Eh+.3)),G.yMag(xc,LUG.zc,md,-d.E-1,-d.E+mh+.2,'sub'))}}
+    const r=p.corners==='rounded'?6:2,f=[varying(0,2.4,z=>plRect(d,lidInset(z),r),.2)];
+    if(p.doorStyle&&p.doorStyle!=='plain')for(const x of crestX(d)){const c=CREST.peg/2+.15;
+      f.push(prism(1,2.4+6,rect(x-5,-d.E+.6,x+5,-d.E+CREST.y1+2)),prism(-1,CREST.len+.4,rect(x-c,-d.E+CREST.y0-.15,x+c,-d.E+CREST.y1+.15),'sub'))}
     return f;
   }
   /* where each corner's lid screw goes: in the outer quarter of the post, clear of both panel slots */
@@ -367,13 +366,65 @@
      the door snaps in from the front and turns on the rod. No pin, no screws.
      catch 'magnet': two round magnets in the rim and door. 'detent': a printed rib on the rim clicks into a
      groove in the door. */
+  /* ---------- the window door (v35) ----------
+     Built lying down, in its own frame: x across the door, y up the door, z through it from the inner face (off) to
+     the outer face (off+dt); it prints face down on the bed, so the outer face comes out smooth and the engraving
+     crisp. The pane goes in from the inside: its hinge-side edge tucks under a sloped lip, turn buttons hold the other
+     edge. The front layer in front of the pane carries the window opening in the theme's shape and the engraved
+     ornament around it. A push-in knob replaces the old moulded pull, so nothing stands proud of the face. */
+  function themedDoor(q,p){
+    const {xh,yh,rr,cR,gp,zone,xm,zm,xd1,xo0,xo1,zo0,zo1,zd0,zd1,off,dt,T,md,pd,mag,turn}=q,Z1=off+dt,TR=root.HabitatTrim;
+    const st=TR&&p.doorStyle&&TR.STYLES[p.doorStyle]?TR.STYLES[p.doorStyle]:null;
+    const f=[prism(off,Z1,rect(xh,zd0,xd1,zd1))];
+    /* the hinge rod along the hinge edge, and the gaps for the frame's clips */
+    const xIv=(rings,z)=>G.slice(rings,z);
+    f.push(varying(off,Z1,z=>xIv(circle(xh,yh,rr,40),z).map(([a,b])=>rect(a,zd0,b,zd1)[0]),.2));
+    const cut=subtract(rect(xh-cR-2,off-1,xh+cR+1.2,Z1+1),circle(xh,yh,rr+.01,40));
+    for(const i of [0,2,4]){const [z0,z1]=zone(i);f.push(varying(off-1,Z1+1,z=>xIv(cut,z).map(([a,b])=>rect(a,z0-gp,b,z1+gp)[0]),.2,'sub'))}
+    /* catch: magnet pockets or click dimples in the inner face */
+    if(mag)for(const z of zm)f.push(prism(off-1,off+pd,G.mag(xm,z,md),'sub'));
+    else if(!turn)for(const z of zm)f.push(prism(off-1,off+.9,rect(xm-.9,z-13,xm+.9,z+13),'sub'));
+    if(q.lockZ!=null)for(const z of [q.lockZ-6,q.lockZ+6])f.push(prism(Z1-3,Z1+1,circle(xd1-5,z,1.5,24),'sub'));
+    /* the pane: same size as before (it fits the panes already cut), in a recess from the inside */
+    const PL=xo0,PR=xo1+6,zR0=zo0-3.3,zR1=zo1+3.3,dR=T+.3;
+    f.push(varying(off-1,off+dR,z=>{const t=Math.max(0,Math.min(1,(z-off)/dR)),xl=PL+1.2-1.5*t;return rect(xl,zR0,PR+.3,zR1)},.2,'sub'));
+    const bx=PR+.3+3.3;let buttons=0;
+    if(bx+2.6<=xd1){const zs=[zR0+14,zR1-14];for(const z of zs)f.push(prism(off-1,off+4.5,circle(bx,z,1.5,24),'sub'));buttons=zs.length}
+    /* the window opening in the front layer: the theme's shape inside the pane, 3 mm of pane held all round */
+    const ox0=PL+3,ox1=PR-3,oz0=zR0+3.3,oz1=zR1-3.3;
+    const win=st?TR.opening(st.open,ox0,oz0,ox1,oz1):G.rrect(ox0,oz0,ox1,oz1,6);
+    f.push(prism(off+dR-.01,Z1+1,win,'sub'));
+    /* knob hole on the free side, at mid height */
+    const kz=(zd0+zd1)/2,kx=xd1-6;f.push(prism(Z1-4.5,Z1+1,circle(kx,kz,1.6,24),'sub'));
+    /* engraved ornament: the theme's corner art beside the top of the window, a running pattern up the free side,
+       and a fine line round the opening */
+    let art=[];
+    if(st){const lw=1.2,face=G.rrect(xh+cR+2,zd0+2,xd1-2,zd1-2,2),keep=subtract(face,offset(win,1.2));
+      art.push(subtract(offset(win,2.6),offset(win,1.4)));
+      /* corner art: in the largest round space beside the top of the window, found by search */
+      const segD=(px,py,rings)=>{let d=1e9;for(const r of rings)for(let i=0;i<r.length;i++){const [ax,ay]=r[i],[bx_,by_]=r[(i+1)%r.length],vx=bx_-ax,vy=by_-ay,L2=vx*vx+vy*vy||1,t=Math.max(0,Math.min(1,((px-ax)*vx+(py-ay)*vy)/L2));d=Math.min(d,Math.hypot(px-ax-t*vx,py-ay-t*vy))}return d};
+      if(st.open!=='rect'){let best=null;const w=ox1-ox0;
+        for(let i=0;i<=24;i++)for(let j=0;j<=24;j++){const px=ox0-4+(w*.5)*i/24,py=oz1+2-(w*.6)*j/24;if(!G.inside(keep,px,py))continue;const dd=segD(px,py,keep);if(!best||dd>best[2])best=[px,py,dd]}
+        if(best&&best[2]>5){const sz=best[2]*1.8;for(const [cx,fl] of [[best[0],false],[ox0+ox1-best[0],true]]){let a=TR.cornerArt(st.corner,cx,best[1],sz);if(fl)a=a.map(r=>r.map(([x,y])=>[2*cx-x,y]).reverse());art.push(a)}}}
+      const sx0=PR+.8,sx1=xd1-2.2;if(sx1-sx0>4.5)art.push(TR.pattern(st.stile,sx0,zd0+16,sx1,zd1-16,.9,7));
+      art=intersect(U2(art),offset(keep,-.6));
+      if(art.length)f.push(prism(Z1-.8,Z1+1,art,'sub'))}
+    const m=build(f);
+    /* back to the enclosure's axes: x stays, the door's y becomes height, its z becomes depth */
+    const t=m.tris,o2=new Float32Array(t.length);
+    for(let i=0;i<t.length;i+=9)for(const [v,w] of [[0,0],[1,2],[2,1]]){o2[i+w*3]=t[i+v*3];o2[i+w*3+1]=t[i+v*3+2];o2[i+w*3+2]=t[i+v*3+1]}
+    return {doorM:{tris:o2},faceDown:true,win:[PR-PL,zR1-zR0-.6],recess:true,buttons,button:buttons?turnButton(0,4.5):null,knob:knob(),styled:!!st,face2D:{art,win,leaf:[[xh,zd0],[xd1,zd0],[xd1,zd1],[xh,zd1]]}};
+  }
+  const U2=a=>a.filter(x=>x&&x.length).reduce((x,y)=>unite(x,y),[]);
+  /* a small turned knob with a 3 mm peg that pushes into the door */
+  function knob(){return build([varying(0,8,z=>circle(0,0,3+3.5*Math.sin(.9*Math.PI*Math.min(1,(8-z)/8*1.15))+.01,40),.25),prism(7.99,13,circle(0,0,1.45,24))])}
   function swingDoor(o,p,preview){
     const {fbW,pH,T,postX,s}=o,catchM=p.doorCatch!=='detent',mag=p.doorCatch==='magnet'||!p.doorCatch,turn=p.doorCatch==='turn';
     const md=p.dMagD||10,mh=p.dMagH||3,pd=mh+.2,Rm=md/2+.2,recess=p.front==='swingWindow';
     const off=catchM?mh+1.6:3.2,dt0=catchM?Math.max(T,mh+1.6):Math.max(T,3.2),rr=3,cR=rr+2.6,cl=.3;
     /* with the window in a recess the door is thicker: the pane sits flush in its outer face, behind it stays a 1.6 mm
        back, and the magnet pockets in the inner face stay clear of the recess */
-    const dt=recess?Math.max(dt0,T+.3+1.6,mag?pd+.6+T+.3:0):dt0;
+    const dt=recess?Math.max(dt0,T+.3+2.2,2*rr,pd+1.2):dt0;
     const xh=postX+.8+cR,yh=off+rr,zd0=s+1,zd1=pH-s-1,Lh=zd1-zd0,xd1=fbW-postX-1.5;
     /* the free side always has room for the window's turn buttons */
     const rwR=catchM||recess?2*Rm+4:8,xr0=xh+cR+1.2,xo0=xr0+4,xo1=xd1-1-rwR,zo0=zd0+5,zo1=zd1-5;
@@ -386,6 +437,7 @@
     for(const i of [0,2,4]){const [z0,z1]=zone(i);ff.push(prism(z0,z1,clip))}
     if(mag)for(const z of zm)ff.push(G.yMag(xm,z,md,off-pd,off+1,'sub'));
     else if(!turn)for(const z of zm)ff.push(prism(z-12,z+12,G.rrect(xm-.6,off-.01,xm+.6,off+.6,.3)));
+    if(recess)return Object.assign(themedDoor({xh,yh,rr,cR,gp,zone,xm,zm,xd1,xo0,xo1,zo0,zo1,zd0,zd1,off,dt,T,md,pd,Rm,mag,turn,lockZ:o.lockZ},p),{ok:true,frameM:build(ff),pinLen:0,catchM:mag,turn,front:off+dt,edge:xd1,midZ:(zd0+zd1)/2});
     /* door */
     const leaf=rect(xh,off,xd1,off+dt),df=[prism(zd0,zd1,leaf),prism(zd0,zd1,circle(xh,yh,rr,40))];
     df.push(prism((zd0+zd1)/2-15,(zd0+zd1)/2+15,rect(xd1-10,off+dt-.01,xd1,off+dt+8)));
@@ -414,5 +466,5 @@
       button:buttons?turnButton(0,4.5):null,front:off+dt,edge:xd1,midZ:(zd0+zd1)/2};
   }
 
-  root.HabitatEnclosure={lugX,LUG,screwSpec,screwSpots,stud,hasp,screwHoleUp,lidScrew,turnButton,latchDepth,frontVents,hatchCover,TW,base,lid,rectBase,rectLid,rectPost,polyGeom,polyEnclosure,spineToWorld,roundEnclosure,perimeter,tilePanel,TILE,swingDoor,lightWindows,mirrorY};
+  root.HabitatEnclosure={crestX,CREST,screwSpec,screwSpots,stud,hasp,screwHoleUp,lidScrew,turnButton,latchDepth,frontVents,hatchCover,TW,base,lid,rectBase,rectLid,rectPost,polyGeom,polyEnclosure,spineToWorld,roundEnclosure,perimeter,tilePanel,TILE,swingDoor,lightWindows,mirrorY};
 })(typeof window!=='undefined'?window:globalThis);
