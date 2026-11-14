@@ -1,0 +1,589 @@
+<!doctype html><html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
+<title>3D Prints</title>
+<script src="../shim.js"></script>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Bricolage+Grotesque:opsz,wght@12..96,600;12..96,750&family=IBM+Plex+Mono:wght@500&family=IBM+Plex+Sans:wght@400;500;600&display=swap">
+<style>
+/* Same layout as the Resin Workshop and Habitat: inputs on the left, the 3D preview and downloads beside them. */
+:root{
+  --bg:#efece8; --panel:#fbfaf8; --fg:#24201c; --muted:#665d55; --line:#d6cec6;
+  --accent:#a64b26; --on-accent:#fff; --warn:#8a4b00; --warn-bg:#fbeed8;
+  --tray:#4a86b8; --ring:#5a9a6a; --post:#d39a2c; --foot:#8a8580; --lift:#b85450; --frame:#7a5ab0; --pot:rgba(120,150,180,.16);
+  --display:"Bricolage Grotesque",ui-sans-serif,system-ui,sans-serif;
+  --body:"IBM Plex Sans",ui-sans-serif,system-ui,sans-serif;
+  --mono:"IBM Plex Mono",ui-monospace,Menlo,monospace;
+}
+@media (prefers-color-scheme:dark){:root:not([data-theme="light"]){
+  --bg:#181513; --panel:#221e1b; --fg:#ede6df; --muted:#a99f96; --line:#3b342e;
+  --accent:#f0956b; --on-accent:#2a120a; --warn:#f3c37e; --warn-bg:#3a2a12; --pot:rgba(150,180,210,.14); color-scheme:dark}}
+*{box-sizing:border-box}
+[hidden]{display:none!important}
+html,body{margin:0}
+body{background:var(--bg);color:var(--fg);font:400 16px/1.5 var(--body)}
+.wrap{max-width:1080px;margin:0 auto;padding-block:32px 56px;padding-left:max(16px,env(safe-area-inset-left,0px));padding-right:max(16px,env(safe-area-inset-right,0px));display:grid;gap:24px}
+header h1{font:750 clamp(34px,6vw,52px)/1.05 var(--display);margin:0;letter-spacing:-.01em}
+header p{margin:8px 0 0;color:var(--muted);max-width:62ch}
+.tabs{display:flex;flex-wrap:wrap;gap:6px;margin-top:16px}
+.tabs button{font:600 15px var(--body);color:var(--fg);background:transparent;border:0;border-bottom:3px solid transparent;padding:6px 4px;margin-right:14px;cursor:pointer}
+.tabs button[aria-selected="true"]{border-bottom-color:var(--accent);color:var(--accent)}
+.grid{display:grid;grid-template-columns:minmax(0,1fr) minmax(0,440px);gap:24px;align-items:start}
+.inputs{display:grid;gap:32px;min-width:0}
+section h2{font:600 22px/1.2 var(--display);margin:0 0 12px}
+.seg{display:flex;flex-wrap:wrap;gap:6px}
+.seg button{font:500 14px var(--body);color:var(--fg);background:transparent;border:1px solid var(--line);border-radius:6px;padding:8px 12px;cursor:pointer}
+.seg button[aria-pressed="true"]{background:var(--accent);border-color:var(--accent);color:var(--on-accent)}
+.fields{display:grid;grid-template-columns:repeat(auto-fit,minmax(140px,1fr));gap:12px}
+label.f{display:grid;gap:4px;font-size:14px;font-weight:500;min-width:0;align-content:start}
+label.f small{font-weight:400;color:var(--muted)}
+input,select{font:500 16px var(--mono);color:var(--fg);background:var(--panel);border:1px solid var(--line);border-radius:6px;padding:9px 10px;width:100%;min-width:0}
+input[type=text],select{font-family:var(--body)}
+:focus-visible{outline:2px solid var(--accent);outline-offset:2px}
+.hint{font-size:14px;color:var(--muted);margin:12px 0 0;max-width:62ch}
+.btn{font:600 14px var(--body);border-radius:6px;padding:9px 13px;border:1px solid var(--accent);background:transparent;color:var(--accent);cursor:pointer}
+.btn.quiet{border-color:var(--line);color:var(--muted)}
+.btn.solid{background:var(--accent);color:var(--on-accent);width:100%;padding:11px 13px}
+.btn:disabled{opacity:.5;cursor:default}
+.row{display:flex;flex-wrap:wrap;gap:8px;align-items:center;margin-top:12px}
+.levels{display:grid;gap:8px}
+.lvl{display:grid;grid-template-columns:auto minmax(0,1fr);gap:4px 12px;align-items:center;padding:10px 12px;border:1px solid var(--line);border-radius:6px;background:var(--panel)}
+.lvl b{font-size:14px}
+.lvl.posts{background:transparent;border-style:dashed}
+.lvl span{font-size:14px;color:var(--muted)}
+.result{position:sticky;top:calc(16px + env(safe-area-inset-top,0px));background:var(--panel);border:1px solid var(--line);border-radius:8px;padding:20px;display:grid;gap:16px;min-width:0}
+canvas{width:100%;height:auto;display:block;aspect-ratio:4/3}
+.stats{display:grid;grid-template-columns:1fr 1fr;gap:12px}
+.stat .k{font-size:13px;color:var(--muted)}
+.stat .v{font:700 28px/1.1 var(--display);font-variant-numeric:tabular-nums}
+.stat .s{font:500 13px var(--mono);color:var(--muted)}
+.need{font-size:14px;display:grid;gap:4px;border-top:1px solid var(--line);padding-top:12px}
+.need div{display:flex;justify-content:space-between;gap:12px}
+.need span:last-child{font:500 14px var(--mono);text-align:right;white-space:nowrap}
+.legend{display:flex;flex-wrap:wrap;gap:6px 14px;font-size:13px;color:var(--muted)}
+.legend span{display:flex;gap:6px;align-items:center}
+.dot{width:10px;height:10px;border-radius:2px;flex:none}
+.note{font-size:14px;background:var(--warn-bg);color:var(--warn);border-radius:6px;padding:10px 12px}
+.msg{font-size:14px;color:var(--muted);min-height:1.2em}
+ol.steps,ul.tips{margin:0;padding-left:20px;font-size:15px;display:grid;gap:6px;max-width:64ch}
+details summary{cursor:pointer;font-weight:600}
+.loading{font-size:14px;color:var(--muted);text-align:center;padding:40px 0}
+@media (max-width:820px){.grid{grid-template-columns:minmax(0,1fr)}.result{position:static;order:-1}}
+</style></head><body>
+<div class="wrap">
+  <header>
+    <h1>3D Prints</h1>
+    <p>Printable designs for your projects. Change the sizes, check the preview, and download STL files for your slicer.</p>
+    <div class="tabs" role="tablist" aria-label="Designs">
+      <button type="button" role="tab" id="tabPot" aria-controls="viewPot" aria-selected="true">Pressure pot insert</button>
+      <button type="button" role="tab" id="tabCup" aria-controls="viewCup" aria-selected="false">Mantis catch cup</button>
+    </div>
+  </header>
+
+  <div class="grid" id="viewPot" role="tabpanel" aria-labelledby="tabPot">
+    <div class="inputs">
+      <section aria-labelledby="h-pot">
+        <h2 id="h-pot">Your pot</h2>
+        <div class="fields">
+          <label class="f">Inside diameter (mm)<input id="potD" type="number" min="120" max="600" step="1"></label>
+          <label class="f">Inside depth (mm)<input id="potDepth" type="number" min="60" max="800" step="1"></label>
+          <label class="f">Gap to the wall (mm)<small>each side</small><input id="wallGap" type="number" min="2" max="30" step="0.5"></label>
+          <label class="f">Printer bed (mm)<small>K2 Plus: 350</small><input id="bed" type="number" min="100" max="1000" step="1"></label>
+        </div>
+        <p class="hint">Measure at the narrowest point. Some pots have a collar near the top or a fitting under the lid.</p>
+      </section>
+
+      <section aria-labelledby="h-stack">
+        <h2 id="h-stack">Stack</h2>
+        <div class="levels" id="levels"></div>
+        <div class="row">
+          <button class="btn" id="addLvl" type="button">Add a level</button>
+          <button class="btn quiet" id="delLvl" type="button">Remove the top level</button>
+        </div>
+        <div class="fields" style="margin-top:16px">
+          <label class="f">Lift posts<select id="lift"></select></label>
+        </div>
+        <p class="hint">A ring tray has an open centre, so a tall mould can stand on the level below and reach through it. Post sizes are the room for moulds between two trays.</p>
+      </section>
+
+      <section aria-labelledby="h-tray">
+        <h2 id="h-tray">Trays</h2>
+        <div class="fields">
+          <label class="f">Floor (mm)<input id="floor" type="number" min="2" max="10" step="0.2"></label>
+          <label class="f">Drip rim height (mm)<input id="rimH" type="number" min="6" max="30" step="1"></label>
+          <label class="f">Rim wall (mm)<input id="rimW" type="number" min="1.2" max="5" step="0.2"></label>
+          <label class="f">Ring tray opening (mm)<input id="ringOpen" type="number" min="40" max="400" step="5"></label>
+          <label class="f">Sockets in from the edge (mm)<input id="socketInset" type="number" min="18" max="80" step="1"></label>
+        </div>
+      </section>
+
+      <section aria-labelledby="h-sizes">
+        <h2 id="h-sizes">Post and foot sizes</h2>
+        <div class="fields">
+          <label class="f" style="grid-column:1/-1">Spacer posts, room for moulds (mm)<small>Separate sizes with commas.</small><input id="posts" type="text" autocomplete="off"></label>
+          <label class="f" style="grid-column:1/-1">Lift posts (mm)<input id="lifts" type="text" autocomplete="off"></label>
+          <label class="f">Foot height (mm)<input id="footH" type="number" min="4" max="60" step="1"></label>
+        </div>
+      </section>
+
+      <section aria-labelledby="h-fit">
+        <h2 id="h-fit">Fit</h2>
+        <div class="fields">
+          <label class="f">Peg clearance (mm)<small>per side</small><input id="fit" type="number" min="0.1" max="0.6" step="0.05"></label>
+          <label class="f">Lug clearance (mm)<input id="grooveFit" type="number" min="0.1" max="0.6" step="0.05"></label>
+        </div>
+        <p class="hint">Before printing full trays, print the fit test: three small test sockets (marked with 1, 2 and 3 holes) and one short test post, about 65 g of PLA. Push the post into each socket from above and from below, and turn it. Pick the one that turns firmly without forcing and doesn't wobble when locked.</p>
+        <div class="row">
+          <button class="btn" id="dlFit" type="button" disabled>Download the fit test</button>
+        </div>
+        <div class="row">
+          <button class="btn quiet" id="fit1" type="button">1 hole fit best</button>
+          <button class="btn quiet" id="fit3" type="button">3 holes fit best</button>
+        </div>
+        <p class="hint" id="fitMsg" role="status">If 2 holes fit best, the clearances above are right. If 1 or 3 fit better, tap that button to change them. Then you can print the test again with the new values, or go on to the full parts.</p>
+      </section>
+
+      <section aria-labelledby="h-how">
+        <h2 id="h-how">Print and put together</h2>
+        <ul class="tips">
+          <li>PLA, 0.2 mm layers, <b>100 % infill</b> for every part. Closed infill pockets hold air, and when the pressure is released that air can bulge or split thin skins.</li>
+          <li>No supports. Print trays rim up with a 5 mm brim, posts standing, the frame flat.</li>
+          <li>Wipe resin off right away. A quick wipe with isopropyl alcohol is fine, but don't soak PLA in it.</li>
+        </ul>
+        <details style="margin-top:14px"><summary>How the twist-lock goes together</summary>
+        <ol class="steps" style="margin-top:10px">
+          <li>Always turn counter-clockwise, seen from above.</li>
+          <li>Feet: push into the bottom tray from below and turn until they stop.</li>
+          <li>Posts: push into the tray from above, with the line on the post at the narrow notch. Turn about 30° until the line sits at the wide notch.</li>
+          <li>Lower the next tray onto the three posts, then reach between the trays and turn each post on until it stops. It's now locked in both trays.</li>
+          <li>Top tray: push in the lift posts and turn until they stop.</li>
+          <li>Lift frame: drop its round holes over the caps, then turn it clockwise until it clicks. Carry the stack by the centre grip.</li>
+          <li>A post put in upside down won't lock. The ring groove marks the top.</li>
+        </ol></details>
+      </section>
+    </div>
+
+    <aside class="result" aria-label="Pressure pot insert result">
+      <div class="fields"><label class="f">Show<select id="show"></select></label></div>
+      <div class="loading" id="loading">Loading the 3D modeller…</div>
+      <canvas id="cv" width="800" height="600" role="img" aria-label="3D preview of the pressure pot insert" hidden></canvas>
+      <div class="legend" id="legend"></div>
+      <div class="stats" id="stats"></div>
+      <div class="need" id="need"></div>
+      <div class="note" id="note" hidden></div>
+      <button class="btn solid" id="dlStack" type="button" disabled>Download STL files for this stack</button>
+      <button class="btn quiet" id="dlAll" type="button" disabled>Download every part</button>
+      <span class="msg" id="msg" role="status"></span>
+    </aside>
+  </div>
+
+  <div class="grid" id="viewCup" role="tabpanel" aria-labelledby="tabCup" hidden>
+    <div class="inputs">
+      <section aria-labelledby="h-mantis">
+        <h2 id="h-mantis">Mantis</h2>
+        <div class="seg" id="cPresets" role="group" aria-label="Mantis"></div>
+        <div class="fields" style="margin-top:16px">
+          <label class="f">Body length (mm)<input id="cLen" type="number" min="5" max="150" step="1"></label>
+        </div>
+        <p class="hint">Picking a mantis or changing its length sets a cup size with room to stand and turn round. You can change the cup size below.</p>
+      </section>
+      <section aria-labelledby="h-cup">
+        <h2 id="h-cup">Cup</h2>
+        <div class="fields">
+          <label class="f">Inside diameter (mm)<input id="cD" type="number" min="35" max="180" step="5"></label>
+          <label class="f">Inside depth (mm)<input id="cH" type="number" min="35" max="220" step="5"></label>
+          <label class="f">Gate clearance (mm)<input id="cFit" type="number" min="0.1" max="0.8" step="0.05"></label>
+        </div>
+        <div class="seg" id="cVents" role="group" aria-label="Air holes" style="margin-top:16px"></div>
+        <p class="hint">Air holes are 1.6 mm, in the floor and the gate: big enough for air, too small for feet to get caught.</p>
+      </section>
+      <section aria-labelledby="h-handle">
+        <h2 id="h-handle">Handle</h2>
+        <div class="seg" id="cHandles" role="group" aria-label="Handle"></div>
+        <div class="fields" style="margin-top:16px"><label class="f" id="cHLWrap">Handle length (mm)<input id="cHL" type="number" min="40" max="300" step="10"></label></div>
+        <p class="hint">The handle slides down into a dovetail on the side of the cup and comes off for washing. A long handle helps you reach in without your hand in the way.</p>
+      </section>
+      <section aria-labelledby="h-cuse">
+        <h2 id="h-cuse">Print and use</h2>
+        <ul class="tips">
+          <li>Print the cup in clear or natural PETG if you can, so you can see the mantis inside. PLA works too.</li>
+          <li>No supports. The cup prints standing, the gate and handle flat. The slot in the rim prints as a short overhang.</li>
+          <li>Let the mantis walk in on its own: hold the cup in front of it and nudge it gently from behind. Don't scoop it.</li>
+          <li>Slide the gate in slowly and watch the legs and antennae near the rim. Never move a mantis that is moulting or has just moulted.</li>
+          <li>To let it out, set the cup down near a perch and pull the gate back.</li>
+        </ul>
+      </section>
+    </div>
+    <aside class="result" aria-label="Catch cup result">
+      <div class="fields"><label class="f">Show<select id="cShow"></select></label></div>
+      <div class="loading" id="cLoading">Loading the 3D modeller…</div>
+      <canvas id="cCv" width="800" height="600" role="img" aria-label="3D preview of the catch cup" hidden></canvas>
+      <div class="legend" id="cLegend"></div>
+      <div class="stats" id="cStats"></div>
+      <div class="need" id="cNeed"></div>
+      <div class="note" id="cNote" hidden></div>
+      <button class="btn solid" id="cDl" type="button" disabled>Download STL files</button>
+      <span class="msg" id="cMsg" role="status"></span>
+    </aside>
+  </div>
+</div>
+
+<script>
+/* preview renderer and STL/zip writers, the same as on the Habitat page */
+function stl(tris0){
+  /* snap every corner to a 1 µm grid, so corners that are meant to be shared are exactly equal in the file,
+     and drop triangles that collapse to a line */
+  const q=v=>Math.round(v*1000)/1000,keep=[];
+  for(let b=0;b<tris0.length;b+=9){const k=[0,3,6].map(i=>q(tris0[b+i])+','+q(tris0[b+i+1])+','+q(tris0[b+i+2]));if(k[0]===k[1]||k[1]===k[2]||k[0]===k[2])continue;for(let i=0;i<9;i++)keep.push(q(tris0[b+i]))}
+  const tris=keep,n=tris.length/9,buf=new ArrayBuffer(84+50*n),dv=new DataView(buf);
+  dv.setUint32(80,n,true);
+  for(let t=0;t<n;t++){
+    const b=t*9,o=84+t*50;
+    const ux=tris[b+3]-tris[b],uy=tris[b+4]-tris[b+1],uz=tris[b+5]-tris[b+2],vx=tris[b+6]-tris[b],vy=tris[b+7]-tris[b+1],vz=tris[b+8]-tris[b+2];
+    let nx=uy*vz-uz*vy,ny=uz*vx-ux*vz,nz=ux*vy-uy*vx;const l=Math.hypot(nx,ny,nz)||1;
+    dv.setFloat32(o,nx/l,true);dv.setFloat32(o+4,ny/l,true);dv.setFloat32(o+8,nz/l,true);
+    for(let i=0;i<9;i++)dv.setFloat32(o+12+i*4,tris[b+i],true);
+  }
+  return new Uint8Array(buf);
+}
+function crc32(u8){let c=~0;for(let i=0;i<u8.length;i++){c^=u8[i];for(let k=0;k<8;k++)c=(c>>>1)^(0xEDB88320&-(c&1))}return (~c)>>>0}
+function zipStore(files){
+  const enc=new TextEncoder(),chunks=[],central=[];let off=0;
+  for(const f of files){
+    const name=enc.encode(f.name),crc=crc32(f.data),h=new DataView(new ArrayBuffer(30));
+    h.setUint32(0,0x04034b50,true);h.setUint16(4,20,true);h.setUint16(6,0x0800,true);
+    h.setUint32(14,crc,true);h.setUint32(18,f.data.length,true);h.setUint32(22,f.data.length,true);h.setUint16(26,name.length,true);
+    chunks.push(new Uint8Array(h.buffer),name,f.data);
+    const c=new DataView(new ArrayBuffer(46));
+    c.setUint32(0,0x02014b50,true);c.setUint16(4,20,true);c.setUint16(6,20,true);c.setUint16(8,0x0800,true);
+    c.setUint32(16,crc,true);c.setUint32(20,f.data.length,true);c.setUint32(24,f.data.length,true);c.setUint16(28,name.length,true);c.setUint32(42,off,true);
+    central.push(new Uint8Array(c.buffer),name);off+=30+name.length+f.data.length;
+  }
+  const size=central.reduce((a,b)=>a+b.length,0),e=new DataView(new ArrayBuffer(22));
+  e.setUint32(0,0x06054b50,true);e.setUint16(8,files.length,true);e.setUint16(10,files.length,true);e.setUint32(12,size,true);e.setUint32(16,off,true);
+  return new Blob([...chunks,...central,new Uint8Array(e.buffer)],{type:'application/zip'});
+}
+
+function cssColor(v){const d=document.createElement('i');d.style.color=v;document.body.append(d);const c=getComputedStyle(d).color;d.remove();const m=c.match(/[\d.]+/g).map(Number);return {r:m[0],g:m[1],b:m[2],a:m[3]??1}}
+function render(cv,items){
+  /* items: {tris, color:{r,g,b}, alpha} in shared world coordinates. A small depth-buffered rasteriser,
+     so overlapping parts always draw in the right order; see-through parts blend on top of solid ones. */
+  const dpr=Math.min(2,window.devicePixelRatio||1),Wd=cv.clientWidth||400,Hd=Wd*.75,PW=Math.round(Wd*dpr*1.5),PH=Math.round(Hd*dpr*1.5);
+  cv.width=PW;cv.height=PH;const ctx=cv.getContext('2d');ctx.clearRect(0,0,PW,PH);
+  const C=Math.cos(Math.PI/6),Lx=-.25,Ly=-.55,Lz=.8,Ll=Math.hypot(Lx,Ly,Lz);
+  let mnx=1e9,mny=1e9,mxx=-1e9,mxy=-1e9;
+  for(const it of items){const t=it.tris;for(let i=0;i<t.length;i+=3){const x=(t[i]+t[i+1])*C,y=(t[i]-t[i+1])*.5-t[i+2];if(x<mnx)mnx=x;if(x>mxx)mxx=x;if(y<mny)mny=y;if(y>mxy)mxy=y}}
+  if(mnx>mxx)return;
+  const pad=14*dpr*1.5,sc=Math.min((PW-2*pad)/(mxx-mnx||1),(PH-2*pad)/(mxy-mny||1)),ox=(PW-(mxx-mnx)*sc)/2-mnx*sc,oy=(PH-(mxy-mny)*sc)/2-mny*sc;
+  const img=ctx.createImageData(PW,PH),px=img.data,zb=new Float32Array(PW*PH).fill(-1e9);
+  /* a pick buffer: which clickable part is in front at each pixel (solid parts block, other see-through ones don't) */
+  const picks=[],pz=new Float32Array(PW*PH).fill(-1e9),pid=new Int16Array(PW*PH);
+  const draw=(it,blend)=>{
+    const t=it.tris,a=it.alpha??1,pk=it.pick?picks.push(it.pick):(blend?0:-1);
+    for(let b=0;b<t.length;b+=9){
+      const ux=t[b+3]-t[b],uy=t[b+4]-t[b+1],uz=t[b+5]-t[b+2],vx=t[b+6]-t[b],vy=t[b+7]-t[b+1],vz=t[b+8]-t[b+2];
+      const nx=uy*vz-uz*vy,ny=uz*vx-ux*vz,nz=ux*vy-uy*vx,l=Math.hypot(nx,ny,nz);if(!l||nx-ny+nz<=0)continue;
+      const sh=.55+.45*Math.abs(nx*Lx+ny*Ly+nz*Lz)/(l*Ll),R=it.color.r*sh,G=it.color.g*sh,B=it.color.b*sh;
+      const X=[],Y=[],Z=[];
+      for(let v=0;v<3;v++){const x=t[b+v*3],y=t[b+v*3+1],z=t[b+v*3+2];X.push((x+y)*C*sc+ox);Y.push(((x-y)*.5-z)*sc+oy);Z.push(x-y+z)}
+      const x0=Math.max(0,Math.floor(Math.min(...X))),x1=Math.min(PW-1,Math.ceil(Math.max(...X))),y0=Math.max(0,Math.floor(Math.min(...Y))),y1=Math.min(PH-1,Math.ceil(Math.max(...Y)));
+      const den=(Y[1]-Y[2])*(X[0]-X[2])+(X[2]-X[1])*(Y[0]-Y[2]);if(Math.abs(den)<1e-9)continue;
+      for(let py=y0;py<=y1;py++)for(let qx=x0;qx<=x1;qx++){
+        const cx=qx+.5,cy=py+.5,w0=((Y[1]-Y[2])*(cx-X[2])+(X[2]-X[1])*(cy-Y[2]))/den,w1=((Y[2]-Y[0])*(cx-X[2])+(X[0]-X[2])*(cy-Y[2]))/den,w2=1-w0-w1;
+        if(w0<-1e-6||w1<-1e-6||w2<-1e-6)continue;
+        const z=w0*Z[0]+w1*Z[1]+w2*Z[2],k=py*PW+qx;if(z<zb[k]-1e-3)continue;
+        if(pk&&z>=pz[k]){pz[k]=z;pid[k]=pk}
+        const o=k*4;
+        if(blend){px[o]=px[o]*(1-a)+R*a;px[o+1]=px[o+1]*(1-a)+G*a;px[o+2]=px[o+2]*(1-a)+B*a;px[o+3]=Math.max(px[o+3],255*a)}
+        else{zb[k]=z;px[o]=R;px[o+1]=G;px[o+2]=B;px[o+3]=255}
+      }
+    }
+  };
+  for(const it of items)if((it.alpha??1)>=1)draw(it,false);
+  for(const it of items)if((it.alpha??1)<1)draw(it,true);
+  ctx.putImageData(img,0,0);
+  cv._pick={PW,PH,pid,picks};
+}
+
+</script>
+<script type="module">
+import Module from '../lib/manifold/manifold.js';
+import {garbageCollectManifold,cleanup} from '../lib/manifold/garbage-collector.js';
+import {makePotInsert,derive,DEF,J} from './prints-potinsert.js?v=2';
+import {makeCatchCup,deriveCup,CUP_DEF,PRESETS,sizeFor} from './prints-catchcup.js?v=1';
+import {mountDesign} from './prints-runner.js?v=1';
+import dollChair from './prints-dollchair.js?v=1';
+import diceTower from './prints-dicetower.js?v=1';
+import armour from './prints-armour.js?v=5';
+import gauntlet from './prints-gauntlet.js?v=4';
+import suit from './prints-suit.js?v=4';
+import hounskull from './prints-hounskull.js?v=1';
+import necro from './prints-necro.js?v=1';
+import jester from './prints-jester.js?v=1';
+/* designs that use the shared runner: add new ones here */
+const DESIGNS=[dollChair,diceTower,armour,gauntlet,suit,hounskull,necro,jester];
+let MOUNTED=[];
+
+const $=id=>document.getElementById(id);
+const fmt=(n,d=0)=>Number(n).toLocaleString('en',{minimumFractionDigits:d,maximumFractionDigits:d});
+const STORE='workshop:db:prints';
+let state;try{state=JSON.parse(localStorage.getItem(STORE))||{}}catch{state={}}
+const persist=()=>{try{localStorage.setItem(STORE,JSON.stringify(state))}catch{}};
+const PLA=1.24; /* g per cm³ */
+const S=state.pot=Object.assign({},DEF,state.pot||{});
+if(!Array.isArray(state.levels)||!state.levels.length)state.levels=[{tray:'full',post:60},{tray:'ring',post:80},{tray:'full',post:60}];
+state.lift=state.lift||'auto';state.show=state.show||'stack';
+
+const NUM=['potD','potDepth','wallGap','bed','floor','rimH','rimW','ringOpen','socketInset','footH','fit','grooveFit'],TXT=['posts','lifts'];
+for(const k of NUM.concat(TXT))$(k).value=S[k];
+
+let PI=null,P=derive(S);
+function opt(sel,pairs,val){sel.textContent='';for(const [v,l] of pairs){const o=document.createElement('option');o.value=v;o.textContent=l;sel.append(o)}if(val!==undefined&&pairs.some(p=>String(p[0])===String(val)))sel.value=val}
+
+function drawLevels(){
+  const box=$('levels');box.textContent='';
+  const L=state.levels,n=L.length;
+  for(let i=n-1;i>=0;i--){
+    const d=document.createElement('div');d.className='lvl';
+    const b=document.createElement('b');b.textContent=n===1?'Level 1':i===n-1?`Level ${i+1} (top)`:i===0?'Level 1 (bottom)':`Level ${i+1}`;
+    const s=document.createElement('select');s.setAttribute('aria-label',b.textContent+' tray');
+    opt(s,[['full','Tray'],['ring','Ring tray']],L[i].tray);
+    s.onchange=()=>{L[i].tray=s.value;changed()};
+    d.append(b,s);box.append(d);
+    if(i>0){
+      const q=document.createElement('div');q.className='lvl posts';
+      const t=document.createElement('span');t.textContent='Posts';
+      const ps=document.createElement('select');ps.setAttribute('aria-label',`Posts between level ${i} and level ${i+1}`);
+      if(!P.postList.includes(Number(L[i-1].post)))L[i-1].post=P.postList.includes(60)?60:P.postList[0];
+      opt(ps,P.postList.map(h=>[h,`${h} mm of room`]),L[i-1].post);
+      ps.onchange=()=>{L[i-1].post=Number(ps.value);changed()};
+      q.append(t,ps);box.append(q);
+    }
+  }
+  $('delLvl').disabled=n<=1;
+  opt($('lift'),[['auto','Tallest that fits under the lid'],...P.liftList.map(h=>[h,`${h} mm`]),['none','No lift posts']],state.lift);
+}
+$('addLvl').onclick=()=>{const L=state.levels;L[L.length-1].post=L[L.length-1].post||(P.postList.includes(60)?60:P.postList[0]);L.push({tray:'full',post:L[L.length-1].post});drawLevels();changed()};
+$('delLvl').onclick=()=>{if(state.levels.length>1){state.levels.pop();drawLevels();changed()}};
+$('lift').onchange=()=>{state.lift=$('lift').value;changed()};
+
+function showList(){
+  const pairs=[['stack','The stack in your pot']];
+  if(PI)for(const c of PI.catalogue(P))pairs.push([c.id,`${c.name} (as printed)`]);
+  opt($('show'),pairs,state.show);state.show=$('show').value;
+}
+$('show').onchange=()=>{state.show=$('show').value;persist();draw()};
+
+const COL={}; function colours(){for(const k of ['tray','ring','post','foot','lift','frame','pot'])COL[k]=cssColor(`var(--${k})`)}
+const partCol=id=>id==='tray'||id.startsWith('test-socket')?COL.tray:id==='tray-ring'?COL.ring:id==='foot'?COL.foot:id.startsWith('lift-post')?COL.lift:id==='lift-frame'?COL.frame:COL.post;
+
+function legend(items){const l=$('legend');l.textContent='';for(const [c,t] of items){const s=document.createElement('span'),i=document.createElement('i');i.className='dot';i.style.background=c;s.append(i,t);l.append(s)}}
+function stat(k,v,s){return `<div class="stat"><div class="k">${k}</div><div class="v">${v}</div><div class="s">${s||''}</div></div>`}
+
+function check(st){
+  const w=[],dia=2*P.trayR;
+  if(dia>P.bed)w.push(`The trays are ${fmt(dia)} mm across, bigger than your ${fmt(P.bed)} mm bed.`);
+  if(P.socketR-J.bossD/2<20)w.push('The pot is too small for this layout. Use fewer sockets in from the edge.');
+  if(P.socketR+J.bossD/2>P.trayR-P.rimW-.5)w.push('The sockets touch the rim. Move them further in from the edge.');
+  if(P.ringOpen/2+P.rimW>P.socketR-J.bossD/2-2)w.push('The ring tray opening cuts into the sockets. Make it smaller.');
+  if(!P.postList.length)w.push('Add at least one spacer post size.');
+  if(st){
+    if(st.room<0)w.push(`The stack is ${fmt(-st.room)} mm too tall for the pot. Use shorter posts or fewer levels.`);
+    else if(st.room<10)w.push(`Only ${fmt(st.room)} mm under the lid. Check that nothing on the lid reaches down that far.`);
+    if(state.lift!=='none'&&!st.lift)w.push('Add a lift post size to lift the stack out in one piece.');
+  }
+  return w;
+}
+
+
+function draw(){
+  if(!PI)return;
+  const cv=$('cv');
+  let st=null,items=[];
+  try{
+    const lift=state.lift==='none'?'none':state.lift;
+    if(state.show==='stack'){
+      const a=PI.assembly(P,state.levels,lift==='none'?'auto':lift);st=a.st;
+      if(lift==='none'){st={...st};/* drop the lift parts */a.items=a.items.filter(i=>i.kind!=='lift'&&i.kind!=='frame');st.height=st.zTop;st.room=P.potDepth-st.zTop;delete st.need['lift-frame'];for(const k in st.need)if(k.startsWith('lift-post'))delete st.need[k];st.lift=null}
+      let li=0;const kinds=state.levels.map(l=>l.tray);
+      items=a.items.map(it=>({tris:it.tris,color:it.kind==='tray'?(kinds[li++]==='ring'?COL.ring:COL.tray):COL[it.kind]}));
+      items.push({tris:PI.potShell(P),color:COL.pot,alpha:COL.pot.a});
+      legend([['var(--tray)','Tray'],['var(--ring)','Ring tray'],['var(--post)','Posts'],['var(--foot)','Feet'],['var(--lift)','Lift posts'],['var(--frame)','Lift frame']]);
+    }else{
+      const r=PI.part(P,state.show);
+      if(r){items=[{tris:r.tris,color:partCol(r.id)}];legend([[`rgb(${partCol(r.id).r},${partCol(r.id).g},${partCol(r.id).b})`,`${r.name}: ${r.what}`]])}
+      st=currentStackSafe();
+    }
+    render(cv,items);
+  }catch(e){console.error(e)}
+  info(st);
+}
+function currentStackSafe(){try{const s=PI.stack(P,state.levels,state.lift==='none'?'auto':state.lift);if(state.lift==='none'){s.height=s.zTop;s.room=P.potDepth-s.zTop;delete s.need['lift-frame'];for(const k in s.need)if(k.startsWith('lift-post'))delete s.need[k];s.lift=null}return s}catch{return null}}
+
+function info(st){
+  const out=[];let grams=0;
+  if(st){
+    const cat=PI.catalogue(P);
+    $('need').innerHTML='<div><b>To print for this stack</b><span></span></div>'+Object.entries(st.need).map(([id,n])=>{
+      const c=cat.find(x=>x.id===id);const r=PI.part(P,id);grams+=r.vol/1000*PLA*n;
+      return `<div><span>${c?c.name:id}</span><span>× ${n}</span></div>`}).join('');
+    out.push(stat('Stack height',`${fmt(st.height)} mm`,st.lift?`with ${st.lift} mm lift posts`:'no lift posts'));
+    out.push(stat('Room under the lid',`${fmt(st.room)} mm`,`pot depth ${fmt(P.potDepth)} mm`));
+    out.push(stat('PLA for this stack',grams>=1000?`${fmt(grams/1000,2)} kg`:`${fmt(grams)} g`,'at 100 % infill'));
+    if(state.show!=='stack'){const r=PI.part(P,state.show);if(r)out.push(stat('This part',`${fmt(r.vol/1000*PLA)} g`,r.size.map(v=>fmt(v)).join(' × ')+' mm'))}
+    else out.push(stat('Tray size',`${fmt(2*P.trayR)} mm`,`${fmt(P.wallGap)} mm from the wall`));
+  }
+  $('stats').innerHTML=out.join('');
+  const w=check(st);$('note').hidden=!w.length;$('note').textContent=w.join(' ');
+}
+
+let t=null;
+function changed(){persist();clearTimeout(t);t=setTimeout(()=>{draw()},120)}
+function readInputs(){
+  for(const k of NUM){const v=parseFloat($(k).value);if(isFinite(v))S[k]=v}
+  for(const k of TXT)S[k]=$(k).value;
+  P=derive(S);
+}
+for(const k of NUM.concat(TXT))$(k).addEventListener('input',()=>{readInputs();drawLevels();showList();changed()});
+
+/* ---------- downloads ---------- */
+function readme(st,ids){
+  const cat=PI.catalogue(P),L=[];
+  L.push('PRESSURE POT INSERT','Made in Workshop > 3D Prints.','');
+  L.push(`Pot: ${P.potD} mm inside diameter, ${P.potDepth} mm deep. Trays: ${fmt(2*P.trayR)} mm across.`);
+  if(st){L.push(`Stack: ${state.levels.length} levels, ${fmt(st.height)} mm tall, ${fmt(st.room)} mm under the lid.`,'','PRINT');
+    for(const [id,n] of Object.entries(st.need)){const c=cat.find(x=>x.id===id);L.push(`  ${n} × ${id}.stl   ${c?c.what:''}`)}}
+  else{L.push('','FILES');for(const id of ids){const c=cat.find(x=>x.id===id);L.push(`  ${id}.stl   ${c?c.what:''}`)}L.push('  Each tray needs 3 posts (or feet, or lift posts) under or on it.')}
+  L.push('','PRINT SETTINGS',
+    '  PLA, 0.2 mm layers, 100 % infill for every part (closed infill pockets can split when the pressure is released).',
+    '  No supports. Trays rim up with a 5 mm brim. Posts, feet and lift posts standing. Lift frame flat.','',
+    'PUTTING IT TOGETHER (always turn counter-clockwise, seen from above)',
+    '  1. Feet: push into the bottom tray from below, turn until they stop.',
+    '  2. Posts: push into the tray from above, line on the post at the narrow notch.',
+    '     Turn about 30° until the line is at the wide notch.',
+    '  3. Lower the next tray onto the posts. Turn each post on until it stops: it is now locked in both trays.',
+    '  4. Top tray: lift posts in, turn until they stop.',
+    '  5. Lift frame: drop the round holes over the caps, turn it clockwise until it clicks.',
+    '  A post put in upside down will not lock. The ring groove marks the top.','',
+    `Fit used: peg clearance ${P.fit} mm, lug clearance ${P.grooveFit} mm.`);
+  return new TextEncoder().encode(L.join('\r\n'));
+}
+function fitReadme(){
+  const cat=PI.catalogue(P).filter(c=>c.test),L=['PRESSURE POT INSERT: FIT TEST','Made in Workshop > 3D Prints.','','FILES'];
+  for(const c of cat)L.push(`  ${c.id}.stl   ${c.what}`);
+  L.push('','Print each once: PLA, 0.2 mm layers, 100 % infill, no supports. Sockets flat, the post standing.','',
+    'HOW TO TEST (turn counter-clockwise, seen from above)',
+    '  1. Push the post into a socket from above: line on the post at the narrow notch. Turn until it stops.',
+    '  2. Try the other end of the post from below the same socket, and turn.',
+    '  3. Do the same with the other two sockets.',
+    '  The best one goes in without forcing, turns firmly, and does not wobble once locked.',
+    '','  2 holes = the clearances set now. 1 hole = 0.05 mm tighter. 3 holes = 0.05 mm looser.',
+    '  In Workshop > 3D Prints, tap "1 hole fit best" or "3 holes fit best" to change them.',
+    '  If 1 hole is still loose or 3 holes still tight, change them again and print a new test.');
+  return new TextEncoder().encode(L.join('\r\n'));
+}
+function nudgeFit(dir){
+  const st=PI.FIT_STEP*dir;
+  for(const k of ['fit','grooveFit']){S[k]=Math.round((S[k]+st)*100)/100;$(k).value=S[k]}
+  P=derive(S);showList();changed();
+  $('fitMsg').textContent=`Clearances changed to ${S.fit.toFixed(2)} / ${S.grooveFit.toFixed(2)} mm. New downloads use them, including a new fit test.`;
+}
+$('fit1').onclick=()=>{if(PI)nudgeFit(-1)};
+$('fit3').onclick=()=>{if(PI)nudgeFit(1)};
+$('dlFit').onclick=()=>download('fit');
+async function download(which){
+  const msg=$('msg');msg.textContent='Building the files…';await new Promise(r=>setTimeout(r,30));
+  try{
+    let ids,st=null;
+    if(which==='stack'){st=currentStackSafe();ids=Object.keys(st.need)}
+    else if(which==='fit')ids=PI.catalogue(P).filter(c=>c.test).map(c=>c.id);
+    else ids=PI.catalogue(P).filter(c=>!c.test).map(c=>c.id);
+    const files=ids.map(id=>({name:id+'.stl',data:stl(PI.part(P,id).tris)}));
+    files.push({name:'README.txt',data:which==='fit'?fitReadme():readme(st,ids)});
+    const blob=zipStore(files);
+    const dl=window.claude?await window.claude.use('downloads'):null;
+    if(!dl){msg.textContent='Downloads aren’t available in this view.';return}
+    await dl.save({filename:which==='stack'?'pressure-pot-insert-stack.zip':which==='fit'?'pressure-pot-insert-fit-test.zip':'pressure-pot-insert-all-parts.zip',data:blob});
+    msg.textContent='Saved. Unzip it and open the STL files in your slicer. The README lists how many of each to print.';
+  }catch(e){console.error(e);msg.textContent=e&&e.code==='declined'?'Download cancelled.':e&&e.code==='tap_again'?'Tap the button again to save.':'That did not save. Try again.'}
+}
+$('dlStack').onclick=()=>download('stack');
+$('dlAll').onclick=()=>download('all');
+
+
+/* ---------- mantis catch cup ---------- */
+let CC=null;
+const CS_=state.cup=Object.assign({},CUP_DEF,state.cup||{});
+let CP=deriveCup(CS_);
+function segBtns(box,pairs,cur,pick){box.textContent='';for(const [v,l] of pairs){const b=document.createElement('button');b.type='button';b.textContent=l;b.setAttribute('aria-pressed',String(v)===String(cur));b.onclick=()=>pick(v);box.append(b)}}
+function cupControls(){
+  const pre=PRESETS.find(x=>x[2]===Number(CS_.len));
+  segBtns($('cPresets'),PRESETS.map(x=>[x[0],x[1]]),pre?pre[0]:'',k=>{const x=PRESETS.find(y=>y[0]===k);CS_.len=x[2];Object.assign(CS_,sizeFor(x[2]));cupInputs();cupChanged()});
+  segBtns($('cVents'),[[true,'Air holes'],[false,'No holes']],CS_.vents,v=>{CS_.vents=v;cupChanged()});
+  segBtns($('cHandles'),[['short','Short handle'],['long','Long handle'],['none','No handle']],CS_.handle,v=>{CS_.handle=v;if(v==='long'&&CS_.handleL<120)CS_.handleL=150;if(v==='short'&&CS_.handleL>120)CS_.handleL=70;cupInputs();cupChanged()});
+  $('cHLWrap').hidden=CS_.handle==='none';
+}
+function cupInputs(){$('cLen').value=CS_.len;$('cD').value=CS_.D;$('cH').value=CS_.H;$('cFit').value=CS_.gateFit;$('cHL').value=CS_.handleL}
+$('cLen').addEventListener('input',()=>{const v=parseFloat($('cLen').value);if(v>0){CS_.len=v;Object.assign(CS_,sizeFor(v));$('cD').value=CS_.D;$('cH').value=CS_.H;cupChanged()}});
+for(const [id,k] of [['cD','D'],['cH','H'],['cFit','gateFit'],['cHL','handleL']])$(id).addEventListener('input',()=>{const v=parseFloat($(id).value);if(isFinite(v)){CS_[k]=v;cupChanged()}});
+let ct=null;function cupChanged(){CP=deriveCup(CS_);persist();cupControls();clearTimeout(ct);ct=setTimeout(cupDraw,120)}
+function cupShowList(){const pairs=[['all','Put together'],['cup','Cup (as printed)'],['gate','Gate (as printed)']];if(CS_.handle!=='none')pairs.push(['handle','Handle (as printed)']);const cur=state.cupShow||'all';opt($('cShow'),pairs,pairs.some(p=>p[0]===cur)?cur:'all');state.cupShow=$('cShow').value}
+$('cShow').onchange=()=>{state.cupShow=$('cShow').value;persist();cupDraw()};
+function cupDraw(){
+  if(!CC)return;cupShowList();
+  const r=CC.parts(CP),C={cup:cssColor('var(--tray)'),gate:cssColor('var(--post)'),handle:cssColor('var(--lift)')},show=state.cupShow;
+  let items;
+  if(show==='all'){items=[{tris:r.cup.tris,color:C.cup},{tris:PI.xform(r.gate.tris,0,...r.place.gate),color:C.gate}];if(r.handle)items.push({tris:PI.xform(r.handle.tris,0,...r.place.handle),color:C.handle})}
+  else items=[{tris:r[show].tris,color:C[show]}];
+  render($('cCv'),items);
+  legend2($('cLegend'),[['var(--tray)','Cup'],['var(--post)','Gate'],...(r.handle?[['var(--lift)','Handle']]:[])]);
+  const g=k=>r[k]?r[k].vol/1000*1.27:0,tot=g('cup')+g('gate')+g('handle'),sz=r.cup.size;
+  $('cStats').innerHTML=stat('Cup',`${fmt(CP.D)} × ${fmt(CP.H)} mm`,'inside diameter × depth')+stat('Filament',`${fmt(tot)} g`,'PETG, 100 % infill')
+    +stat('Printed cup',`${fmt(sz[2])} mm`,`tall, ${fmt(Math.max(sz[0],sz[1]))} mm across`)+stat('Mantis',`${fmt(CS_.len)} mm`,'body length');
+  $('cNeed').innerHTML='<div><b>To print</b><span></span></div>'+['cup','gate','handle'].filter(k=>r[k]).map(k=>`<div><span>${k[0].toUpperCase()+k.slice(1)} · ${r[k].size.map(v=>fmt(v)).join(' × ')} mm</span><span>× 1</span></div>`).join('');
+  const w=[];
+  if(CP.D<CS_.len*.9)w.push('The cup is narrow for this mantis. It needs room to turn round.');
+  if(CP.H<CS_.len)w.push('The cup is shallow for this mantis, so it may climb out before the gate closes.');
+  const big=Math.max(...['cup','gate','handle'].filter(k=>r[k]).map(k=>Math.max(r[k].size[0],r[k].size[1])));
+  if(big>P.bed)w.push(`A part is ${fmt(big)} mm long, bigger than your ${fmt(P.bed)} mm bed.`);
+  $('cNote').hidden=!w.length;$('cNote').textContent=w.join(' ');
+}
+function legend2(l,items){l.textContent='';for(const [c,t] of items){const s=document.createElement('span'),i=document.createElement('i');i.className='dot';i.style.background=c;s.append(i,t);l.append(s)}}
+$('cDl').onclick=async()=>{
+  const msg=$('cMsg');msg.textContent='Building the files…';await new Promise(r=>setTimeout(r,30));
+  try{
+    const r=CC.parts(CP),files=['cup','gate','handle'].filter(k=>r[k]).map(k=>({name:`catch-cup-${k}.stl`,data:stl(r[k].tris)}));
+    const L=['MANTIS CATCH CUP','Made in Workshop > 3D Prints.','',`Cup: ${CP.D} mm inside, ${CP.H} mm deep, for a mantis of about ${CS_.len} mm.`,'',
+      'PRINT','  PETG (clear if you can) or PLA, 0.2 mm layers, 100 % infill, no supports.','  Cup standing, gate and handle flat.','',
+      'PUT TOGETHER','  Gate: slide it into the slot in the rim, tab outwards.','  Handle: drop its dovetail end into the slot on the side of the cup from above.','',
+      'USE','  Let the mantis walk in on its own, then slide the gate in slowly. Watch the legs and antennae near the rim.',
+      '  Never move a mantis that is moulting or has just moulted.',`  Gate clearance used: ${CP.gateFit} mm. If the gate sticks, raise it by 0.1 mm.`];
+    files.push({name:'README.txt',data:new TextEncoder().encode(L.join('\r\n'))});
+    const dl=window.claude?await window.claude.use('downloads'):null;
+    if(!dl){msg.textContent='Downloads aren’t available in this view.';return}
+    await dl.save({filename:'mantis-catch-cup.zip',data:zipStore(files)});
+    msg.textContent='Saved. Unzip it and open the STL files in your slicer.';
+  }catch(e){console.error(e);msg.textContent=e&&e.code==='declined'?'Download cancelled.':e&&e.code==='tap_again'?'Tap the button again to save.':'That did not save. Try again.'}
+};
+function tab(k){
+  if(k!=='pot'&&k!=='cup'&&!MOUNTED.some(m=>m.key===k))k='pot';
+  state.tab=k;persist();
+  for(const [v,t,key] of [['viewPot','tabPot','pot'],['viewCup','tabCup','cup']]){$(v).hidden=k!==key;$(t).setAttribute('aria-selected',String(k===key))}
+  for(const m of MOUNTED){m.view.hidden=k!==m.key;m.tab.setAttribute('aria-selected',String(k===m.key))}
+  if(k==='cup')cupDraw();else if(k==='pot')draw();else MOUNTED.find(m=>m.key===k).draw();
+}
+$('tabPot').onclick=()=>tab('pot');$('tabCup').onclick=()=>tab('cup');
+cupInputs();cupControls();
+colours();drawLevels();
+let rz;addEventListener('resize',()=>{clearTimeout(rz);rz=setTimeout(()=>tab(state.tab||'pot'),150)});
+matchMedia('(prefers-color-scheme:dark)').addEventListener?.('change',()=>{colours();draw()});
+try{
+  const wasm=await Module();wasm.setup();
+  const GW=garbageCollectManifold(wasm);
+  PI=makePotInsert(GW,cleanup);CC=makeCatchCup(GW,cleanup);
+  $('loading').hidden=true;$('cv').hidden=false;$('dlStack').disabled=false;$('dlAll').disabled=false;$('dlFit').disabled=false;
+  $('cLoading').hidden=true;$('cCv').hidden=false;$('cDl').disabled=false;
+  MOUNTED=DESIGNS.map(D=>mountDesign(D,{W:GW,cleanup,state,persist,bed:()=>P.bed,tabs:document.querySelector('.tabs'),wrap:document.querySelector('.wrap'),render,stl,zipStore,cssColor}));
+  for(const m of MOUNTED)m.tab.onclick=()=>tab(m.key);
+  showList();tab(state.tab||'pot');
+}catch(e){console.error(e);$('loading').textContent=$('cLoading').textContent='The 3D modeller did not load. Close Workshop and open it again.'}
+window.__prints={get PI(){return PI},get P(){return P},state};
+</script>
+</body></html>

@@ -1,6 +1,7 @@
-/* Habitat, frame trim in a style: a decorative front frame that sits in front of the enclosure (an arched or
-   shaped window, filigree in the corners, a patterned base and an optional name), a crest above it, finials for the
-   top corners and feet for the bottom corners. Everything prints without supports: the frame flat on its back,
+/* Habitat, door and trim styles. Each style gives the swing door its window shape and engraved ornament (the door
+   itself is built in habitat-enclosure.js from these pieces), and makes the trim that never gets in the door's way: a
+   crest that stands on the lid on two pegs, a name plaque on magnets across the front of the base, finials for the top
+   corners and feet for the bottom corners. Everything prints without supports: crest and plaque flat on their backs,
    finials and feet standing up with every overhang at 45° or less. */
 (function(root){
   const G=root.Geo,HP=root.HabitatParts,HM=root.HabitatMore,MO=root.HabitatMotifs,S=root.Sdf;
@@ -30,7 +31,7 @@
     geo:{name:'Geometric',open:'octagon',stile:'lines',rail:'lattice',corner:'facets',crest:'ziggurat',finial:'stepped',foot:'block'},
     rustic:{name:'Rustic twig',open:'round',stile:'bark',rail:'bark',corner:'tree',crest:'branch',finial:'acorn',foot:'root'}
   };
-  /* which frame goes with which style package */
+  /* which door and trim style goes with which theme */
   const FOR={orchid:'orchid',temple:'greek',gothic:'gothic',fantasy:'fantasy',forest:'forest',library:'library',geo:'geo'};
   const styleFor=theme=>FOR[root.HABITAT_THEME?root.HABITAT_THEME(theme):theme]||'baroque';
 
@@ -135,7 +136,7 @@
     const m=MO.motif(kind,s);return move(m.fill,cx,cy-s/2);
   }
 
-  /* the crest above the frame */
+  /* the crest that stands on the lid */
   function crest(kind,W,y,ch,lw){
     const m=W/2,o=[],raised=[];
     if(kind==='gable'){o.push([[[W*.18,y],[W*.82,y],[m,y+ch]]]);o.push(rect(m-2.5,y+ch-4,m+2.5,y+ch+ch*.25));o.push(ngon(m,y+ch+ch*.28,4.5,4,PI/4));
@@ -168,75 +169,7 @@
     return {fill:U(...o),raised:U(...raised)};
   }
 
-  /* ---------- the front frame ---------- */
-  /* o: style, W (outer width), Htot (to the top of the lid), S (top of the base), Hwin (top of the window), name, font,
-     crest yes/no, colour one/two, mount magnet/glue, md, mh (magnet), bed [x,y] */
-  function frame(o){
-    const st=STYLES[o.style]||STYLES.baroque,W=o.W,Ht=o.Htot,bt=2.4,oh=1.2,lw=max(1.3,W*.007),notes=[],seed=o.seed||1;
-    const sw=max(16,W*.085),bot=max(o.S,16),top=max(14,Ht-o.Hwin+10);
-    const x0=sw,x1=W-sw,y0=bot,y1=Ht-top,win=opening(st.open,x0,y0,x1,y1);
-    const ch=o.crest==='no'?0:min(W*.22,46);
-    let outer=rrect(0,0,W,Ht,3);let cr=null;
-    if(ch){cr=crest(st.crest,W,Ht-1,ch,lw);outer=U(outer,cr.fill)}
-    const body=subtract(outer,win),inner=subtract(offset(body,-1.6),offset(win,3.2));
-    /* the ornament */
-    const art=[];
-    art.push(subtract(offset(win,2.8),offset(win,1)));
-    art.push(subtract(offset(rrect(0,0,W,Ht,3),-1),offset(rrect(0,0,W,Ht,3),-2.6)));
-    const wb=B(win);
-    /* the sides: from the base to the top rail */
-    art.push(pattern(st.stile,3.5,bot+3,sw-3.5,Ht-top-3,lw,seed),pattern(st.stile,W-sw+3.5,bot+3,W-3.5,Ht-top-3,lw,seed+1));
-    /* the base, with the name in the middle */
-    let rail=pattern(st.rail,sw*.5,3.5,W-sw*.5,bot-3.5,lw,seed+2);
-    if(o.name&&o.name.trim()){const th=min(bot*.42,W*.1),t=HM.text2D([o.name.trim()],th,max(1.4,th*.13),o.font||'script');
-      const tr=move(t.rings,W/2,bot/2),pad=offset(tr,3.5);rail=subtract(rail,pad);art.push(tr,subtract(pad,offset(tr,2.2)).length?subtract(offset(pad,0),offset(pad,-lw)):[])}
-    art.push(rail);
-    /* the corners beside the top of the window (only where there is room) */
-    const sp=st.open==='rect'?0:min((y1-y0)*.18,(x1-x0)*.24);
-    if(sp>14){const cy=y1-sp*.55;for(const [cx,fl] of [[x0+sp*.55,false],[x1-sp*.55,true]]){let a=cornerArt(st.corner,cx,cy,sp*.8);if(fl)a=mirror(a,cx);art.push(subtract(a,offset(win,2.5)))}}
-    if(st.key){const kw=min(24,(x1-x0)*.12);art.push([[[W/2-kw/2,y1+.5],[W/2+kw/2,y1+.5],[W/2+kw*.35,y1-kw*.9],[W/2-kw*.35,y1-kw*.9]]])}
-    if(cr&&cr.raised.length)art.push(cr.raised);
-    let deco=intersect(U(...art),offset(body,-1.2));
-    /* magnets: two at the base corners, two in the top rail held by clips on the lid */
-    const mags=[];const glue=o.mount==='glue';
-    /* the bottom pair sits in front of the base's front corner blocks, which have matching pockets */
-    const bx=o.cornerX||[sw/2+2,W-sw/2-2],by=o.cornerX?o.S/2:bot/2;
-    if(!glue){const md=o.md||10,mh=o.mh||3;for(const [x,y] of [[bx[0],by],[bx[1],by],...(o.topMags||[[sw/2+2,Ht-top/2],[W-sw/2-2,Ht-top/2]])])mags.push([x,y]);
-      const pd=max(mh+.2,bt+oh),rz=pd+.6,ros=U(...mags.map(([x,y])=>st.stile==='stars'?star(x,y,md/2+5,8,.7):st.stile==='quatrefoil'?U(...[0,1,2,3].map(i=>circle(x+cos(i*PI/2)*(md/4+1.5),y+sin(i*PI/2)*(md/4+1.5),md/2+.5,32))):circle(x,y,md/2+3.5,48)));
-      deco=subtract(deco,offset(ros,1));mags.rz=rz;mags.ros=ros;mags.pd=pd}
-    /* split in two when it doesn't fit the bed */
-    const bed=o.bed||[350,350],full=B(outer);const tall=full.y1-full.y0,wide=full.x1-full.x0;
-    if(wide>bed[0]+.1&&wide>bed[1]+.1)notes.push(`The frame is ${wide.toFixed(0)} mm wide, more than your bed: it needs a bigger printer.`);
-    let cuts=[null];
-    if(tall>max(bed[0],bed[1])+.1||(tall>bed[1]+.1&&wide>bed[0]+.1)){
-      const ys=Ht*.5,tab=(cx)=>[[cx-4,ys],[cx-4,ys+3],[cx-7,ys+9],[cx+7,ys+9],[cx+4,ys+3],[cx+4,ys]];
-      const lowP=[[[-50,-50],[W+50,-50],[W+50,ys],...tab(W-sw/2).reverse(),...tab(sw/2).reverse(),[-50,ys]]];
-      cuts=[lowP,subtract(rect(-50,-50,W+50,full.y1+50),offset(lowP,.05))];
-      notes.push('The frame is taller than your print bed, so it comes in two halves with puzzle joints in the sides. Press them together flat on a table; once the frame hangs on its magnets the joints stay closed.')}
-    const parts=[],two=o.colour==='two';
-    cuts.forEach((c,i)=>{const cl=r=>c?intersect(r,c):r,f=[prism(0,bt,cl(body))],a=[prism(bt,bt+oh,cl(deco))];
-      if(mags.length){a.push(prism(bt,mags.rz,cl(mags.ros)));for(const [x,y] of mags)f.push(prism(-1,mags.pd,cl(G.mag(x,y,o.md||10)),'sub'))}
-      const sfx=cuts.length>1?(i?'-top':'-bottom'):'';
-      if(two){parts.push({file:`frame${sfx}.stl`,role:i?'Second file':'Colour 1',m:build([...f,...(mags.length?[prism(bt,mags.rz,cl(mags.ros))]:[]),...(mags.length?mags.map(([x,y])=>prism(-1,mags.pd,cl(G.mag(x,y,o.md||10)),'sub')):[])]),at:'front'},
-        {file:`frame${sfx}-filigree.stl`,role:'Colour 2',m:build([prism(bt,bt+oh,cl(deco))]),at:'front'})}
-      else parts.push({file:`frame${sfx}.stl`,role:i?'Second file':'Main colour',m:build([...f,...a]),at:'front'})});
-    if(two)notes.push('Two colours: add the filigree file to the frame as a part (same origin), for example gold on black.');
-    if(!glue){notes.push(`Magnets: 8 in all, pressed into their pockets. 4 go in the frame; 2 in the pockets in the front corners of the base${o.frameMags?'':' (turn on Enclosure, Size, Magnets for a front frame, so the base and lid get them)'}; ${o.topMags?'and 2 in the pockets in the lugs under the front corners of the lid':'and 2 in the lid clips, which push onto the front edge of the lid'}. The frame sticks to them.`);
-      if(!o.topMags)parts.push({file:'lid-clip.stl',role:'Second file',m:lidClip(o),at:'loose',count:2})}
-    if(o.blocked)notes.push('The door\'s turn latch and lock hasps sit where the frame\'s right side goes. With a front frame, choose the magnet or click catch and no lock.');
-    else notes.push('Glue: fix the frame to the front of the base and the corner posts with double-sided foam tape (it comes off again).');
-    notes.push('The frame prints flat on its back, with the pattern facing up.');
-    return {parts,notes,magnets:glue?0:4,size:[W,Ht+ch]};
-  }
-  /* a clip that pushes onto the front edge of the lid and holds a magnet facing forward, for the top of the frame */
-  function lidClip(o){
-    /* printed lying down: the profile (x forward, y up) stands on the bed and is w tall */
-    const L=o.Lt||2.4,md=o.md||10,mh=o.mh||3,w=md+6,g=L+.35,d=10,f=Math.max(mh+1,o.clipReach||0),y0=min(-2,g/2-md/2-2),y1=max(g+2,g/2+md/2+2);
-    const prof=U(rect(-d,g,0,g+2),rect(-d,-2,0,0),rect(0,y0,f,y1));
-    return build([prism(0,w,prof),prism(w/2-md/2-.02,w/2+md/2+.02,rect(f-mh-.2,g/2-md/2-.02,f+1,g/2+md/2+.02),'sub')]);
-  }
-
-  /* ---------- finials for the top corners ---------- */
+  /* ---------- finials ---------- */
   function finial(o){
     /* the finial stands on a small plinth with a threaded hole underneath: it screws onto a stud in the corner post,
        which also holds the lid down */
@@ -315,11 +248,11 @@
   function piece(o){
     const which=o.piece||'all',out={parts:[],notes:[],magnets:0};
     const add=r=>{out.parts.push(...r.parts);out.notes.push(...r.notes);out.magnets+=r.magnets};
-    if(['all','top','crest'].includes(which)){if(o.rect&&o.lidCrest)add(lidCrest(o));else out.notes.push('The lid crest fits rectangular enclosures only; finials and feet fit any.')}
+    if(['all','noplaque','top','crest'].includes(which)){if(o.rect&&o.lidCrest)add(lidCrest(o));else out.notes.push('The lid crest fits rectangular enclosures only; finials and feet fit any.')}
     if(['all','plaque'].includes(which)&&o.rect&&o.plaque)add(plaque(o));
-    if(['finials','all','top','small'].includes(which))add(finial(Object.assign({},o,{h:o.fh||max(22,min(40,(o.lidCrest?o.lidCrest.W:o.W)*.13))})));
-    if(['feet','all','small'].includes(which))add(foot(Object.assign({},o,{h:o.ft||22})));
+    if(['finials','all','noplaque','top','small'].includes(which))add(finial(Object.assign({},o,{h:o.fh||max(22,min(40,(o.lidCrest?o.lidCrest.W:o.W)*.13))})));
+    if(['feet','all','noplaque','small'].includes(which))add(foot(Object.assign({},o,{h:o.ft||22})));
     return out;
   }
-  root.HabitatTrim={STYLES,FOR,styleFor,frame,finial,foot,piece,opening,pattern,cornerArt,crest};
+  root.HabitatTrim={STYLES,FOR,styleFor,finial,foot,piece,opening,pattern,cornerArt,crest};
 })(typeof window!=='undefined'?window:globalThis);

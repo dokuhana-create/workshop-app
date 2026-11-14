@@ -3,20 +3,20 @@
 <script src="../shim.js"></script>
 <script src="../lib/clipper.js"></script>
 <script src="../lib/earcut.min.js"></script>
-<script src="../lib/geo.js?v=41"></script>
-<script src="habitat-parts.js?v=41"></script>
-<script src="habitat-enclosure.js?v=41"></script>
-<script src="habitat-more.js?v=41"></script>
-<script src="habitat-motifs.js?v=41"></script>
-<script src="habitat-keep.js?v=41"></script>
-<script src="../lib/sdf.js?v=41"></script>
-<script src="habitat-pots.js?v=41"></script>
-<script src="habitat-sculpt.js?v=41"></script>
-<script src="habitat-trim.js?v=41"></script>
-<script src="habitat-addons.js?v=41"></script>
-<script src="habitat-forms.js?v=41"></script>
-<script src="habitat-shapes.js?v=41"></script>
-<script src="habitat-sets.js?v=41"></script>
+<script src="../lib/geo.js?v=42"></script>
+<script src="habitat-parts.js?v=42"></script>
+<script src="habitat-enclosure.js?v=42"></script>
+<script src="habitat-more.js?v=42"></script>
+<script src="habitat-motifs.js?v=42"></script>
+<script src="habitat-keep.js?v=42"></script>
+<script src="../lib/sdf.js?v=42"></script>
+<script src="habitat-pots.js?v=42"></script>
+<script src="habitat-sculpt.js?v=42"></script>
+<script src="habitat-trim.js?v=42"></script>
+<script src="habitat-addons.js?v=42"></script>
+<script src="habitat-forms.js?v=42"></script>
+<script src="habitat-shapes.js?v=42"></script>
+<script src="habitat-sets.js?v=42"></script>
 <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Bricolage+Grotesque:opsz,wght@12..96,600;12..96,750&family=IBM+Plex+Mono:wght@500&family=IBM+Plex+Sans:wght@400;500;600&display=swap">
 <style>
 /* Same layout as the Resin Workshop: inputs on the left, the 3D preview and downloads beside them. */
@@ -584,8 +584,9 @@ $('preset').onchange=()=>{const pr=PRESETS[$('preset').value];if(!pr||!pr[1])ret
     if(o.lock)pr.lock='pin';
     for(const [k,v] of Object.entries(pr))if(encIds[k]&&$(encIds[k]))$(encIds[k]).value=v;
     $('preset').value='keep';encChanged();encCalc();
-    B.theme=HABITAT_THEME(o.theme);if(o.pack)B.pack=+o.pack>1?'3':'1';B.trim=o.trim?'match':'none';
-    if(o.plate!==null&&o.plate!==undefined){if(o.plate)B.name=o.plate;if(!B.extra.some(e=>e[0]==='plate'))B.extra.push(['plate',{}])}
+    B.theme=HABITAT_THEME(o.theme);if(o.pack)B.pack=+o.pack>1?'3':'1';
+    const pl=o.plate!==null&&o.plate!==undefined&&o.plate!==false;if(pl&&typeof o.plate==='string')B.name=o.plate;
+    B.trim=o.trim||pl?'match':'none';B.trimWhat=o.trim?(pl?'all':'noplaque'):'plaque';
     saveB();for(const [id,k] of [['bTheme','theme'],['bPack','pack'],['bTrim','trim'],['bName','name']])$(id).value=B[k];buildSetup();
     out.textContent='';const lines=[`${o.name||'?'} · ${o.contact||''}`,`${o.shape}, ${o.W}×${o.D}×${o.H} mm · ${(SETS[o.theme]||{}).name||o.theme}`,`${o.deliv==='ship'?'Shipping':'Pick up'} · estimate ${o.price||'?'}`,o.msg?`“${o.msg}”`:'','Loaded into Enclosure and Build. Check the sizes, then make the files.'];
     for(const l of lines.filter(Boolean)){const d=document.createElement('div');d.textContent=l;out.append(d)}};}
@@ -709,7 +710,7 @@ function rectModel(p,pv){
       if(sw.knob)parts.push({name:'Door knob',file:'door-knob.stl',tris:place(sw.knob.tris)});
       const e=d.g/2+.5,toW=t=>{const o=new Float32Array(t.length);for(let j=0;j<t.length;j+=9)for(const [v,w] of [[0,0],[1,2],[2,1]]){o[j+w*3]=e+t[j+v*3];o[j+w*3+1]=-d.g/2+.3-t[j+v*3+1];o[j+w*3+2]=d.S+t[j+v*3+2]}return o};
       items.push({tris:toW(sw.frameM.tris),color:c.frame},{tris:toW(sw.doorM.tris),color:sw.mesh?c.mesh:c.frame,alpha:sw.mesh?.85:1});
-      if(sw.win)cut.push([sw.recess?`Door window, acrylic ${fmt(p.T,1)} mm, goes into the door from the inside`:'Door window, acrylic 2–3 mm, glued over the outside of the opening',`${fmt(sw.win[0],1)} × ${fmt(sw.win[1],1)}`]);
+      if(sw.win)cut.push([sw.recess?`Door window, acrylic ${fmt(p.T,1)} mm, goes into the door from the inside`:'Door window, acrylic 2–3 mm, held from the inside by turn buttons',`${fmt(sw.win[0],1)} × ${fmt(sw.win[1],1)}`]);
       if(sw.buttons)parts.push({name:'Door window button',n:sw.buttons,file:`door-button-print-${sw.buttons}.stl`,tris:place(sw.button.tris)});
       if(sw.turn){const proud=d.g/2-.3+sw.front-d.a,px=d.W-3,reach=px-(e+sw.edge)+6,dep=HE.latchDepth(d),hub=Math.max(.6,proud+.4),btn=HE.turnButton(hub,dep-.5,[5,Math.max(10,reach)]);
         parts.push({name:'Door turn latch',file:'door-turn-latch.stl',tris:place(btn.tris)});
@@ -721,7 +722,7 @@ function rectModel(p,pv){
         items.push({tris:place0(hd.tris,(x,y,z)=>[xd+x,yF-y,d.S+d.lockZ+9-z]),color:c.frame},{tris:place0(hp.tris,(x,y,z)=>[xp-x,-d.a-y,d.S+d.lockZ-9+z]),color:c.frame});
         notes.push('Door lock: press the door hasp\'s two pegs into the holes near the door\'s free edge, and the post hasp into the holes in the front of the right-hand corner post. When the door is shut their tabs stand side by side; hang a mini padlock through both.')}}}
   if(d.lockShort)notes.push('The door is too short for the lock hasps as well as the window buttons and the latch. Make the enclosure taller for a lock.');
-  if(p.frameMags==='yes'&&p.S<(p.dMagD||10)+4)notes.push(`The base is too shallow for the front frame's magnet pockets: make the substrate at least ${(p.dMagD||10)+4} mm deep.`);
+  if(p.frameMags==='yes'&&p.S<(p.dMagD||10)+4)notes.push(`The base is too shallow for the name plaque's magnet pockets: make the substrate at least ${(p.dMagD||10)+4} mm deep.`);
   lidCut(lid,cut);
   let rd=`Insect enclosure ${p.W} x ${p.D} x ${p.H} mm (substrate ${p.S} mm), ${p.corners} corners\nSuggested filament: ${MATS[p.mat].name}.\n`;
   if(cut.length)rd+='\nTo cut:\n'+cut.map(([a,b])=>`- ${a}: ${b} mm`).join('\n')+'\n';
@@ -737,7 +738,7 @@ function rectModel(p,pv){
     if(sw.recess)rd+=`Door window: lay the door face down, tuck the hinge-side edge of the acrylic under the sloped lip on the inside, press the pane into the recess and turn the ${sw.buttons} buttons over its other edge. The door prints face down too, so its front comes out smooth.\nDoor knob: push its peg into the hole near the free edge of the door.\n`;}
   if(lid.screw)rd+=`\nLid screws: put the lid on, then turn a screw into each corner post through the hole in the lid. Hand-tight is enough; a coin fits the slot.\n`;
   if(base.vents)rd+=`\nAir slots: the base has ${base.vents.n} slots low in the front. Keep the substrate below them, at most ${Math.max(0,Math.round(base.vents.z0-d.f))} mm deep.\n`;
-  rd+=`\nAssembly: dry-fit the posts in the base sockets, slide ${d.swing?'the front frame, ':''}the back and side panels into the grooves, put the lid on${d.swing?', then snap the door onto the hinge clips':', then drop the front door in through the slot in the lid'}.\n`;
+  rd+=`\nAssembly: dry-fit the posts in the base sockets, slide ${d.swing?'the door frame, ':''}the back and side panels into the grooves, put the lid on${d.swing?', then snap the door onto the hinge clips':', then drop the front door in through the slot in the lid'}.\n`;
   return {parts,items,cut,notes,readme:rd,tag:`${p.W}x${p.D}x${p.H}`,hatch:lid.hatch,tiles:tp.map(q=>({k:q.k,label:q.label,nx:q.tiles.nx,ny:q.tiles.ny,states:q.states}))};
 }
 function polyModel(p,pv){
@@ -1078,7 +1079,7 @@ Object.assign(ITEMS,{
   carry:{group:'addon',keep:'carry',name:'Carrying handle',fields:[],mounts:['free'],
     hint:'A handle for taking an enclosure to fairs, the vet or a customer: two side straps reach under the base, and a handle bar pushes onto them above the lid. Sized from the Enclosure tab.'},
   trim:{group:'addon',keep:'trim',name:'Door style, crest and trim',fields:[['name','Name on the plaque','',{text:true,show:vis('piece',['all','plaque'])}]],
-    selects:[['style','Style',Object.entries(HabitatTrim.STYLES).map(([k,v])=>[k,v.name])],['piece','Pieces',[['all','Crest, name plaque, finials and feet'],['top','Crest and finials'],['crest','Crest only'],['plaque','Name plaque only'],['finials','Finials only'],['feet','Feet only']]],
+    selects:[['style','Style',Object.entries(HabitatTrim.STYLES).map(([k,v])=>[k,v.name])],['piece','Pieces',[['all','Crest, name plaque, finials and feet'],['noplaque','Crest, finials and feet'],['top','Crest and finials'],['crest','Crest only'],['plaque','Name plaque only'],['finials','Finials only'],['feet','Feet only']]],
       ['font','Writing',[['script','Cursive'],['caps','Capitals']],{show:vis('piece',['all','plaque'])}]],
     mounts:['magnet'],
     hint:'Dresses the enclosure in a style without ever getting in the way of the door. The door itself carries the style (Enclosure, Walls and door, Door style): its window takes the style\'s shape, with engraved ornament round it. Here you get the rest: a crest that stands on the front edge of the lid on two pegs, a name plaque on magnets across the front of the base, finials for the top corners and feet for the bottom corners. Everything prints flat or upright without supports.'},
@@ -1326,7 +1327,7 @@ opt($('bPack'),[['1','Essentials'],['3','Deluxe']]);opt($('bSize'),[['m','Standa
 opt($('bMount'),[['magnet','Magnets'],['clip','Pin rails']]);opt($('bTrim'),[['match','Matching the style'],['none','None'],...Object.entries(HabitatTrim.STYLES).map(([k,v])=>[k,v.name])]);
 opt($('bPlants'),[['tiered','Tiered planter and a wall pot'],['pots','A pot and a wall pot'],['theme','As the style has them']]);
 opt($('bWalls'),[['calm','One piece at most'],['none','None'],['full','Everything in the style']]);
-opt($('bTrimWhat'),[['all','Crest, name plaque, finials and feet'],['top','Crest and finials'],['plaque','Name plaque only'],['small','Finials and feet only']]);opt($('bFont'),[['script','Cursive'],['caps','Capitals']]);
+opt($('bTrimWhat'),[['all','Crest, name plaque, finials and feet'],['noplaque','Crest, finials and feet'],['top','Crest and finials'],['plaque','Name plaque only'],['small','Finials and feet only']]);opt($('bFont'),[['script','Cursive'],['caps','Capitals']]);
 (()=>{const s=$('bAdd');for(const g in GROUPS){const og=document.createElement('optgroup');og.label=GROUPS[g];for(const k of INTERIOR)if(ITEMS[k]&&ITEMS[k].group===g){const o=document.createElement('option');o.value=k;o.textContent=ITEMS[k].name;og.append(o)}if(og.children.length)s.append(og)}})();
 for(const [id,k] of [['bPlants','plants'],['bWalls','walls'],['bTheme','theme'],['bPack','pack'],['bSize','size'],['bMount','mount'],['bFont','font'],['bName','name'],['bTrim','trim'],['bTrimWhat','trimWhat']]){const el=$(id);el.value=B[k];el.addEventListener(el.tagName==='SELECT'?'change':'input',()=>{B[k]=el.value;saveB();buildSetup()})}
 $('bShuffle').onclick=()=>{B.seed=(B.seed||1)+1;saveB();buildCalc()};

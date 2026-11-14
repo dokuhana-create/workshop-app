@@ -162,7 +162,102 @@ const GARMENTS={
       steps:['Use a zip at least '+fmt(m.pw+2,0)+' cm long.','Sew the zip between one outer and one lining piece, right sides facing the zip. Repeat on the other side.','Open the zip halfway. This matters, or you can\u2019t turn the pouch.','Sew around the outers and the linings, leaving a 7 cm gap in the lining.','Turn through the gap, then stitch the gap closed.']}}},
   drawstring:{label:'Drawstring pouch',f:[['pw','Pouch width',18],['ph','Pouch height',22]],sa:1,
     make(m){return {pieces:[{name:'Pouch',cut:'Cut 2',poly:[[0,0],[m.pw,0],[m.pw,m.ph+5],[0,m.ph+5]],grain:1}],
-      steps:['Sew the sides and bottom, stopping 5 cm below the top on each side.','Press those open side edges under and stitch them flat.','Fold the top over by 2.5 cm to make a channel, and stitch it.','Thread a cord through both channels, and knot the ends.']}}}
+      steps:['Sew the sides and bottom, stopping 5 cm below the top on each side.','Press those open side edges under and stitch them flat.','Fold the top over by 2.5 cm to make a channel, and stitch it.','Thread a cord through both channels, and knot the ends.']}}},
+  /* ---- costume pieces: necromancer and jester ---- */
+  tights:{label:'Tights (stretch)',f:[['waist','Waist',94],['hip','Hip',101],['thigh','Thigh, top',61],['knee','Knee',38],['calf','Calf',37],['ankle','Ankle',21],['rise','Rise (waist to seat, sitting)',27],['inseam','Inseam, crotch to ankle',72],['neg','Stretch fit (0.85 snug, 0.95 easy)',.9]],sa:1,
+    make(m){const e=m.neg,R=m.rise,Y=R+m.inseam,half=c=>c*e/2;
+      /* one piece per leg: the middle line is the outside of the leg, front to the right, back to the left; the inside-leg seam is both long edges */
+      const lv=[[R+6,m.thigh],[R+m.inseam*.42,m.knee],[R+m.inseam*.68,m.calf],[Y,m.ankle]];
+      const fr=lv.map(([y,c])=>[half(c)*.96,y]),bk=lv.map(([y,c])=>[-half(c)*1.04,y]).reverse();
+      const hf=m.hip*e/4,wf=m.waist*e/4,fe=m.hip*e/16,be=m.hip*e/10;
+      const frontTop=[[0,0],[wf,0],...bez([wf,0],[hf,R*.4],[hf,R*.7],[hf+fe,R],14).slice(1)];
+      const backTop=[...bez([-hf-be,R],[-hf,R*.65],[-hf-.5,R*.35],[-wf-1,-3],14),[0,-1.5]];
+      const poly=[...frontTop,...fr,...bk,...backTop.slice(0,-1)];
+      return {pieces:[{name:'Leg',cut:'Cut 2 (mirror one), stretch going round the leg',poly,grain:1},{name:'Waistband',cut:'Cut 1, stretch going round',poly:[[0,0],[m.waist*.88,0],[m.waist*.88,8],[0,8]],grain:1}],
+      steps:['Use a two-way or four-way stretch fabric (spandex jersey, lycra, stretch velvet) and a stretch or narrow zigzag stitch, or an overlocker.','Fold each leg lengthwise, right sides together, and sew the inside-leg seam from ankle to crotch.','Turn one leg right side out, slip it inside the other, and sew the crotch curve from front waist to back waist in one seam.','Join the waistband into a loop, fold it in half lengthwise with 2.5 cm elastic inside, and sew it to the top, stretching it to fit.','Hem the ankles with a twin needle, or leave knit edges raw.','Jester: make the two legs in different colours (particoloured), or cut each leg in two halves along the middle line and swap colours.']}}},
+  slops:{label:'Paned slops (trunk hose)',f:[['waist','Waist',94],['hip','Hip',101],['thigh','Leg band, round the thigh',52],['rise','Rise (waist to seat)',28],['len','Waist to leg band, at the side',38],['panes','Panes per leg',10],['pw','Pane width',4.5],['full','Fullness of the puff',2]],sa:1.5,
+    make(m){const H=m.hip+8,f=H/4,b=H/4,L=m.len,ins=Math.max(4,L-m.rise),e1=H/16,e2=H/9,hw=(m.thigh+4)/4;
+      const c=f/2,front=[[-c+1.5,3],[f-c+1.5,3],[hw+1,L],[-hw+1,L],[-c-e1,3+m.rise],...bez([-c-e1,3+m.rise],[-c,3+m.rise],[-c+1,3+m.rise*.6],[-c+1.5,3],14).slice(1,-1)];
+      const c2=b/2,back=[[-c2,0],[b-c2+1.5,3],[hw+1.5,L],[-hw+1.5,L],[-c2-e2,3+m.rise],...bez([-c2-e2,3+m.rise],[-c2,3+m.rise+1],[-c2+.5,3+m.rise*.5],[-c2,0],14).slice(1,-1)];
+      const pw=(H/2+6)*m.full/2,ph=L+12;
+      const puff=[[0,0],[pw,0],...bez([pw,0],[pw*1.04,ph*.4],[pw*1.04,ph*.6],[pw,ph],10).slice(1),[0,ph]];
+      const n=Math.round(m.panes);
+      return {pieces:[{name:'Foundation front',cut:'Cut 2 (lining fabric)',poly:front,grain:1},{name:'Foundation back',cut:'Cut 2 (lining fabric)',poly:back,grain:1},
+        {name:'Puff',cut:'Cut 2 on the fold (silk, taffeta or a soft contrast)',fold:true,poly:puff,grain:1},
+        {name:'Pane',cut:'Cut '+(2*n)+' in felted wool (no hem needed), or '+(4*n)+' to line them',n:2*n,poly:[[0,0],[m.pw,0],[m.pw,L+4],[0,L+4]],grain:1},
+        {name:'Waistband',cut:'Cut 2 (outer and facing)',poly:[[0,0],[m.waist+8,0],[m.waist+8,5],[0,5]],grain:1},
+        {name:'Leg band',cut:'Cut 4 (2 outer, 2 facing)',poly:[[0,0],[m.thigh+4,0],[m.thigh+4,6],[0,6]],grain:1}],
+      steps:['Make the foundation like short breeches: sew the side seams, the inside legs, then the crotch, leaving the centre front open 15 cm from the top for lacing.','Gather the top and bottom of each puff and baste it onto the foundation leg at the waist and at the leg opening, so it balloons between them. The puff shows in the gaps between the panes.','Lay the panes over the puff, side by side with gaps of about a pane width, and baste their ends at the waist and leg opening. Felted wool needs no hem; woven fabric panes are sewn to a lining and turned first.','Sew each leg band to the leg opening, catching foundation, puff and panes together, then fold the facing inside and stitch it down.','Sew the waistband on the same way. Put eyelets along the waistband (as in your photo) to tie the slops to a doublet with points, and at the front opening for lacing.','The panes should be about 4 cm longer than the foundation so they bow out over the puff.']}}},
+  vshirt:{label:'Victorian shirt with jabot',f:[['bust','Chest or bust',96],['sh','Shoulder width',42],['neck','Neck',39],['len','Shirt length',75],['sl','Sleeve length',62],['flare','Sleeve fullness',1.6],['wrist','Wrist',16]],sa:1.5,
+    make(m){const d=tunicDraft({...m,bust:m.bust+8},m.flare,7,['Cut a 20 cm slit down the centre front and face or bind its edges.','Sew the shoulders. Sew the two collar pieces together along the top and ends, turn, and sew the collar stand round the neck; it closes at the back of the neck with hooks or two small buttons, or leave the front slit open.','Gather the jabot along one long edge (or fold it into a cascade of knife pleats) and sew it inside the front slit, so it falls from under the collar.','Sew the sleeves in, then each underarm and side seam in one line.','Gather each sleeve end into its cuff. Hem one long edge of each cuff ruffle, gather the other and sew it inside the cuff so it falls over the hand.','Hem the bottom. Under the breastplate, the shirt shows at the neck, the jabot and the cuffs.']);
+      d.pieces=d.pieces.filter(p=>p.name!=='Neck binding');
+      d.pieces.push({name:'Collar stand',cut:'Cut 2',poly:[[0,0],[m.neck+4,0],[m.neck+4,5],...bez([m.neck+4,5],[m.neck+3,7],[m.neck/2+2,7.5],[0,7.5],10).slice(1)],grain:1},
+        {name:'Jabot ruffle',cut:'Cut 2 (lace or fine cotton, hemmed)',poly:[[0,0],[70,0],[70,14],[0,18]],grain:1},
+        {name:'Cuff',cut:'Cut 2',poly:[[0,0],[m.wrist+5,0],[m.wrist+5,14],[0,14]],grain:1},
+        {name:'Cuff ruffle',cut:'Cut 2 (lace or fine cotton)',poly:[[0,0],[Math.min(52,m.wrist*2.6),0],[Math.min(52,m.wrist*2.6),10],[0,10]],grain:1});return d}},
+  ftabard:{label:'Fantasy tabard, pointed hem',f:[['tw','Width at the chest',42],['len','Length, shoulder to longest point',105],['nk','Neck opening',24],['vee','Front neck depth',18],['pts','Points along the hem',3]],sa:1.5,
+    make(m){const w=m.tw/2,n=m.nk/2,L=m.len,np=Math.max(1,Math.round(m.pts));
+      const body=(depth)=>{const neck=bez([0,depth],[n*.4,depth],[n,depth*.4],[n,0],14);
+        const side=[[w,0],[w*.86,L*.42],[w*1.18,L*.78]];
+        /* the hem: points from the side to the long centre point */
+        const Wh=w*1.18,seg=Wh/np,hem=[];
+        for(let i=0;i<np;i++){const xp=Wh*(1-(i+1)/np),yp=L*(.86+.14*(i+1)/np);hem.push([xp,yp]);if(i<np-1)hem.push([xp-seg/2+seg*0,yp-L*.1])}
+        /* valleys sit halfway between points */
+        for(let i=1;i<hem.length-1;i+=2){hem[i]=[(hem[i-1][0]+hem[i+1][0])/2,Math.min(hem[i-1][1],hem[i+1][1])-L*.1]}
+        return [...neck,...side,...hem];};
+      return {pieces:[{name:'Front',cut:'Cut 1 on the fold (and 1 lining)',fold:true,poly:body(m.vee),grain:1},{name:'Back',cut:'Cut 1 on the fold (and 1 lining)',fold:true,poly:body(3),grain:1}],
+      steps:['Sew front to back at the shoulders, and the linings the same way.','Put the lining onto the tabard, right sides together, and sew all round the neck, the sides and the pointed hem, leaving the side seams of the body open.','Clip the points and curves, turn it through a shoulder, and press. Topstitch close to the edge.','Wear it open at the sides, belted at the waist over the shirt. A strip of trim or embroidery down the centre front (try the Embroidery tab) suits the Mucha look.']}}},
+  ncape:{label:'Narrow back cape',f:[['sh','Shoulder width',42],['neck','Neck',39],['len','Length from the shoulder',130],['tail','Width at the hem',24]],sa:1.5,
+    make(m){const n=(m.neck+2)/(2*Math.PI)*1.2,w=m.sh/2+4,t=m.tail/2,L=m.len;
+      const nw=(m.neck+2)/6,poly=[...bez([0,2.5],[nw*.6,2.5],[nw,1.2],[nw,0],10),[w,3],...bez([w,0],[w*1.05,L*.25],[t*1.2,L*.5],[t,L*.8],18).slice(1),...bez([t,L*.8],[t*.8,L*.92],[t*.3,L*.95],[0,L],10).slice(1)];
+      return {pieces:[{name:'Cape',cut:'Cut 1 on the fold, and 1 lining',fold:true,poly,grain:1}],
+      steps:['A long, narrow panel that hangs from the shoulders down the back and ends in a soft point: light and flowing, it moves well over the asymmetric armour.','Sew the cape to its lining all round, right sides together, leaving 12 cm open on one side. Turn, press and close the gap.','Fix the two top corners to the front of the shoulders with brooches or decorative buttons through hand-sewn loops, or to the breastplate straps.','Chiffon or georgette over a lining moves beautifully; velvet looks heavier and more vampire-like. A lace edge suits the gothic-lolita side.']}}},
+  fsleeve:{label:'Flowing sleeve (one arm)',f:[['arm','Upper arm round',34],['sl','Shoulder to wrist',60],['flare','Hem fullness',3],['trail','Trailing point below the wrist',35]],sa:1.5,
+    make(m){const t=(m.arm+8)/2,h=t*m.flare,L=m.sl,cap=9;
+      const head=bez([t,cap],[t*.6,cap],[t*.45,0],[0,0],18).reverse();
+      const poly=[...head,...bez([t,cap],[t*1.1,L*.4],[h*.8,L*.75],[h,L*.9],18).slice(1),...bez([h,L*.9],[h*.8,L+m.trail*.5],[h*.3,L+m.trail],[0,L+m.trail],14).slice(1)];
+      return {pieces:[{name:'Sleeve',cut:'Cut 1 on the fold, and 1 lining (only the bare arm)',fold:true,poly,grain:1},{name:'Shoulder tie',cut:'Cut 2',poly:[[0,0],[5,0],[5,50],[0,50]],grain:1}],
+      steps:['A detached angel sleeve for the right arm, which has only the hand ornament and the long bracer: it flows over the bracer and trails below the wrist.','Sew the sleeve to its lining along the hem, right sides together. Turn and press.','Fold it in half and sew the underarm seam through both layers from the top down to about 15 cm above the wrist; leave the rest open so it falls in a long trailing point.','Gather the top edge slightly, bind it, and stitch the two ties to it. Tie it to the shirt shoulder or to the breastplate strap.','Sheer chiffon over a darker lining, or devoré velvet, catches the ethereal look.']}}},
+  sideapron:{label:'Side apron (one hip)',f:[['top','Width at the belt',30],['hem','Width at the hem',46],['len','Length',72],['scal','Scallops along the hem',5]],sa:1.5,
+    make(m){const a=m.top/2,b=m.hem/2,L=m.len,n=Math.max(2,Math.round(m.scal));
+      const hem=[];for(let i=0;i<=n*8;i++){const x=b-2*b*i/(n*8),ph=(i%8)/8;hem.push([x,L-Math.sin(Math.PI*ph)*4+Math.abs(x)/b*-6])}
+      const poly=[[-a,0],[a,0],...bez([a,0],[a*1.05,L*.3],[b,L*.6],[b,L-6],14).slice(1),...hem,...bez([-b,L-6],[-b,L*.6],[-a*1.05,L*.3],[-a,0],14).slice(1,-1)];
+      return {pieces:[{name:'Apron panel',cut:'Cut 2 (outer and lining)',poly:poly.map(([x,y])=>[x+b,y]),grain:1},{name:'Belt loops',cut:'Cut 1, cut into 3',poly:[[0,0],[5,0],[5,30],[0,30]],grain:1}],
+      steps:['A decorative panel for the left hip, the leg without armour, hanging from the belt to balance the cuisse, poleyn and greave on the right.','Embroider or appliqué the outer panel before sewing: a Mucha arch and lilies, or a crescent moon (the Embroidery tab can help plan it).','Sew outer and lining right sides together all round the scalloped sides and hem, leaving the top open. Clip the scallops, turn and press.','Fold the three belt loops, and sew them into the top edge as you close it with a narrow binding.','Add lace or beaded fringe along the scallops for the gothic-lolita touch.']}}},
+  jcap:{label:'Jester cap with three tails',f:[['head','Head round, at the brow',56],['tail','Tail length',38],['band','Band height',6]],sa:1,
+    make(m){const H=m.head+1.5,w=H/3,T=m.tail;
+      /* one tail half: its base is a third of the head, it curves over and tapers to a point */
+      const tail=[[0,0],[w/2,0],...bez([w/2,0],[w*.55,T*.35],[w*.1+T*.25,T*.7],[T*.38,T],16).slice(1),...bez([T*.38,T],[T*.2,T*.82],[-w*.05,T*.45],[-w/2,0],16).slice(1)].map(([x,y])=>[x+w/2,y]);
+      return {pieces:[{name:'Tail',cut:'Cut 6 (3 pairs; two colours look best)',n:6,poly:tail,grain:1},{name:'Head band',cut:'Cut 2 (outer and lining)',poly:[[0,0],[H,0],[H,m.band*2],[0,m.band*2]],grain:1}],
+      steps:['Sew each pair of tail pieces along both curved edges, leaving the straight base open. Clip, turn and stuff lightly with polyester fill so the tails curve.','Sew the three tails together side by side along their base edges, so they form a ring that fits the head.','Sew the ring of tails to the head band, then fold the band over to the inside and stitch it down. A strip of foam or buckram inside the band helps it keep its shape.','Sew a jingle bell to the tip of each tail.']}}},
+  jcollar:{label:'Jester collar with points',f:[['neck','Neck',39],['drop','Depth of the collar',16],['pts','Points',10]],sa:1,
+    make(m){const r=(m.neck+3)/(2*Math.PI),o=r+m.drop,n=Math.max(4,Math.round(m.pts));
+      const inner=arc(0,0,r,Math.PI/2,-Math.PI/2,40),outer=[];
+      for(let i=0;i<=n*2;i++){const a=-Math.PI/2+Math.PI*i/(n*2),rr=i%2?o:o-m.drop*.55;outer.push([rr*Math.cos(a),rr*Math.sin(a)])}
+      const poly=[...inner,...outer].map(([x,y])=>[x,y+o]);
+      return {pieces:[{name:'Collar half',cut:'Cut 2 outer and 2 lining (a full circle; the opening is at the back)',poly:poly.map(([x,y])=>[x+o,y]),grain:1}],
+      steps:['Sew the two outer halves together at the centre front, and the two linings the same way.','Sew outer to lining right sides together round all the points and the back opening, leaving the neck edge open. Clip into each valley, trim the points, turn and press.','Bind the neck edge with bias tape, leaving ties at the back, or sew it to the doublet neck.','Sew a jingle bell to each point. Alternate two colours point by point for the harlequin look.']}}}
+,
+  jdoublet:{label:'Jester doublet with pointed peplum',f:[['bust','Chest or bust',96],['waist','Waist',94],['sh','Shoulder width',42],['len','Back length, neck to waist',44],['sl','Sleeve length',62],['pd','Peplum depth',18],['pts','Points round the peplum',12],['spts','Points on each cuff',4]],sa:1.5,
+    make(m){const d=openFront({...m,bust:m.bust+2},2.5,0);
+      /* sleeve: same head as the shirt draft, ending in a ring of points round the wrist */
+      const t=tunicDraft({...m,bust:m.bust+2},1,9,[]),sl=t.pieces.find(p=>p.name==='Sleeve').poly;
+      const hw=sl[sl.length-2][0],yb=sl[sl.length-2][1]-4,n=Math.max(1,Math.round(m.spts)),z=[];
+      const head=sl.slice(0,sl.length-2);
+      for(let i=0;i<=2*n;i++){const x=hw*(1-i/(2*n));z.push([x,yb+(i%2?9:0)])}
+      /* the fold is at x=0: make the last point fall on it */
+      const sleeve=[...head,...z];
+      /* peplum: four quarter pieces, each a ring segment with points round the outer edge */
+      const q=(m.waist+4)/4,ri=26,ang=q/ri,ro=ri+m.pd,np=Math.max(2,Math.round(m.pts/4)),pep=[];
+      for(let i=0;i<=24;i++){const a=-Math.PI/2+ang*i/24;pep.push([ri*Math.cos(a),ri*Math.sin(a)])}
+      for(let i=2*np;i>=0;i--){const a=-Math.PI/2+ang*i/(2*np),r=i%2?ro:ro-m.pd*.45;pep.push([r*Math.cos(a),r*Math.sin(a)])}
+      const pp=pep.map(([x,y])=>[x,-y]);   /* waist edge at the top, points hanging down */
+      return {pieces:[{name:'Front',cut:'Cut 2 outer (mirror one) and 2 lining',n:4,poly:d.front,grain:1},{name:'Back',cut:'Cut 1 outer and 1 lining on the fold',n:2,fold:true,poly:d.back,grain:1},
+        {name:'Sleeve',cut:'Cut 2 outer and 2 lining on the fold',n:4,fold:true,poly:sleeve,grain:1},
+        {name:'Peplum quarter',cut:'Cut 4 outer and 4 lining',n:8,poly:pp,grain:1},
+        {name:'Collar stand',cut:'Cut 2',poly:[[0,0],[44,0],[44,5],[0,5]],grain:1}],
+      steps:['Harlequin colours: cut the left front and the right back in one colour and the right front and left back in the other, and swap the colours on the sleeves and the peplum points, so the colours cross over the body.','Sew the fronts to the back at the shoulders and sides, in the outer fabric and again in the lining.','Sew each sleeve to its lining round the pointed cuff, right sides together; clip into each valley, turn and press. Then sew the underarm seam and set the sleeve into the armhole.','Sew the four peplum quarters into one band for the outer and one for the lining, leaving the centre front open. Sew outer to lining round the points and the front ends, clip, turn and press.','Sew the peplum to the waist of the doublet, sandwiched between the outer and the lining, then sew the lining to the body round the neck and the front edges and turn it through.','Sew on the collar stand, then close the front with hooks, buttons or lacing rings. Wear the jester collar over the top.','Sew a small jingle bell to each point of the peplum and cuffs. The pauldrons sit over the shoulder seams.']}}}
+
 };
 function openFront(m,lap,skirt){
   const B=(m.bust+10)/4,neck=8.5,drop=3,ad=m.bust*.22+1,S=m.sh/2;
@@ -224,7 +319,7 @@ function patternView(){
   for(const k in GARMENTS)seg.append(el('button',{type:'button',textContent:GARMENTS[k].label,'aria-pressed':String(k===gar),on:{click(){gar=k;render()}}}));
   const fields=el('div',{className:'fields'});
   for(const [k,l,d] of GARMENTS[gar].f){
-    fields.append(el('label',{className:'f'},l+(k==='full'?' (times hip)':k==='flare'?' (1 is straight)':k==='skirt'?'':' (cm)'),el('input',{id:'m_'+k,type:'number',step:'any',min:'0',value:M[mk(k)]??d,on:{input(e){M[mk(k)]=e.target.value;saveBody();drawPattern()}}})));
+    fields.append(el('label',{className:'f'},l+(k==='full'?' (times hip)':k==='flare'?' (1 is straight)':['skirt','panes','pts','spts','scal','neg'].includes(k)||/[(]/.test(l)?'':' (cm)'),el('input',{id:'m_'+k,type:'number',step:'any',min:'0',value:M[mk(k)]??d,on:{input(e){M[mk(k)]=e.target.value;saveBody();drawPattern()}}})));
   }
   const fw=el('select',{'aria-label':'Fabric width',on:{change(e){fab=+e.target.value;drawPattern()}}},...[110,140,150].map(w=>el('option',{value:w,textContent:w+' cm',selected:w===fab})));
   return el('div',{className:'grid'},
