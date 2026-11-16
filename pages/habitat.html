@@ -3,20 +3,20 @@
 <script src="../shim.js"></script>
 <script src="../lib/clipper.js"></script>
 <script src="../lib/earcut.min.js"></script>
-<script src="../lib/geo.js?v=44"></script>
-<script src="habitat-parts.js?v=44"></script>
-<script src="habitat-enclosure.js?v=44"></script>
-<script src="habitat-more.js?v=44"></script>
-<script src="habitat-motifs.js?v=44"></script>
-<script src="habitat-keep.js?v=44"></script>
-<script src="../lib/sdf.js?v=44"></script>
-<script src="habitat-pots.js?v=44"></script>
-<script src="habitat-sculpt.js?v=44"></script>
-<script src="habitat-trim.js?v=44"></script>
-<script src="habitat-addons.js?v=44"></script>
-<script src="habitat-forms.js?v=44"></script>
-<script src="habitat-shapes.js?v=44"></script>
-<script src="habitat-sets.js?v=44"></script>
+<script src="../lib/geo.js?v=45"></script>
+<script src="habitat-parts.js?v=45"></script>
+<script src="habitat-enclosure.js?v=45"></script>
+<script src="habitat-more.js?v=45"></script>
+<script src="habitat-motifs.js?v=45"></script>
+<script src="habitat-keep.js?v=45"></script>
+<script src="../lib/sdf.js?v=45"></script>
+<script src="habitat-pots.js?v=45"></script>
+<script src="habitat-sculpt.js?v=45"></script>
+<script src="habitat-trim.js?v=45"></script>
+<script src="habitat-addons.js?v=45"></script>
+<script src="habitat-forms.js?v=45"></script>
+<script src="habitat-shapes.js?v=45"></script>
+<script src="habitat-sets.js?v=45"></script>
 <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Bricolage+Grotesque:opsz,wght@12..96,600;12..96,750&family=IBM+Plex+Mono:wght@500&family=IBM+Plex+Sans:wght@400;500;600&display=swap">
 <style>
 /* Same layout as the Resin Workshop: inputs on the left, the 3D preview and downloads beside them. */
@@ -196,7 +196,7 @@ h3{font:600 15px var(--body);margin:0 0 6px}
           <label class="f lwF">Number of lamps<input id="lwN" type="number" min="1" max="4" step="1"></label>
           <label class="f">Lid vents<select id="lidVent"></select></label>
           <label class="f rectOnly">Air slots in the base<select id="frontVent"></select></label>
-          <label class="f" style="grid-column:1/-1">Feeding hatch<select id="hatch"></select></label>
+          <label class="f hatchSel" style="grid-column:1/-1">Feeding hatch<select id="hatch"></select></label>
           <label class="f hatchF">Hatch opening (mm)<input id="hatchD" type="number" min="30" max="120" step="5"></label>
           <label class="f hatchF">Move left (−) or right (+) (mm)<input id="hatchX" type="number" step="5"></label>
           <label class="f hatchF">Move to the front (−) or back (+) (mm)<input id="hatchY" type="number" step="5"></label>
@@ -641,7 +641,9 @@ $('species').onchange=()=>{const sp=SPECIES.find(s=>s.id===$('species').value);$
    Every shape becomes a model: the parts to print (in print orientation), how they sit in the preview, the cut
    list, notes and the read-me. The heavy mesh holes are only built for the download. */
 const HE=window.HabitatEnclosure;
-function readEnc(){const o={};for(const k in encIds){const el=$(encIds[k]);o[k]=el.tagName==='SELECT'?el.value:+el.value}o.tileMap=Object.assign({},state.encTiles||{});return o}
+/* a swing door opens the whole front, so swing-door enclosures have no feeding hatch (the setting is kept for the sliding door) */
+function readEnc(){const o={};for(const k in encIds){const el=$(encIds[k]);o[k]=el.tagName==='SELECT'?el.value:+el.value}o.tileMap=Object.assign({},state.encTiles||{});
+  if(o.shape==='rect'&&String(o.front).startsWith('swing'))o.hatch='none';return o}
 /* which openings of a tile panel hold a mesh tile (m) and which a clear one (c), counted column by column from the
    bottom left as seen from inside */
 function tileStates(p,k,n){const s=(p.tileMap||{})[k];return typeof s==='string'&&s.length===n?s:'m'.repeat(n)}
@@ -910,7 +912,7 @@ function shapeUI(p){
   show('.sheetOnly',((round||corner)&&p.roundWall!=='mesh')||dome);
   show('.swingF',rect&&p.front.startsWith('swing'));show('.winF',rect&&p.front==='swingWindow');show('.tileF',rect&&[p.back,p.left,p.right].includes('tiles'));
   show('.lockF',rect||poly);
-  show('.hatchF',!hex&&!cage&&!nur&&!dome&&p.hatch!=='none');show('.magE',hex||p.hatch==='magnet'||(rect&&p.frameMags==='yes')||(rect&&p.front.startsWith('swing')&&p.doorCatch==='magnet'));
+  show('.hatchSel',!(rect&&p.front.startsWith('swing'))&&!(hex||cage||nur||dome));show('.hatchF',!hex&&!cage&&!nur&&!dome&&p.hatch!=='none');show('.magE',hex||p.hatch==='magnet'||(rect&&p.frameMags==='yes')||(rect&&p.front.startsWith('swing')&&p.doorCatch==='magnet'));
   $('Dwrap').hidden=!(rect||sh==='oval'||hex||nur);
   $('Wlab').textContent=sh==='round'||cage?'Diameter (mm)':poly||dome?'Width across the flats (mm)':hex?'Height, floor to ceiling (mm)':corner?'Length of each straight wall (mm)':nur?'Drawer width (mm)':'Width (mm)';
   $('Dwrap').firstChild.textContent=hex?'Depth from the wall (mm)':nur?'Drawer depth (mm)':'Depth (mm)';
@@ -1426,7 +1428,7 @@ function buildPieces(){
 function buildSetup(){
   const th=SETS[B.theme]||SETS.orchid;$('bThemeHint').textContent=`${th.note} Suggested colours: ${th.colours}.`;
   const e=readEnc(),shp={rect:(+e.tiers>1?`Display tower of ${e.tiers}, `:'')+'Rectangular',poly:`${e.sides}-sided`,round:'Round',oval:'Oval',hexcell:'Hexagonal wall cell'}[e.shape];
-  if(e.shape==='hexcell'){$('bEncSum').textContent=`${shp}, ${e.W} mm floor to ceiling, ${e.D} mm deep.`}else $('bEncSum').textContent=`${shp}, ${e.W}${e.shape==='round'||e.shape==='poly'?'':' × '+e.D} × ${e.H} mm, ${e.S} mm substrate. Feeding hatch: ${e.hatch==='none'?'none':e.hatch}. Floor pegs: ${e.pegs==='grid'?'yes':'no'}. Pin rails: ${e.rails==='yes'?'yes':'no'}.`;
+  if(e.shape==='hexcell'){$('bEncSum').textContent=`${shp}, ${e.W} mm floor to ceiling, ${e.D} mm deep.`}else $('bEncSum').textContent=`${shp}, ${e.W}${e.shape==='round'||e.shape==='poly'?'':' × '+e.D} × ${e.H} mm, ${e.S} mm substrate. Feeding hatch: ${e.hatch==='none'?(e.shape==='rect'&&e.front.startsWith('swing')?'none (the swing door opens the front)':'none'):e.hatch}. Floor pegs: ${e.pegs==='grid'?'yes':'no'}. Pin rails: ${e.rails==='yes'?'yes':'no'}.`;
   const mb=$('bMust');mb.innerHTML='';for(const [k,l] of MUST){const lab=document.createElement('label'),c=document.createElement('input');
     c.type='checkbox';c.checked=!!B.must[k];c.onchange=()=>{B.must[k]=c.checked?1:0;saveB();buildSetup()};lab.append(c,' '+l);mb.append(lab)}
   const box=$('bPieces');box.innerHTML='<legend>In this build</legend>';
