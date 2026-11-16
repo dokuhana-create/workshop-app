@@ -191,7 +191,7 @@
     }[k]||[t=>4,c];
     f.push(L(P[0],P[1]));
     if(!thr)return {parts:[{file:`finial-${k}.stl`,role:'Main colour',m:build(f),at:'top',count:4}],notes:['Finials: print 4 and stand one on each top corner of the lid.'],magnets:0};
-    const sl=(o.Lt||2.4)+11+7;
+    const sl=(o.Lt||2.4)+2+10.5+7;
     return {parts:[{file:`finial-${k}.stl`,role:'Main colour',m:build(f),at:'top',count:4},{file:'finial-stud-print-4.stl',role:'Second file',m:root.HabitatEnclosure.stud(sp,sl),at:'loose',count:4}],
       notes:[`Finials: print 4 finials and 4 studs. Turn a stud into each corner post through the hole in the lid, with a screwdriver in its slot, until about 7 mm stands above the lid; then screw a finial onto it. The finials hold the lid down, so you don't need the lid screws as well.${o.lidScrews?'':' Turn on Enclosure, Size, Lid fixing: Printed screws in the corners, so the posts and the lid get their threads and holes.'}`],magnets:0};
   }
@@ -234,16 +234,17 @@
      A low plaque across the front of the base, below the door, with the style's running pattern and the name. Two
      magnets in its back meet the pockets in the plinth's front corners. */
   function plaque(o){
-    const st=STYLES[o.style]||STYLES.baroque,q=o.plaque,W=q.W+2*q.E-6,H=max(20,q.S-8),bt=2.4,oh=1.2,lw=max(1.3,W*.007),notes=[];
+    /* v43: a smaller plaque on the base's flat upper band, between and round the two magnets 20 % in from each side */
+    const md0=o.md||10,mx=md0/2+8,st=STYLES[o.style]||STYLES.baroque,q=o.plaque,W=q.mags?q.mags.xs[1]-q.mags.xs[0]+2*mx:q.W+2*q.E-6,H=q.mags?q.h:max(20,q.S-8),bt=2.4,oh=1.2,lw=max(1.3,W*.007),notes=[];
     const body=rrect(0,0,W,H,3),art=[subtract(offset(body,-1.6),offset(body,-2.8))];
     let rail=pattern(st.rail,6,4.5,W-6,H-4.5,lw,5);
     if(o.name&&o.name.trim()){const th=min(H*.5,W*.1),t=HM.text2D([o.name.trim()],th,max(1.4,th*.13),o.font||'script'),tr=move(t.rings,W/2,H/2),pad=offset(tr,4);rail=subtract(rail,pad);art.push(tr)}
     art.push(rail);
-    const md=o.md||10,mh=o.mh||3,mags=[[q.E-3,q.S/2-4],[q.W+q.E-3,q.S/2-4]],pd=max(mh+.2,bt+oh),ros=U(...mags.map(([x,y])=>circle(x,y,md/2+3.2,48)));
+    const md=md0,mh=o.mh||3,mags=q.mags?[[mx,H/2],[W-mx,H/2]]:[[q.E-3,q.S/2-4],[q.W+q.E-3,q.S/2-4]],pd=max(mh+.2,bt+oh),ros=U(...mags.map(([x,y])=>circle(x,y,md/2+3.2,48)));
     const deco=subtract(intersect(U(...art),offset(body,-1.2)),offset(ros,1));
     const f=[prism(0,bt,body),prism(bt,bt+oh,deco),prism(bt,pd+.6,ros),...mags.map(([x,y])=>prism(-1,pd,G.mag(x,y,md),'sub'))];
-    notes.push(`Name plaque: 2 magnets ${md} x ${mh} mm pressed into its back, and 2 in the pockets in the front corners of the base (Enclosure, Size, Magnets for a name plaque). It prints flat on its back.`);
-    return {parts:[{file:'name-plaque.stl',role:'Main colour',m:build(f),at:'plaque'}],notes,magnets:2};
+    notes.push(`Name plaque: 2 magnets ${md} x ${mh} mm pressed into its back, and 2 in the pockets in the front of the base (Enclosure, Size, Magnets for a name plaque). It prints flat on its back.`);
+    return {parts:[{file:'name-plaque.stl',role:'Main colour',m:build(f),at:'plaque',mx:q.mags?mx:0}],notes,magnets:2};
   }
   function piece(o){
     const which=o.piece||'all',out={parts:[],notes:[],magnets:0};

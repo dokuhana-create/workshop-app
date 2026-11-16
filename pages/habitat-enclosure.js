@@ -132,7 +132,7 @@
   function lid(C,o,p,preview){
     const ob=o.gw/2+o.wall,outer=offset(C,ob,o.join),oG=offset(C,o.gw/2,o.join),iG=offset(C,-o.gw/2,o.join),inner=offset(C,-ob,o.join);
     const f=[prism(0,o.Lt,outer),prism(o.Lt-.01,o.Lt+o.s,subtract(outer,oG)),prism(o.Lt-.01,o.Lt+o.s,subtract(iG,inner))],notes=[];
-    for(const c of o.corners||[]){f.push(prism(0,o.Lt+o.s,c.block));f.push(prism(o.Lt,o.Lt+o.s+1,c.pocket,'sub'))}
+    for(const c of o.corners||[]){f.push(prism(0,o.Lt+o.s,c.block));f.push(prism(o.pocketZ??o.Lt,o.Lt+o.s+1,c.pocket,'sub'))}
     if(o.slot)f.push(prism(-1,o.Lt+o.s+1,o.slot,'sub'));
     if(o.screws&&o.screws.length)f.push(prism(-1,o.Lt+1,o.screws.map(([x,y,r])=>circle(x,y,r,40)[0]),'sub'));
     const mesh=offset(C,-ob-4),fits=(x,y,r)=>[[x-r,y],[x+r,y],[x,y-r],[x,y+r],[x-r*.7,y-r*.7],[x+r*.7,y-r*.7],[x-r*.7,y+r*.7],[x+r*.7,y+r*.7]].every(([u,v])=>G.inside(mesh,u,v));
@@ -389,6 +389,22 @@
     if(pm)for(const x of pm.xs){const ring=G.mag(x,pm.z,md),R=md/2+.25;f.push(varying(pm.z-R,pm.z+R,z=>G.slice(ring,z).map(([a,b])=>rect(a,-bg.eT-1,b,-bg.eT+mh+.2)[0]),.5,'sub'))}
     const m=build(f);m.pegs=pegs;m.vents=vents;m.geom=bg;m.plaqueMags=pm;return m;
   }
+  /* ---------- the v43 lid ----------
+     Its top plate runs out to the base's upper band, with the same rounded corners and a small chamfer top and
+     bottom. Under it, the groove rails and a tube at each corner; the post top goes 3.7 mm up into the tube. A
+     countersunk screw goes down through each corner into the post, its head flush with the lid. */
+  function rectLid2(d,p,J,preview){
+    const g=J.g,sp=J.sp,W=d.W,D=d.D,E=d.E,Lt=d.Lt,pz=Lt+2,ins=z=>z<.8?.8-z:z>Lt-.8?z-(Lt-.8):0;
+    const outl=e=>G.rrect(-e,-e,W+e,D+e,e-(J.a-J.ro),Math.max(5,Math.round(e)));
+    const corners=[0,1,2,3].map(i=>({block:atCorner(d,i,postOutline(J,J.cs+1.6)),pocket:atCorner(d,i,postOutline(J,J.cs))}));
+    const extra=[varying(0,Lt,z=>outl(E-ins(z)),.2)],spots=[0,1,2,3].map(i=>atCorner(d,i,[[[-sp.c,-sp.c]]])[0][0]);
+    for(const [x,y] of spots)extra.push(...cskHole(x,y,sp,pz+.01));
+    /* crest slots: two square slots through the front of the plate, with a small block under each */
+    if(p.doorStyle&&p.doorStyle!=='plain')for(const x of crestX(d)){const c=CREST.peg/2+.15;
+      extra.push(prism(1,Lt+6,rect(x-5,-E+.6,x+5,-E+CREST.y1+1.2)),prism(-1,CREST.len+.4,rect(x-c,-E+CREST.y0-.15,x+c,-E+CREST.y1+.15),'sub'))}
+    const m=lid(rectC(d),{gw:g,wall:2.4,s:d.s,Lt,join:'miter',corners,pocketZ:pz,slot:d.swing?null:rect(g/2,-g/2,W-g/2,g/2),centre:[W/2,D/2],alongY:D>W,extra},p,preview);
+    m.screw=cskScrew(sp,pz-cskHeight(sp)+J.thread-1.5,J.scl);m.spots=spots;return m;
+  }
   /* the whole fit kit: three blocks, a short post with a thread in each end, and one screw */
   function fitKit(T,fit,screwFit){const J=joint(T,fit,screwFit),blocks=[-1,0,1].map(k=>fitBlock(J,k));
     /* three screws: 1 dot is fatter (tighter), 3 dots thinner (looser) */
@@ -601,5 +617,5 @@
       button:buttons?turnButton(0,4.5):null,front:off+dt,edge:xd1,midZ:(zd0+zd1)/2};
   }
 
-  root.HabitatEnclosure={rectBase2,baseGeom,plaqueMags,atCorner,FIT_STEP,SCREW_STEP,joint,postOutline,jointPost,cskScrew,cskHole,cskHeight,fitBlock,fitKit,rr4,crestX,CREST,screwSpec,screwSpots,stud,hasp,screwHoleUp,lidScrew,turnButton,latchDepth,frontVents,hatchCover,TW,base,lid,rectBase,rectLid,rectPost,polyGeom,polyEnclosure,spineToWorld,roundEnclosure,perimeter,tilePanel,TILE,swingDoor,lightWindows,mirrorY};
+  root.HabitatEnclosure={rectLid2,rectBase2,baseGeom,plaqueMags,atCorner,FIT_STEP,SCREW_STEP,joint,postOutline,jointPost,cskScrew,cskHole,cskHeight,fitBlock,fitKit,rr4,crestX,CREST,screwSpec,screwSpots,stud,hasp,screwHoleUp,lidScrew,turnButton,latchDepth,frontVents,hatchCover,TW,base,lid,rectBase,rectLid,rectPost,polyGeom,polyEnclosure,spineToWorld,roundEnclosure,perimeter,tilePanel,TILE,swingDoor,lightWindows,mirrorY};
 })(typeof window!=='undefined'?window:globalThis);

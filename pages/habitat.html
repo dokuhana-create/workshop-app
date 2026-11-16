@@ -133,9 +133,9 @@ h3{font:600 15px var(--body);margin:0 0 6px}
           <label class="f" style="grid-column:1/-1">Start from a ready-made form<select id="preset"></select></label>
           <label class="f" style="grid-column:1/-1">Shape<select id="eShape"></select></label>
           <label class="f sidesF">Number of walls<input id="sides" type="number" min="5" max="8" step="1"></label>
-          <label class="f rectOnly">Corners<select id="corners"></select></label>
-          <label class="f rectOnly">Corner posts<select id="frame"></select></label>
-          <label class="f rectOnly">Lid fixing<select id="lidScrews"></select></label>
+          <label class="f" hidden>Corners<select id="corners"></select></label>
+          <label class="f" hidden>Corner posts<select id="frame"></select></label>
+          <label class="f" hidden>Lid fixing<select id="lidScrews"></select></label>
           <label class="f rectOnly">Magnets for a name plaque<select id="frameMags"></select></label>
           <label class="f" hidden>Display tower<select id="tiers"></select></label>
           <label class="f"><span id="Wlab">Width (mm)</span><input id="W" type="number" min="60" step="5"></label>
@@ -645,10 +645,13 @@ function readEnc(){const o={};for(const k in encIds){const el=$(encIds[k]);o[k]=
 /* which openings of a tile panel hold a mesh tile (m) and which a clear one (c), counted column by column from the
    bottom left as seen from inside */
 function tileStates(p,k,n){const s=(p.tileMap||{})[k];return typeof s==='string'&&s.length===n?s:'m'.repeat(n)}
-function rectDims(p){const g=p.T+.6,s=6,r=2.4,slim=p.frame==='slim',a=g/2+(slim?4.7:s),band=g/2+r,swing=p.front.startsWith('swing');
+/* v43: slim round-cornered posts in sockets (HabitatEnclosure.joint). g is the nominal groove, so the panel sizes never
+   change with the fit; a is the post's half width, aDoor the old standard post's, which keeps the door window at its
+   cut size (281 × 156 for 200 × 300); E is the line of the base's upper band and the lid's edge. */
+function rectDims(p){const J=HE.joint(p.T,p.fit,p.screwFit),g=J.gN,s=6,r=2.4,slim=true,a=J.a,aDoor=g/2+6,band=g/2+r,swing=p.front.startsWith('swing');
   /* turn latch above the door's pull, lock hasps below it; both stay clear of the window buttons near the door's ends */
   const pH=p.H-.5,lockZ=Math.max(pH/2-30,s+1+1.7+14+20),lockOK=lockZ+9<=pH/2-16,latchOK=pH/2+27.5<=pH-31;
-  return {W:p.W,D:p.D,S:p.S,H:p.H,s,g,band,Eh:a+.25+r,E:a+.25+r+5.5,f:2.4,a,Lt:2.4,swing,Hp:pH,slim,latch:swing&&p.doorCatch==='turn',latchZ:latchOK?pH/2+24:pH/2-24,lockZ:swing&&p.lock==='pin'&&lockOK&&latchOK?lockZ:null,lockShort:swing&&p.lock==='pin'&&!(lockOK&&latchOK)}}
+  return {W:p.W,D:p.D,S:p.S,H:p.H,s,g,band,Eh:a+J.cs+1.6,E:a+J.cs+1.8,f:2.4,a,aDoor,J,Lt:2.4,swing,Hp:pH,slim,latch:swing&&p.doorCatch==='turn',latchZ:latchOK?pH/2+24:pH/2-24,lockZ:swing&&p.lock==='pin'&&lockOK&&latchOK?lockZ:null,lockShort:swing&&p.lock==='pin'&&!(lockOK&&latchOK)}}
 /* a printed mesh panel, flat on the bed: x across, y up the wall, z through it (inner face at z=T).
    It is 0.4 mm thinner than the clear panels and 0.5 mm shorter at every edge, so it slides into the grooves even
    when the print comes out a little fat. Pin rails are solid bands with holes through, so both faces stay flat. */
@@ -682,14 +685,18 @@ function lidReadme(L,p){let t='';if(L.win&&L.win.mode==='insert')t+=`\nLight win
 
 function rectModel(p,pv){
   const d=rectDims(p),c=colours(),notes=[],cut=[],parts=[],items=[],Ztop=d.S+d.H+d.Lt;
-  const J=HE.joint(p.T,p.fit,p.screwFit),base=HE.rectBase2(d,p,J),zb=base.geom.zb,lid=HE.rectLid(d,p,pv),post=HE.jointPost(J,d.S+d.Hp-zb),bScrew=HE.cskScrew(J.sp,6-HE.cskHeight(J.sp)+J.thread-1.5,J.scl);
+  const J=d.J,base=HE.rectBase2(d,p,J),zb=base.geom.zb,lid=HE.rectLid2(d,p,J,pv),bScrew=HE.cskScrew(J.sp,6-HE.cskHeight(J.sp)+J.thread-1.5,J.scl);
+  /* the posts run from their bosses in the base to just under the lid's pockets; holes for the door latch and lock in both outer faces, so any post fits any corner */
+  const pLen=d.S+d.H-2.3-zb,psubs=[],dep=HE.latchDepth(d),hole=zz=>psubs.push(Geo.yDisc(3,zz-zb,1.5,-d.a-1,-d.a+dep,'sub'),Geo.xDisc(3,zz-zb,1.5,-d.a-1,-d.a+dep,'sub'));
+  if(d.latch)hole(d.S+d.latchZ);if(d.lockZ!=null)for(const z of [d.lockZ-6,d.lockZ+6])hole(d.S+z);
+  const post=HE.jointPost(J,pLen,{subs:psubs});
   notes.push(...lid.notes);
   parts.push({name:'Base',file:`base-${p.W}x${p.D}.stl`,tris:place(base.tris)},{name:'Corner post',n:4,file:'corner-post-print-4.stl',tris:place(post.tris,(x,y,z)=>[z,(x-y)*Math.SQRT1_2,(x+y)*Math.SQRT1_2])},{name:'Base screw',n:4,file:'base-screw-print-4.stl',tris:place(bScrew.tris)},{name:lid.win?'Lid with mesh and lamp windows':'Lid with mesh',file:`lid-${p.W}x${p.D}.stl`,tris:place(lid.tris)});
   if(lid.cover)parts.push({name:'Feeding hatch cover',file:'feeding-hatch.stl',tris:place(lid.cover.tris)});
   items.push({tris:base.tris,color:c.frame},{tris:place0(lid.tris,(x,y,z)=>[x,-y,Ztop-z]),color:c.mesh,alpha:.55});
   const cw=coverWorld(lid,Ztop,p);if(cw)items.push({tris:cw,color:c.frame});
-  if(lid.screw){parts.push({name:'Lid screw',n:4,file:'lid-screw-print-4.stl',tris:place(lid.screw.tris)});
-    const sp=HE.screwSpec(d.slim),cc=sp.c;[[0,0],[d.W,0],[d.W,d.D],[0,d.D]].forEach(([x,y],i)=>{const a=i*Math.PI/2,co=Math.round(Math.cos(a)),si=Math.round(Math.sin(a)),sx=x-co*cc+si*cc,sy=y-si*cc-co*cc;items.push({tris:place0(lid.screw.tris,(u,v,w)=>[sx+u,sy-v,Ztop+3-w]),color:c.frame})})}
+  parts.push({name:'Lid screw',n:4,file:'lid-screw-print-4.stl',tris:place(lid.screw.tris)});
+  for(const [sx,sy] of lid.spots)items.push({tris:place0(lid.screw.tris,(u,v,w)=>[sx+u,sy-v,Ztop-w]),color:c.frame});
   [[0,0],[d.W,0],[d.W,d.D],[0,d.D]].forEach(([x,y],i)=>{const a=i*Math.PI/2,co=Math.round(Math.cos(a)),si=Math.round(Math.sin(a));items.push({tris:place0(post.tris,(u,v,w)=>[x+co*u-si*v,y+si*u+co*v,w+zb]),color:c.frame})});
   const fbW=d.W-d.g-1,lrW=d.D-d.g-1,pH=d.H-.5;
   const panels=[{k:'front',label:'Front door',w:fbW,h:d.swing?pH:d.H+d.Lt+20,type:d.swing?'swing':p.front},{k:'back',label:'Back',w:fbW,h:pH,type:p.back},{k:'left',label:'Left',w:lrW,h:pH,type:p.left},{k:'right',label:'Right',w:lrW,h:pH,type:p.right}];
@@ -714,7 +721,7 @@ function rectModel(p,pv){
     notes.push(`Tile panels: ${nm} mesh and ${nc} clear tiles. Click a tile in the picture, or use the grid under Walls and door, to switch it.`);
     if(tp.some(q=>Math.abs(q.tiles.tileSize[0]-t.tileSize[0])>.5||Math.abs(q.tiles.tileSize[1]-t.tileSize[1])>.5))notes.push('The tile panels have different tile sizes. The mesh tile file fits the first one; make the panels the same size to share tiles.');}
   let sw=null;
-  if(d.swing){sw=HE.swingDoor({fbW,pH,T:p.T,postX:d.a-(d.g/2+.5),s:d.s,lockZ:d.lockZ},p,pv);
+  if(d.swing){sw=HE.swingDoor({fbW,pH,T:p.T,postX:d.aDoor-(d.g/2+.5),s:d.s,lockZ:d.lockZ},p,pv);
     if(!sw.ok)notes.push('The enclosure is too narrow or low for a swing door. Make it wider and taller, or use a sliding door.');
     else{parts.push({name:'Front frame with hinge clips',file:'front-frame-swing.stl',tris:place(sw.frameM.tris,(x,y,z)=>[x,-z,y])},{name:'Swing door',file:`swing-door-${sw.mesh?'mesh':'window'}.stl`,tris:place(sw.doorM.tris,sw.faceDown?(x,y,z)=>[x,z,-y]:(x,y,z)=>[x,-z,y])});
       if(sw.knob)parts.push({name:'Door knob',file:'door-knob.stl',tris:place(sw.knob.tris)});
@@ -734,7 +741,7 @@ function rectModel(p,pv){
   if(d.lockShort)notes.push('The door is too short for the lock hasps as well as the window buttons and the latch. Make the enclosure taller for a lock.');
   if(p.frameMags==='yes'&&p.S<(p.dMagD||10)+4)notes.push(`The base is too shallow for the name plaque's magnet pockets: make the substrate at least ${(p.dMagD||10)+4} mm deep.`);
   lidCut(lid,cut);
-  let rd=`Insect enclosure ${p.W} x ${p.D} x ${p.H} mm (substrate ${p.S} mm), ${p.corners} corners\nSuggested filament: ${MATS[p.mat].name}.\n`;
+  let rd=`Insect enclosure ${p.W} x ${p.D} x ${p.H} mm (substrate ${p.S} mm)\nSuggested filament: ${MATS[p.mat].name}.\n`;
   if(cut.length)rd+='\nTo cut:\n'+cut.map(([a,b])=>`- ${a}: ${b} mm`).join('\n')+'\n';
   rd+=lidReadme(lid,p);
   if(base.pegs.length)rd+=`\nThe base has ${base.pegs.length} floor pegs for accessories with a floor socket.\n`;
@@ -746,9 +753,9 @@ function rectModel(p,pv){
     for(let j=ny-1;j>=0;j--){let row='  ';for(let i=0;i<nx;i++)row+=(q.states[i*ny+j]==='m'?'M':'C')+' ';rd+=row+'\n'}}
   if(sw&&sw.ok){rd+=`\nSwing door: the rod along the door's edge snaps into the three clips on the frame from the front. ${sw.catchM?`Catch: 4 round magnets, ${p.dMagD} x ${p.dMagH} mm (2 in the rim, 2 in the door).`:sw.turn?'Catch: push the turn latch into the hole in the front of the right-hand corner post, at the height of the door. Turn it over the door edge to close, upright to open.':'Catch: the printed rib on the rim clicks into the groove in the door.'}\n`;
     if(sw.recess)rd+=`Door window: lay the door face down, tuck the hinge-side edge of the acrylic under the sloped lip on the inside, press the pane into the recess and turn the ${sw.buttons} buttons over its other edge. The door prints face down too, so its front comes out smooth.\nDoor knob: push its peg into the hole near the free edge of the door.\n`;}
-  if(lid.screw)rd+=`\nLid screws: put the lid on, then turn a screw into each corner post through the hole in the lid. Hand-tight is enough; a coin fits the slot.\n`;
+  rd+=`\nScrews: 4 base screws and 4 lid screws, all countersunk. The base screws go up through the bottom of the base into the foot of each post (reach them from below with a flat screwdriver); the lid screws go down through the lid into the top of each post, their heads flush with the lid. Hand-tight is enough. If they are too stiff or too loose, print the fit test (Enclosure, Fit test).\n`;
   if(base.vents)rd+=`\nAir slots: the base has ${base.vents.n} slots low in the front. Keep the substrate below them, at most ${Math.max(0,Math.round(base.vents.z0-d.f))} mm deep.\n`;
-  rd+=`\nAssembly: dry-fit the posts in the base sockets, slide ${d.swing?'the door frame, ':''}the back and side panels into the grooves, put the lid on${d.swing?', then snap the door onto the hinge clips':', then drop the front door in through the slot in the lid'}.\n`;
+  rd+=`\nAssembly:\n1. Stand each post in its socket in the base and turn a base screw up into it from underneath.\n2. Slide ${d.swing?'the door frame, ':''}the back and the side panels down the post slots into the base groove.\n3. Put the lid on, so the post tops go into its corner tubes and the panels into its groove, and turn the 4 lid screws in.\n4. ${d.swing?'Snap the door onto the hinge clips.':'Drop the front door in through the slot in the lid.'}\n`;
   return {parts,items,cut,notes,readme:rd,tag:`${p.W}x${p.D}x${p.H}`,hatch:lid.hatch,tiles:tp.map(q=>({k:q.k,label:q.label,nx:q.tiles.nx,ny:q.tiles.ny,states:q.states}))};
 }
 function polyModel(p,pv){
@@ -1225,7 +1232,7 @@ let trimMemo={k:'',v:null};
 function trimEnc(){const p=readEnc(),k=JSON.stringify(p);if(trimMemo.k===k)return trimMemo.v;
   let mn=[1e9,1e9,1e9],mx=[-1e9,-1e9,-1e9];try{for(const it of encModel(p,true).items){const t=it.tris;for(let i=0;i<t.length;i+=3)for(let a=0;a<3;a++){if(t[i+a]<mn[a])mn[a]=t[i+a];if(t[i+a]>mx[a])mx[a]=t[i+a]}}}catch(e){mn=[0,0,0];mx=[p.W,p.D||p.W,p.S+p.H+2.4]}
   const v={rect:p.shape==='rect',W:Math.round((mx[0]-mn[0])*10)/10,Htot:Math.round((mx[2]-Math.max(0,mn[2]))*10)/10,S:p.S,Hwin:p.S+p.H,Lt:2.4,bed:[p.bx||350,p.by||350],box:[mn,mx]};
-  if(v.rect){const d=rectDims(p);v.cornerX=[-mn[0],p.W-mn[0]];v.frontY=-d.E;v.clipReach=d.Eh-d.band;v.ztop=p.S+p.H+2.4;v.lidCrest={W:p.W,E:d.E,xs:HE.crestX(d),C:HE.CREST,ok:p.doorStyle!=='plain'};v.plaque={W:p.W,E:d.E,S:p.S};v.blocked=d.latch||d.lockZ!=null;v.frameMags=p.frameMags==='yes';v.lidScrews=p.lidScrews==='screws';v.screw=HE.screwSpec(d.slim);v.finSpots=HE.screwSpots(d,{lidScrews:'screws'})}
+  if(v.rect){const d=rectDims(p);v.cornerX=[-mn[0],p.W-mn[0]];v.frontY=-d.E;v.clipReach=d.Eh-d.band;v.ztop=p.S+p.H+2.4;v.lidCrest={W:p.W,E:d.E,xs:HE.crestX(d),C:HE.CREST,ok:p.doorStyle!=='plain'};v.plaque=Object.assign({W:p.W,E:d.E,S:p.S},(()=>{const bg=HE.baseGeom(d,d.J),pm=HE.plaqueMags(d,bg),top=(bg.line??bg.Ht)-1;return {mags:pm,h:Math.max(14,Math.min(2*(pm.z-(bg.z1+bg.hc)),2*(top-pm.z))-1.5)}})());v.blocked=d.latch||d.lockZ!=null;v.frameMags=p.frameMags==='yes';v.lidScrews=true;v.screw=d.J.sp;v.finSpots=HE.screwSpots(d,{lidScrews:'screws'})}
   trimMemo={k,v};return v}
 HabitatKeep.trim=o=>HabitatTrim.piece(Object.assign({},trimEnc(),o));
 /* the anatomical skull loads in the background; redraw when it arrives */
@@ -1480,7 +1487,7 @@ function buildScene(des){
     for(const q of d.r.parts){if(!q.m||q.at==='loose')continue;const col=q.role==='Colour 2'?c2:c1;
       if(q.at==='front')items.push({tris:place0(q.m.tris,(x,y,z)=>[mn[0]+x,(te.frontY??mn[1]-1)-z,y]),color:col});
       else if(q.at==='crest'&&te.lidCrest){const c=te.lidCrest;items.push({tris:place0(q.m.tris,(x,y,z)=>[x-c.E,-c.E+c.C.y1-z,te.ztop+y]),color:col})}
-      else if(q.at==='plaque'&&te.plaque){const c=te.plaque;items.push({tris:place0(q.m.tris,(x,y,z)=>[x-c.E+3,-c.E-z,4+y]),color:col})}
+      else if(q.at==='plaque'&&te.plaque){const c=te.plaque;if(c.mags){const x0=c.mags.xs[0]-(q.mx||0),z0=c.mags.z-c.h/2;items.push({tris:place0(q.m.tris,(x,y,z)=>[x+x0,-c.E-z,z0+y]),color:col})}else items.push({tris:place0(q.m.tris,(x,y,z)=>[x-c.E+3,-c.E-z,4+y]),color:col})}
       else if(q.at==='top'){if(!te.rect)continue;for(const [cx,cy] of te.finSpots||[[mn[0]+8,mn[1]+8],[mx[0]-8,mn[1]+8],[mn[0]+8,mx[1]-8],[mx[0]-8,mx[1]-8]])items.push({tris:place0(q.m.tris,(x,y,z)=>[x+cx,y+cy,z+mx[2]]),color:col})}
       else if(q.at==='bottom'){if(!te.rect)continue;const t=q.m.tris;let z1=0;for(let i=2;i<t.length;i+=3)z1=Math.max(z1,t[i]);const zt=z1-5;
         for(const [cx,cy,a] of [[mn[0]+15,mn[1]+15,0],[mx[0]-15,mn[1]+15,1],[mx[0]-15,mx[1]-15,2],[mn[0]+15,mx[1]-15,3]]){const c=[1,0,-1,0][a],s_=[0,1,0,-1][a];
