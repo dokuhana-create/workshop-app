@@ -203,7 +203,10 @@
     /* at least half the floor stays free: if even the shallowest rows across the whole back would cover too much,
        the planter becomes a block in the back left corner */
     const Wu=Wp*Dp>FLOOR_MAX*Wp*Dfloor?Math.max(60,FLOOR_MAX*Wp*Dfloor/Dp):Wp,corner=Wu<Wp-1;
-    const bed=info.bed||350,m=o.mods&&o.mods!=='auto'?+o.mods:Math.max(1,Math.ceil(Wu/(bed-10))),Mw=(Wu-(m-1))/m;
+    const bed=info.bed||350,m=corner?1:o.mods&&o.mods!=='auto'?+o.mods:Math.max(1,Math.ceil(Wu/(bed-10))),Mw=(Wu-(m-1))/m;
+    /* in the corner the tiers also step down towards the open side: the tallest sits in the corner, each lower one wraps
+       round it, so only the two sides against the enclosure walls are full height. The corner is at x = Mw. */
+    const xL=k=>corner?Mw-(k+1)*Mw/n:-1e3;
     const hk=k=>Sb-2.4+(o.up||20)+(n-1-k)*(o.step||30),yk=k=>(k+1)*Dp/n,sk=SURF[o.front]||SURF.flutes,amp=sk.amp||0;
     const sf=surfFn(o.front||'flutes',{C:0,H:hk(0),seed:o.seed||1});
     /* top edge: depth of a dip at x, only along the front of each tier */
@@ -213,21 +216,28 @@
     for(let j=0;j<m;j++){
       const first=j===0,last=j===m-1,X0=j*(Mw+1);
       /* the tiers as one body: each one runs from the back wall to its own front, so they step down */
-      const tier=k=>(x,y,z)=>{const xx=x,front=y-(yk(k)+sf(X0+xx,z)-.2),dip=RIM((X0+xx))*clamp((y-(yk(k)-12))/8,0,1);
-        let d=smax(smax(-xx,xx-Mw,1),smax(-y,front,1.6),1);d=smax(smax(d,z-(hk(k)-dip),1.4),-z,.25);return d};
-      const cav=k=>(x,y,z)=>{const front=y-(yk(k)-amp-wall),back=(k?yk(k-1):0)+wall-y;let d=smax(smax(wall-x,x-(Mw-wall),1.2),smax(back,front,1.2),1.2);return smax(d,fl-z,1.2)};
+      const tier=k=>(x,y,z)=>{const xx=x,front=y-(yk(k)+sf(X0+xx,z)-.2);let dip=RIM((X0+xx))*clamp((y-(yk(k)-12))/8,0,1);
+        let left=-xx;if(corner&&k<n-1){left=(xL(k)-sf(500+y,z)+.2)-xx;dip=max(dip,RIM(y)*clamp(((xL(k)+12)-xx)/8,0,1))}
+        let d=smax(smax(left,xx-Mw,1.6),smax(-y,front,1.6),1);d=smax(smax(d,z-(hk(k)-dip),1.4),-z,.25);return d};
+      const cav=k=>(x,y,z)=>{const front=y-(yk(k)-amp-wall);let d;
+        if(!corner){const back=(k?yk(k-1):0)+wall-y;d=smax(smax(wall-x,x-(Mw-wall),1.2),smax(back,front,1.2),1.2)}
+        else{/* an L-shaped pocket: inside this tier, outside the one above it */
+          d=smax(smax((k<n-1?xL(k)+amp:0)+wall-x,x-(Mw-wall),1.2),smax(wall-y,front,1.2),1.2);
+          if(k>0)d=smax(d,-smax(smax((xL(k-1)-wall)-x,-1e3,1),y-(yk(k-1)+wall),1.2),1.2)}
+        return smax(d,fl-z,1.2)};
       let f=sd.union(...[...Array(n)].map((_,k)=>tier(k)));
       f=sd.scut(1.4,f,...[...Array(n)].map((_,k)=>cav(k)));
       if(nt>0){const cs=[];if(first&&!corner)cs.push(sd.box(nt/2-.5,nt/2-.5,60,nt/2+.5,nt/2+.5,200));if(last)cs.push(sd.box(Mw-nt/2+.5,nt/2-.5,60,nt/2+.5,nt/2+.5,200));if(cs.length)f=sd.cut(f,...cs)}
       const spots=pegsUnder(e,Wp,ob,X0,Mw,Dp+amp),near=(x,y)=>spots.some(([u,v])=>Math.hypot(x-u,y-v)<9.5);
-      const hs=[];for(let k=0;k<n;k++){const y0=(k?yk(k-1):0)+wall+4,y1=yk(k)-amp-wall-4;for(let x=wall+6;x<Mw-wall-4;x+=12)for(let y=y0;y<=y1;y+=12)if(!near(x,y))hs.push(sd.cylZ(x,y,1.05,-1,fl+.5))}
+      const hs=[];if(corner){for(let x=wall+6;x<Mw-wall-4;x+=12)for(let y=wall+5;y<Dp-wall-4;y+=12)if(!near(x,y)&&[...Array(n)].some((_,k)=>cav(k)(x,y,fl+1)<-2.5))hs.push(sd.cylZ(x,y,1.05,-1,fl+.5))}
+      else for(let k=0;k<n;k++){const y0=(k?yk(k-1):0)+wall+4,y1=yk(k)-amp-wall-4;for(let x=wall+6;x<Mw-wall-4;x+=12)for(let y=y0;y<=y1;y+=12)if(!near(x,y))hs.push(sd.cylZ(x,y,1.05,-1,fl+.5))}
       if(hs.length)f=sd.cut(f,...hs);
       const sp=socketPegs(sd,f,spots,fl);f=sp.f;pegN+=sp.n;const carve=sp.carve;
       const mm=sd.mesh(f,[-1,-1,Mw+1,Dp+amp+2,hk(0)+2],o.preview?1.4:.6,{carve});
       parts.push({file:m>1?`tiered-planter-${j+1}-of-${m}.stl`:'tiered-planter.stl',role:j?'Second file':'Main colour',m:mm});
     }
     const hs=[...Array(n)].map((_,k)=>round(hk(k)));
-    notes.push(`${n} tiers ${corner?'in the back left corner':'across the back'}, ${round(Wu)} × ${round(Dp)} mm and ${hs.join(', ')} mm tall from back to front, with a ${sk.name.toLowerCase()} front. It stands on the base floor and leaves ${round(100-100*Wu*Dp/(Wp*Dfloor))} % of the floor free${corner?': a planter across the whole back would have covered more than half of it':''}.`);
+    notes.push(`${n} tiers ${corner?'in the back left corner':'across the back'}, ${round(Wu)} × ${round(Dp)} mm and ${hs.join(', ')} mm tall from back to front, with a ${sk.name.toLowerCase()} front. It stands on the base floor and leaves ${round(100-100*Wu*Dp/(Wp*Dfloor))} % of the floor free${corner?': a planter across the whole back would have covered more than half of it. The tiers step down towards the front and towards the open side, so only the two sides against the enclosure walls are full height':''}.`);
     if(m>1)notes.push(`It comes in ${m} modules that stand side by side; they need nothing to join them.`);
     notes.push(pegN>=2*m?`It sits on ${pegN} floor pegs of the base, so it can't slide or tip. Turn on floor pegs for the enclosure.`:'Turn on floor pegs for the enclosure and make the planter reach further, so it sits on at least two pegs; it has sockets wherever a peg is under it.');
 
