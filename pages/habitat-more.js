@@ -420,9 +420,15 @@
     if(e.shape==='nursery')return W-6;
     return W-4}
   /* the wall bracket: a plate on the wall with a block on top, and a square hole down through the block */
-  function wallBracket(o,ps){
-    const cw=ps/2+3.2,foot=rrect(-cw-2,-20,cw+2,16,4),bm=backMount(o,foot,{my:-10}),f=bm.f,dy=bm.dy,bt=bm.bt;
-    const y0=2+dy,y1=16+dy,hz=ps+.4,hw=hz/2,z0=bt+2.4,zt=z0+hz+hw+1.6;
+  /* diamond: for a bridge that meets the wall at 45° (across a corner), its square pin stands turned by 45°, so the
+     hole is the same square turned too. Lying on its back to print, a diamond hole has only 45° sides. */
+  function wallBracket(o,ps,diamond){
+    const hz=ps+.4,hd=hz/Math.SQRT2,cw=diamond?Math.max(ps/2+3.2,hd+2):ps/2+3.2,foot=rrect(-cw-2,-20,cw+2,16,4),bm=backMount(o,foot,{my:-10}),f=bm.f,dy=bm.dy,bt=bm.bt;
+    const y0=2+dy,y1=16+dy;
+    if(diamond){const zc=bt+2+hd,zt=zc+hd+1.6;f.push(prism(bt-.01,zt,rrect(-cw,y0,cw,y1,1.2)));
+      const st=.25;for(let z=zc-hd;z<zc+hd-.01;z+=st){const zm=z+st/2,w=hd-Math.abs(zm-zc);if(w>.05)f.push(prism(z,z+st,rect(-w,y0-1,w,y1+1),'sub'))}
+      return {m:build(f),c:zc,top:y1,magnets:bm.magnets,notes:bm.notes}}
+    const hw=hz/2,z0=bt+2.4,zt=z0+hz+hw+1.6;
     f.push(prism(bt-.01,zt,rrect(-cw,y0,cw,y1,1.2)));
     /* the hole runs along the wall; its roof comes to a 45° point so it prints without bridging */
     f.push(prism(z0,z0+hz,rect(-hw,y0-1,hw,y1+1),'sub'));
@@ -434,8 +440,14 @@
   function bridge(o,enc){
     const hang=o.mount&&o.mount!=='holder'&&o.mount!=='none',ps=Math.max(3,(o.dia+.6)/Math.SQRT2-.3),r=rnd(o.seed),f=[],notes=[];
     if(!hang)return holderBridge(o,ps,r);
-    const w=Math.max(ps+1,o.w),t=Math.max(ps,Math.min(14,o.w)),br=wallBracket(o,ps),c=br.c;
-    const across=o.across==='depth'?'depth':'width',auto=!(o.span>0),span=auto?Math.max(60,innerSpan(enc,across)-2*c-1.5):o.span;
+    const e_=(enc&&enc.e)||{},cornerOK=e_.shape==='rect'||!e_.shape,corner=cornerOK&&(o.across==='cornerL'||o.across==='cornerR');
+    if(!cornerOK&&(o.across==='cornerL'||o.across==='cornerR'))notes.push('Bridges across a corner fit rectangular enclosures; this one hangs from wall to wall instead.');
+    const w=Math.max(ps+1,o.w),t=Math.max(ps,Math.min(14,o.w)),br=wallBracket(o,ps,corner),c=br.c;
+    const across=corner?o.across:o.across==='depth'?'depth':'width',auto=!(o.span>0);
+    /* across a corner: each pin sits a from the inside corner along its wall, so the bridge crosses at 45° */
+    const Wi=(+e_.W||200)-(+e_.T||3),Di=(+e_.D||+e_.W||200)-(+e_.T||3);
+    let a=0,span;if(corner){span=auto?Math.max(60,Math.SQRT2*(.6*Math.min(Wi,Di)-c)):o.span;a=span/Math.SQRT2+c}
+    else span=auto?Math.max(60,innerSpan(enc,across)-2*c-1.5):o.span;
     const sag=Math.max(0,Math.min(o.sag,span*.45)),drop=Math.max(-span*.4,Math.min(span*.4,o.drop||0)),pinL=Math.min(o.pinL,13);
     const style=o.hstyle||HSTYLE_FROM[o.style]||'swag',N=120,path=[];
     /* the ends run level for a few mm, so the bridge clears the top of the bracket */
@@ -477,12 +489,13 @@
       notes.push('The bridge is longer than your print bed, so it comes in two halves that join with a dovetail in the middle. Slide them together: the dovetail is a tight fit and holds without glue.')}
     else parts.push(part('twig-bridge.stl',build(solid)));
     parts.push({file:'wall-bracket-print-2.stl',role:'Second file',m:br.m,count:2});
-    const where=across==='depth'?'the front and the back wall':'the left and the right wall';
-    notes.push(`It hangs between ${where}${auto?`, ${Math.round(span+2*c)} mm apart inside`:''}, and sags ${Math.round(sag)} mm in the middle${drop?`; one end sits ${Math.round(Math.abs(drop))} mm lower`:''}. Print 2 wall brackets.`);
+    const where=corner?`the ${across==='cornerL'?'left':'right'} wall and the back wall, across the back ${across==='cornerL'?'left':'right'} corner`:across==='depth'?'the front and the back wall':'the left and the right wall';
+    if(corner)notes.push(`Corner bridge: put each bracket ${Math.round(a)} mm from the inside corner, one on each wall, at the same height. Their holes are diamond-shaped, because the bridge meets each wall at 45°.`);
+    notes.push(`It hangs between ${where}${auto&&!corner?`, ${Math.round(span+2*c)} mm apart inside`:''}, and sags ${Math.round(sag)} mm in the middle${drop?`; one end sits ${Math.round(Math.abs(drop))} mm lower`:''}. Print 2 wall brackets.`);
     notes.push(o.mount==='magnet'?'Each bracket holds to its wall with a magnet: put a second magnet on the outside of the panel, opposite it. Set both brackets at the same height first, then drop the bridge\'s square pins into them from above.':o.mount==='clip'?'Each bracket is held to a pin rail on a mesh wall by two rail pins. Drop the bridge\'s square pins into them from above.':'Glue or tape a bracket to each wall at the same height, then drop the bridge\'s square pins into them from above.');
     notes.push(`The bridge prints flat on its side, ${fmt1(t)} mm thick: that is the width the mantis walks on. The brackets print on their backs.`);
     notes.push(...br.notes);
-    return {parts,notes,magnets:br.magnets*2,separate:true,hang:{span,drop,c,top:br.top,t,ps,knob,across,bracket:br.m}};
+    return {parts,notes,magnets:br.magnets*2,separate:true,hang:{span,drop,c,top:br.top,t,ps,knob,across,a,bracket:br.m}};
   }
   const fmt1=v=>(Math.round(v*10)/10).toString();
   function holderBridge(o,ps,r){

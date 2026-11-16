@@ -3,20 +3,20 @@
 <script src="../shim.js"></script>
 <script src="../lib/clipper.js"></script>
 <script src="../lib/earcut.min.js"></script>
-<script src="../lib/geo.js?v=49"></script>
-<script src="habitat-parts.js?v=49"></script>
-<script src="habitat-enclosure.js?v=49"></script>
-<script src="habitat-more.js?v=49"></script>
-<script src="habitat-motifs.js?v=49"></script>
-<script src="habitat-keep.js?v=49"></script>
-<script src="../lib/sdf.js?v=49"></script>
-<script src="habitat-pots.js?v=49"></script>
-<script src="habitat-sculpt.js?v=49"></script>
-<script src="habitat-trim.js?v=49"></script>
-<script src="habitat-addons.js?v=49"></script>
-<script src="habitat-forms.js?v=49"></script>
-<script src="habitat-shapes.js?v=49"></script>
-<script src="habitat-sets.js?v=49"></script>
+<script src="../lib/geo.js?v=50"></script>
+<script src="habitat-parts.js?v=50"></script>
+<script src="habitat-enclosure.js?v=50"></script>
+<script src="habitat-more.js?v=50"></script>
+<script src="habitat-motifs.js?v=50"></script>
+<script src="habitat-keep.js?v=50"></script>
+<script src="../lib/sdf.js?v=50"></script>
+<script src="habitat-pots.js?v=50"></script>
+<script src="habitat-sculpt.js?v=50"></script>
+<script src="habitat-trim.js?v=50"></script>
+<script src="habitat-addons.js?v=50"></script>
+<script src="habitat-forms.js?v=50"></script>
+<script src="habitat-shapes.js?v=50"></script>
+<script src="habitat-sets.js?v=50"></script>
 <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Bricolage+Grotesque:opsz,wght@12..96,600;12..96,750&family=IBM+Plex+Mono:wght@500&family=IBM+Plex+Sans:wght@400;500;600&display=swap">
 <style>
 /* Same layout as the Resin Workshop: inputs on the left, the 3D preview and downloads beside them. */
@@ -1061,7 +1061,7 @@ Object.assign(ITEMS,{
     selects:[['style','Style',[['rope','Rope ladder'],['net','Net'],['chain','Chain of rings'],['vine','Leafy vine'],['bark','Bark strip'],['zigzag','Zigzag'],['bamboo','Bamboo']]]],shuffle:true,mounts:['tie','hook','magnet','clip'],
     hint:'Mantises moult hanging upside down, and need about twice their body length of free space below them and something rough to grip. A ladder hanging from the lid gives them that. It prints flat.'},
   bridge:{group:'climb',more:'bridge',name:'Twig bridge',fields:[['span','Span (0 = automatic)',0],['sag','Sag in the middle',35,{show:s=>s._mount!=='holder'}],['drop','One end lower by',0,{show:s=>s._mount!=='holder'}],['rise','Rise',40,{show:s=>s._mount==='holder'}],['dia','Pin size (twig holder size)',6],['w','Thickness (walking width)',7],['pinL','Pin length',12]],
-    selects:[['across','Hangs across',[['width','Left wall to right wall'],['depth','Front wall to back wall']],{show:s=>s._mount!=='holder'}],
+    selects:[['across','Hangs across',[['width','Left wall to right wall'],['depth','Front wall to back wall'],['cornerL','Left wall to back wall (back left corner)'],['cornerR','Right wall to back wall (back right corner)']],{show:s=>s._mount!=='holder'}],
       ['hstyle','Shape',[['rope','Rope bridge with a hand rope'],['swag','Hanging branch'],['branch','Hanging branch with side twigs'],['vine','Leafy vine'],['chain','Chain of links']],{show:s=>s._mount!=='holder'}],
       ['style','Shape',[['arch','Round arch'],['arc','Low arc'],['gothic','Pointed arch'],['straight','Straight beam'],['zigzag','Zigzag'],['wave','Wave'],['vine','Leafy vine'],['branch','Branch with side twigs']],{show:s=>s._mount==='holder'}],['texture','Surface',[['bark','Bark ridges'],['smooth','Smooth']]]],shuffle:true,mounts:['magnet','clip','glue','holder'],
     hint:'A bridge across the enclosure. Hung from wall to wall, it sags in the middle like a rope bridge: each end has a square pin that drops into a small bracket on the wall held by magnets or rail pins. Choose "Pins into twig holders" for an arch that stands between two twig holders on the floor instead. It prints flat on its side.'},
@@ -1504,6 +1504,15 @@ function placeKind(key,ov,mount){
 }
 /* a bridge hung from wall to wall: the bridge across the middle, a bracket on each wall */
 function hangScene(r,e,S,H,col){const h=r.hang,out=[],wd=h.across!=='depth';
+  if((h.across==='cornerL'||h.across==='cornerR')&&e.shape==='rect'){
+    /* across a back corner at 45°: pin centres Q1 on the side wall and Q2 on the back wall, each a from the inside corner */
+    const lo=e.T/2,L=h.across==='cornerL',sx=L?1:-1,X=v=>L?v:e.W-v,zE=S+H*.68,zb=zE-h.knob-h.top;
+    const Q1=[X(lo+h.c),e.D-lo-h.a],Q2=[X(lo+h.a),e.D-lo-h.c],u=[(Q2[0]-Q1[0])/h.span,(Q2[1]-Q1[1])/h.span],n=[-u[1],u[0]],off=h.ps/2-h.t/2;
+    const P1=[Q1[0]-off*n[0],Q1[1]-off*n[1]];
+    const fb=(x,y,z)=>[P1[0]+x*u[0]+(z-h.t/2)*n[0],P1[1]+x*u[1]+(z-h.t/2)*n[1],zE+y];
+    for(const q of r.parts)if(q.m&&q.role!=='Second file')out.push({tris:place0(q.m.tris,fb),color:col});
+    out.push({tris:place0(h.bracket.tris,(x,y,z)=>[X(lo+z),Q1[1]+x*sx,zb+y]),color:col},{tris:place0(h.bracket.tris,(x,y,z)=>[Q2[0]+x,e.D-lo-z,zb-h.drop+y]),color:col});
+    return out}
   let lo,mid;if(e.shape==='rect'){lo=e.T/2;mid=wd?e.D/2+e.D*.12:e.W/2}
   else if(e.shape==='corner'){lo=wd?2:e.W*.05;mid=wd?e.W*.7:e.W*.3}
   else{const R=e.shape==='poly'?e.W/2-e.T:(e.shape==='oval'&&!wd?e.D:e.W)/2-2;lo=-R;mid=wd?(e.shape==='oval'?e.D:e.W)*.06:0}
