@@ -3,20 +3,20 @@
 <script src="../shim.js"></script>
 <script src="../lib/clipper.js"></script>
 <script src="../lib/earcut.min.js"></script>
-<script src="../lib/geo.js?v=42"></script>
-<script src="habitat-parts.js?v=42"></script>
-<script src="habitat-enclosure.js?v=42"></script>
-<script src="habitat-more.js?v=42"></script>
-<script src="habitat-motifs.js?v=42"></script>
-<script src="habitat-keep.js?v=42"></script>
-<script src="../lib/sdf.js?v=42"></script>
-<script src="habitat-pots.js?v=42"></script>
-<script src="habitat-sculpt.js?v=42"></script>
-<script src="habitat-trim.js?v=42"></script>
-<script src="habitat-addons.js?v=42"></script>
-<script src="habitat-forms.js?v=42"></script>
-<script src="habitat-shapes.js?v=42"></script>
-<script src="habitat-sets.js?v=42"></script>
+<script src="../lib/geo.js?v=43"></script>
+<script src="habitat-parts.js?v=43"></script>
+<script src="habitat-enclosure.js?v=43"></script>
+<script src="habitat-more.js?v=43"></script>
+<script src="habitat-motifs.js?v=43"></script>
+<script src="habitat-keep.js?v=43"></script>
+<script src="../lib/sdf.js?v=43"></script>
+<script src="habitat-pots.js?v=43"></script>
+<script src="habitat-sculpt.js?v=43"></script>
+<script src="habitat-trim.js?v=43"></script>
+<script src="habitat-addons.js?v=43"></script>
+<script src="habitat-forms.js?v=43"></script>
+<script src="habitat-shapes.js?v=43"></script>
+<script src="habitat-sets.js?v=43"></script>
 <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Bricolage+Grotesque:opsz,wght@12..96,600;12..96,750&family=IBM+Plex+Mono:wght@500&family=IBM+Plex+Sans:wght@400;500;600&display=swap">
 <style>
 /* Same layout as the Resin Workshop: inputs on the left, the 3D preview and downloads beside them. */
@@ -173,6 +173,8 @@ h3{font:600 15px var(--body);margin:0 0 6px}
           <label class="f swingF">Door style<select id="doorStyle"></select></label>
           <label class="f lockF">Door lock<select id="lock"></select></label>
           <label class="f notRound">Panel thickness (mm)<input id="T" type="number" min="1.5" max="6" step="0.5"></label>
+          <label class="f rectOnly">Joint fit (mm)<input id="fit" type="number" min="-0.6" max="0.9" step="0.05"></label>
+          <label class="f rectOnly">Screw fit (mm)<input id="screwFit" type="number" min="-0.24" max="0.32" step="0.04"></label>
           <label class="f">Mesh hole (mm)<input id="hole" type="number" min="1" max="5" step="0.1"></label>
           <label class="f">Mesh bar (mm)<input id="bar" type="number" min="0.8" max="4" step="0.1"></label>
           <label class="f notRound">Pin rails<select id="rails"></select></label>
@@ -241,6 +243,14 @@ h3{font:600 15px var(--body);margin:0 0 6px}
       <div class="note" id="encNote" hidden></div>
       <button class="btn solid" id="encDl" type="button">Download STL files</button>
       <span class="saved" id="encMsg" role="status"></span>
+      <div class="rectOnly" id="fitBox">
+        <h3>Fit test</h3>
+        <p class="hint">Print this before a new enclosure, and again with new acrylic or a new filament: three corner blocks (marked with 1, 2 and 3 dots), a short post and three screws, about 30 g. Try a piece of your acrylic in each groove, the post in each socket, and each screw in the post.</p>
+        <div class="row"><button class="btn" id="fitDl" type="button">Download the fit test</button></div>
+        <div class="row"><span>Blocks:</span><button class="btn" id="fitB1" type="button">1 dot fits best</button><button class="btn" id="fitB3" type="button">3 dots fit best</button></div>
+        <div class="row"><span>Screws:</span><button class="btn" id="fitS1" type="button">1 dot fits best</button><button class="btn" id="fitS3" type="button">3 dots fit best</button></div>
+        <p class="hint" id="fitMsg" role="status">If 2 dots fit best, keep the values as they are.</p>
+      </div>
     </aside>
   </div>
 
@@ -543,7 +553,7 @@ const SPECIES=[
 ];
 const MATS={petg:{name:'PETG',rho:1.27},asa:{name:'ASA',rho:1.07},pla:{name:'PLA',rho:1.24}};
 const PANEL={clear:'Clear acrylic',mesh:'Printed mesh',tiles:'Swappable tiles (mesh or clear)',solid:'Printed solid wall'};
-const DEF={doorStyle:'plain',frameMags:'none',frame:'normal',lidScrews:'none',lidVent:'grid',frontVent:'none',doorWin:'recess',species:'orchidF',body:65,W:200,D:200,H:300,S:40,T:3,hole:1.6,bar:1.2,front:'swingWindow',back:'clear',left:'mesh',right:'mesh',bx:350,by:350,bz:350,mat:'petg',dMagD:10,dMagH:3,shape:'rect',ts:.75,pegs:'grid',rails:'yes',lw:'none',lwD:90,lwN:1,cols:3,rows:3,lock:'none',sides:6,corners:'square',polyFront:'clear',polyWalls:'frontclear',roundWall:'sheet',doorCatch:'magnet',hatch:'plug',hatchD:80,hatchX:0,hatchY:0,tiers:'1'};
+const DEF={doorStyle:'plain',frameMags:'none',frame:'normal',fit:0,screwFit:0,lidScrews:'none',lidVent:'grid',frontVent:'none',doorWin:'recess',species:'orchidF',body:65,W:200,D:200,H:300,S:40,T:3,hole:1.6,bar:1.2,front:'swingWindow',back:'clear',left:'mesh',right:'mesh',bx:350,by:350,bz:350,mat:'petg',dMagD:10,dMagH:3,shape:'rect',ts:.75,pegs:'grid',rails:'yes',lw:'none',lwD:90,lwN:1,cols:3,rows:3,lock:'none',sides:6,corners:'square',polyFront:'clear',polyWalls:'frontclear',roundWall:'sheet',doorCatch:'magnet',hatch:'plug',hatchD:80,hatchX:0,hatchY:0,tiers:'1'};
 const E=Object.assign({},DEF,state.enc||{});
 /* v32 keeps the rectangular enclosure (sliding or swing door) and the nursery cabinet; older saved shapes fall back */
 if(!['rect','nursery'].includes(E.shape))Object.assign(E,{shape:'rect',W:200,D:200,H:300});
@@ -608,7 +618,7 @@ opt($('pegs'),[['none','None'],['grid','Pegs for accessories']]);
 opt($('rails'),[['no','None'],['yes','On printed mesh panels']]);
 opt($('lw'),[['none','None'],['fine','Lamp seats, with finer printed mesh under the lamps'],['insert','Lamp seats, with openings for a clear disc or fine fabric']]);
 const LW_HINT={none:'',insert:'Each lamp gets a round opening with a flat rim around it. Lay a clear disc (PET or acrylic, up to 1 mm thick) over the opening, which lets about 90 % of the light through, or lay fine fabric mesh (tulle or insect netting) under it, about 70 %. The lamp seat on top holds the disc in place. Feeders can\'t get through either.',fine:'Under each lamp the mesh has thinner 0.6 mm bars with the same hole size, so feeders stay in and more light gets through.'};
-const encIds={species:'species',body:'body',W:'W',D:'D',H:'H',S:'S',T:'T',hole:'hole',bar:'bar',front:'pFront',back:'pBack',left:'pLeft',right:'pRight',bx:'bx',by:'by',bz:'bz',mat:'mat',dMagD:'dMagD',dMagH:'dMagH',shape:'eShape',tiers:'tiers',ts:'ts',pegs:'pegs',rails:'rails',lw:'lw',lwD:'lwD',lwN:'lwN',sides:'sides',corners:'corners',polyFront:'polyFront',polyWalls:'polyWalls',roundWall:'roundWall',doorCatch:'doorCatch',hatch:'hatch',hatchD:'hatchD',hatchX:'hatchX',hatchY:'hatchY',cols:'cols',rows:'nRows',lock:'lock',frame:'frame',lidScrews:'lidScrews',lidVent:'lidVent',frontVent:'frontVent',doorWin:'doorWin',frameMags:'frameMags',doorStyle:'doorStyle'};
+const encIds={species:'species',body:'body',W:'W',D:'D',H:'H',S:'S',T:'T',hole:'hole',bar:'bar',front:'pFront',back:'pBack',left:'pLeft',right:'pRight',bx:'bx',by:'by',bz:'bz',mat:'mat',dMagD:'dMagD',dMagH:'dMagH',shape:'eShape',tiers:'tiers',ts:'ts',pegs:'pegs',rails:'rails',lw:'lw',lwD:'lwD',lwN:'lwN',sides:'sides',corners:'corners',polyFront:'polyFront',polyWalls:'polyWalls',roundWall:'roundWall',doorCatch:'doorCatch',hatch:'hatch',hatchD:'hatchD',hatchX:'hatchX',hatchY:'hatchY',cols:'cols',rows:'nRows',lock:'lock',frame:'frame',lidScrews:'lidScrews',lidVent:'lidVent',frontVent:'frontVent',doorWin:'doorWin',frameMags:'frameMags',doorStyle:'doorStyle',fit:'fit',screwFit:'screwFit'};
 for(const k in encIds)$(encIds[k]).value=E[k];
 
 function recommend(){
@@ -960,6 +970,40 @@ async function save(filename,blob,msg,done){
     await dl.save({filename,data:blob});msg.textContent=done;
   }catch(e){msg.textContent=e&&e.code==='declined'?'Download cancelled.':e&&e.code==='tap_again'?'Tap the button again to save.':'That did not save. Try again.'}
 }
+/* ---------- fit test for the joints ---------- */
+function fitReadme(K,p){const f=v=>(v>=0?'+':'')+v.toFixed(2),L=['ENCLOSURE FIT TEST','Made in Workshop > Habitat.','',
+  `Acrylic ${p.T} mm. Joint fit now ${f(K.J.fit)} mm, screw fit now ${f(K.J.screwFit)} mm.`,'','FILES',
+  '  fit-block-1-dot.stl, -2-dots, -3-dots   corner blocks: a post socket and two arms with the panel groove',
+  `                                          1 dot ${f(K.blocks[0].fit)}, 2 dots ${f(K.blocks[1].fit)}, 3 dots ${f(K.blocks[2].fit)} mm`,
+  '  fit-post.stl                            a short corner post, with a thread in each end',
+  '  fit-screw-1-dot.stl, -2-dots, -3-dots   1 dot is a little fatter (tighter), 3 dots a little thinner (looser)','',
+  'PRINT','  The same filament and settings as your enclosure: 0.2 mm layers, no supports.',
+  '  Blocks standing on their flat bottom, the post lying on its narrow flat, screws head down.','',
+  'TEST',
+  '  1. Groove: slide an offcut of your acrylic into each block\'s groove. The best one takes it by hand, without',
+  '     forcing, and holds it upright without rattling.',
+  '  2. Socket: push the post into each block. The best one lets it in by hand, right to the bottom, with no wobble.',
+  '     If groove and socket disagree, go by the groove: the screw holds the post anyway.',
+  '  3. Slot: slide the acrylic down the post\'s slots. It should slide all the way.',
+  '  4. Screw: put the post in the block you chose and turn each screw up through the bottom into the post with a',
+  '     coin or screwdriver. The best one turns firmly by hand and pulls the post down tight, without forcing.','',
+  'RESULT','  In Workshop > Habitat > Enclosure, under Fit test:',
+  '  - Blocks: tap "1 dot fits best" or "3 dots fit best". If 2 dots fit best, change nothing.',
+  '  - Screws: the same.','  The values change by one step. Then print a new test, or go on to the full enclosure.'];
+  return new TextEncoder().encode(L.join('\r\n'))}
+$('fitDl').onclick=async()=>{const p=readEnc(),msg=$('fitMsg');msg.textContent='Building the fit test…';await new Promise(r=>setTimeout(r,50));
+  let K;try{K=HE.fitKit(p.T,p.fit,p.screwFit)}catch(e){console.error(e);msg.textContent='The fit test could not be made with these settings.';return}
+  const dots=['1-dot','2-dots','3-dots'],rot=t=>place(t,(x,y,z)=>[z,(x-y)*Math.SQRT1_2,(x+y)*Math.SQRT1_2]),files=[];
+  K.blocks.forEach((b,i)=>files.push({name:`fit-block-${dots[i]}.stl`,data:stl(place(b.m.tris))}));
+  files.push({name:'fit-post.stl',data:stl(rot(K.post.tris))});
+  K.screws.forEach((m,i)=>files.push({name:`fit-screw-${dots[i]}.stl`,data:stl(place(m.tris))}));
+  files.push({name:'read-me.txt',data:fitReadme(K,p)});
+  await save(`enclosure-fit-test-${String(p.T).replace('.','-')}mm.zip`,zipStore(files),msg,'Saved. Print the parts, then tap the buttons below for what fits best.')};
+function nudgeFit(k,dir){const id=k==='fit'?'fit':'screwFit',st=k==='fit'?HE.FIT_STEP:HE.SCREW_STEP,el=$(id);
+  el.value=Math.round(((+el.value||0)+dir*st)*100)/100;$('preset').value='keep';state.enc=readEnc();persist();encChanged();
+  $('fitMsg').textContent=k==='fit'?`Joint fit is now ${(+el.value).toFixed(2)} mm: the grooves, slots and post sockets ${dir<0?'tighten':'loosen'} a little. New downloads use it, including a new fit test.`:`Screw fit is now ${(+el.value).toFixed(2)} mm: the printed screws get a little ${dir<0?'fatter':'thinner'}. New downloads use it.`}
+$('fitB1').onclick=()=>nudgeFit('fit',-1);$('fitB3').onclick=()=>nudgeFit('fit',1);
+$('fitS1').onclick=()=>nudgeFit('screw',-1);$('fitS3').onclick=()=>nudgeFit('screw',1);
 $('encDl').onclick=async()=>{
   const p=readEnc(),msg=$('encMsg');msg.textContent='Building the files. Mesh parts can take up to half a minute…';
   await new Promise(r=>setTimeout(r,50));

@@ -264,6 +264,59 @@
   }
   const latchDepth=d=>Math.min(5,d.a-d.g/2-.8);
 
+  /* ---------- the v43 joints ----------
+     Slim posts with a rounded outer corner stand in sockets in the base. A countersunk printed screw comes up through
+     the base into each post's foot, and the lid screws into the post tops the same way. The panels slide down the
+     post slots into the base groove.
+     One fit value (mm, default 0) widens or narrows every groove and slot for the acrylic by that much, and the gap
+     round each post in its socket by half of it. The fit test prints three corner blocks at fit - 0.15, fit and
+     fit + 0.15, so the right value is found on your own printer with your own acrylic.
+     The panel sizes never depend on the fit: they come from the nominal groove gN. */
+  const FIT_STEP=.15;
+  const SCREW_STEP=.08;
+  function joint(T,fit,screwFit){fit=+fit||0;screwFit=+screwFit||0;const gN=T+.6;return {fit,screwFit,scl:SCREW.cl+screwFit,gN,g:gN+fit,a:gN/2+4.4,ro:4,ri:1,cs:.25+fit/2,face:6.8,s:6,sp:{d:5,P:1.6,c:2},thread:12}}
+  /* a rounded rectangle with its own radius at each corner, counter-clockwise from (x0,y0) */
+  function rr4(x0,y0,x1,y1,r){const q=[],c=[[x0+r[0],y0+r[0],Math.PI],[x1-r[1],y0+r[1],1.5*Math.PI],[x1-r[2],y1-r[2],0],[x0+r[3],y1-r[3],.5*Math.PI]];
+    c.forEach(([cx,cy,a0],i)=>{const R=r[i],n=R>1.5?10:R>0?4:0;if(!n){q.push([cx,cy]);return}for(let k=0;k<=n;k++){const a=a0+k/n*Math.PI/2;q.push([cx+R*Math.cos(a),cy+R*Math.sin(a)])}});return [q]}
+  /* the post's outline, grown by c (for its socket). The outer corner is at (-a,-a); a 3 mm flat on it is what the
+     post prints lying on, with both slots facing up at 45°. */
+  function postOutline(J,c){c=c||0;const a=J.a+c,f=(J.face+c)*Math.SQRT2;
+    return subtract(rr4(-a,-a,a,a,[J.ro+c,J.ri+c,J.ri+c,J.ri+c]),[[[60,-60-f],[-60-f,60],[-120,-120]]])}
+  /* a slot for a panel along +x from the post's centre, with a small lead-in at its mouth */
+  function slotX(J,g){const h=g/2,m=J.a;return [[[h,-h],[m-.6,-h],[m+.01,-h-.6],[m+1,-h-.6],[m+1,h+.6],[m+.01,h+.6],[m-.6,h],[h,h]]]}
+  const flipXY=rings=>rings.map(r=>r.map(([x,y])=>[y,x]).reverse());
+  /* the post itself, along z from 0 to len, in the enclosure's corner frame (panels along +x and +y) */
+  function jointPost(J,len,opt){opt=opt||{};const sp=J.sp,f=[prism(0,len,postOutline(J)),prism(-1,len+1,slotX(J,J.g),'sub'),prism(-1,len+1,flipXY(slotX(J,J.g)),'sub')];
+    f.push(screwHoleUp(-sp.c,-sp.c,J.thread-.1,sp));
+    if(opt.top!==false)f.push(screwHole(-sp.c,-sp.c,len-J.thread,len,sp));
+    for(const x of opt.subs||[])f.push(x);
+    return build(f)}
+  /* countersunk printed screw, printed head down: a 9 mm head with a 45° cone, a slot for a coin or screwdriver */
+  const CSK={R:4.5,rim:.6};
+  /* cl: the screw's own clearance (SCREW.cl plus the screw fit); dots: small marks in the head, for the fit test */
+  function cskScrew(sp,L,cl,dots){cl=cl??SCREW.cl;const h=.4*sp.P,R0=sp.d/2-h-cl,cone=CSK.R-sp.d/2,H=CSK.rim+cone;
+    const f=[varying(0,H,z=>circle(0,0,z<CSK.rim?CSK.R-Math.max(0,.3-z):CSK.R-(z-CSK.rim),64),.2),prism(-1,1.4,rect(-3.4,-.7,3.4,.7),'sub'),
+      varying(H-.01,H+L,z=>polar(0,0,a=>Math.min(threadR(sp,a,z-H,-cl),R0+h+.2,R0+.2+(H+L-z)),48),.17)];
+    for(let i=0;i<(dots||0);i++)f.push(prism(-1,.4,circle((i-(dots-1)/2)*1.8,2.4,.55,16),'sub'));
+    return build(f)}
+  const cskHeight=sp=>CSK.rim+CSK.R-sp.d/2;
+  /* the hole for it, from the bed (z=0) up to z1: the countersink, then a clearance hole */
+  function cskHole(x,y,sp,z1){const r=sp.d/2+.35,R=CSK.R+.2,H=CSK.rim+.2+(R-r);
+    return [varying(-1,H,z=>circle(x,y,z<CSK.rim+.2?R:R-(z-CSK.rim-.2),48),.2,'sub'),prism(-1,z1,circle(x,y,r,32),'sub')]}
+  /* a fit-test corner block: a socket for the post with two short arms carrying the panel groove.
+     k = -1, 0, 1 for fit - step, fit, fit + step; k+2 dots on the end of one arm tell them apart. */
+  function fitBlock(J,k){const fit=J.fit+k*FIT_STEP,g=J.gN+fit,cs=.25+fit/2,H=16,dep=10,arm=24,w=g+3.6,sp=J.sp;
+    const f=[prism(0,H,unite(offset(postOutline(J,cs),2),unite(rect(0,-w/2,arm,w/2),rect(-w/2,0,w/2,arm))))];
+    f.push(prism(H-dep,H+1,postOutline(J,cs),'sub'));
+    f.push(prism(H-J.s,H+1,unite(rect(0,-g/2,arm+1,g/2),rect(-g/2,0,g/2,arm+1)),'sub'));
+    f.push(...cskHole(-sp.c,-sp.c,sp,H-dep+.01));
+    for(let i=0;i<k+2;i++)f.push(G.xDisc((i-(k+1)/2)*2.4,4,.8,arm-1,arm+1,'sub'));
+    return {m:build(f),fit,screwL:H-dep-cskHeight(sp)+J.thread-1.5}}
+  /* the whole fit kit: three blocks, a short post with a thread in each end, and one screw */
+  function fitKit(T,fit,screwFit){const J=joint(T,fit,screwFit),blocks=[-1,0,1].map(k=>fitBlock(J,k));
+    /* three screws: 1 dot is fatter (tighter), 3 dots thinner (looser) */
+    return {J,blocks,post:jointPost(J,40),screws:[-1,0,1].map(k=>cskScrew(J.sp,blocks[0].screwL,J.scl+k*SCREW_STEP,k+2))}}
+
   /* ---------- polygon enclosure: 5 to 8 flat walls ----------
      W is the width across the flats, measured between panel centres. One flat faces the front. */
   function polyGeom(p){
@@ -471,5 +524,5 @@
       button:buttons?turnButton(0,4.5):null,front:off+dt,edge:xd1,midZ:(zd0+zd1)/2};
   }
 
-  root.HabitatEnclosure={crestX,CREST,screwSpec,screwSpots,stud,hasp,screwHoleUp,lidScrew,turnButton,latchDepth,frontVents,hatchCover,TW,base,lid,rectBase,rectLid,rectPost,polyGeom,polyEnclosure,spineToWorld,roundEnclosure,perimeter,tilePanel,TILE,swingDoor,lightWindows,mirrorY};
+  root.HabitatEnclosure={FIT_STEP,SCREW_STEP,joint,postOutline,jointPost,cskScrew,cskHole,cskHeight,fitBlock,fitKit,rr4,crestX,CREST,screwSpec,screwSpots,stud,hasp,screwHoleUp,lidScrew,turnButton,latchDepth,frontVents,hatchCover,TW,base,lid,rectBase,rectLid,rectPost,polyGeom,polyEnclosure,spineToWorld,roundEnclosure,perimeter,tilePanel,TILE,swingDoor,lightWindows,mirrorY};
 })(typeof window!=='undefined'?window:globalThis);
