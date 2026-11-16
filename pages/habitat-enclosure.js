@@ -274,19 +274,25 @@
      The panel sizes never depend on the fit: they come from the nominal groove gN. */
   const FIT_STEP=.15;
   const SCREW_STEP=.08;
-  function joint(T,fit,screwFit){fit=+fit||0;screwFit=+screwFit||0;const gN=T+.6;return {fit,screwFit,scl:SCREW.cl+screwFit,gN,g:gN+fit,a:gN/2+4.4,ro:4,ri:1,cs:.25+fit/2,face:6.8,s:6,sp:{d:5,P:1.6,c:2},thread:12}}
+  function joint(T,fit,screwFit){fit=+fit||0;screwFit=+screwFit||0;const gN=T+.6;return {fit,screwFit,scl:SCREW.cl+screwFit,gN,g:gN+fit,a:gN/2+4.4,ro:3,ri:1,cs:.25+fit/2,face:6.65,s:6,sp:{d:5,P:1.6,c:2},thread:12}}
   /* a rounded rectangle with its own radius at each corner, counter-clockwise from (x0,y0) */
   function rr4(x0,y0,x1,y1,r){const q=[],c=[[x0+r[0],y0+r[0],Math.PI],[x1-r[1],y0+r[1],1.5*Math.PI],[x1-r[2],y1-r[2],0],[x0+r[3],y1-r[3],.5*Math.PI]];
     c.forEach(([cx,cy,a0],i)=>{const R=r[i],n=R>1.5?10:R>0?4:0;if(!n){q.push([cx,cy]);return}for(let k=0;k<=n;k++){const a=a0+k/n*Math.PI/2;q.push([cx+R*Math.cos(a),cy+R*Math.sin(a)])}});return [q]}
   /* the post's outline, grown by c (for its socket). The outer corner is at (-a,-a); a 3 mm flat on it is what the
-     post prints lying on, with both slots facing up at 45°. */
+     post prints lying on, with both slots facing up at 45°. With a 3 mm corner radius the curve meets that flat at
+     exactly 45°, so even the first layers along its edges don't overhang. */
   function postOutline(J,c){c=c||0;const a=J.a+c,f=(J.face+c)*Math.SQRT2;
     return subtract(rr4(-a,-a,a,a,[J.ro+c,J.ri+c,J.ri+c,J.ri+c]),[[[60,-60-f],[-60-f,60],[-120,-120]]])}
+  /* The post's own shape: the rounded outline without its inside quarter. The two panel slots meet at the post's
+     centre, so a quarter on the inside, behind the panels, could only hang on by a hairline (the slicer calls it a
+     floating cantilever). The panels are held at the top and bottom by the lid and base grooves, so the post keeps just
+     a solid core and the two outer lips that the panels slide behind. Grown by c, it is the socket for the post. */
+  function postShape(J,c){c=c||0;const h=J.g/2,core=subtract(postOutline(J),rect(h,h,J.a+1,J.a+1));return c?offset(core,c):core}
   /* a slot for a panel along +x from the post's centre, with a small lead-in at its mouth */
   function slotX(J,g){const h=g/2,m=J.a;return [[[h,-h],[m-.6,-h],[m+.01,-h-.6],[m+1,-h-.6],[m+1,h+.6],[m+.01,h+.6],[m-.6,h],[h,h]]]}
   const flipXY=rings=>rings.map(r=>r.map(([x,y])=>[y,x]).reverse());
   /* the post itself, along z from 0 to len, in the enclosure's corner frame (panels along +x and +y) */
-  function jointPost(J,len,opt){opt=opt||{};const sp=J.sp,f=[prism(0,len,postOutline(J)),prism(-1,len+1,slotX(J,J.g),'sub'),prism(-1,len+1,flipXY(slotX(J,J.g)),'sub')];
+  function jointPost(J,len,opt){opt=opt||{};const sp=J.sp,f=[prism(0,len,postShape(J)),prism(-1,len+1,slotX(J,J.g),'sub'),prism(-1,len+1,flipXY(slotX(J,J.g)),'sub')];
     f.push(screwHoleUp(-sp.c,-sp.c,J.thread-.1,sp));
     if(opt.top!==false)f.push(screwHole(-sp.c,-sp.c,len-J.thread,len,sp));
     for(const x of opt.subs||[])f.push(x);
@@ -309,7 +315,7 @@
      k = -1, 0, 1 for fit - step, fit, fit + step; k+2 dots on the end of one arm tell them apart. */
   function fitBlock(J,k){const fit=J.fit+k*FIT_STEP,g=J.gN+fit,cs=.25+fit/2,H=16,dep=10,arm=24,w=g+3.6,sp=J.sp;
     const f=[prism(0,H,unite(offset(postOutline(J,cs),2),unite(rect(0,-w/2,arm,w/2),rect(-w/2,0,w/2,arm))))];
-    f.push(prism(H-dep,H+1,postOutline(J,cs),'sub'));
+    f.push(prism(H-dep,H+1,postShape(J,cs),'sub'));
     f.push(prism(H-J.s,H+1,unite(rect(0,-g/2,arm+1,g/2),rect(-g/2,0,g/2,arm+1)),'sub'));
     f.push(...cskHole(-sp.c,-sp.c,sp,H-dep+.01));
     for(let i=0;i<k+2;i++)f.push(G.xDisc((i-(k+1)/2)*2.4,4,.8,arm-1,arm+1,'sub'));
@@ -342,7 +348,7 @@
     const outlineE=e=>G.rrect(-e,-e,W+e,D+e,e-(J.a-J.ro),Math.max(5,Math.round(e)));
     const tubes=U([0,1,2,3].map(i=>atCorner(d,i,postOutline(J,J.cs+1.6))));
     const boss=U([0,1,2,3].map(i=>atCorner(d,i,circle(-sp.c,-sp.c,5.9,24))));
-    const sock=U([0,1,2,3].map(i=>atCorner(d,i,postOutline(J,J.cs))));
+    const sock=U([0,1,2,3].map(i=>atCorner(d,i,postShape(J,J.cs))));
     const inner=rect(g/2+1.6,g/2+1.6,W-g/2-1.6,D-g/2-1.6),wallOut=rect(g/2-.4,g/2-.4,W-g/2+.4,D-g/2+.4),grooveOut=offset([[[0,0],[W,0],[W,D],[0,D]]],g/2+1.6,'miter');
     const groove=subtract(offset([[[0,0],[W,0],[W,D],[0,D]]],g/2,'miter'),offset([[[0,0],[W,0],[W,D],[0,D]]],-g/2,'miter'));
     /* ribs from the skin to the inner wall, about every 55 mm */
@@ -396,7 +402,7 @@
   function rectLid2(d,p,J,preview){
     const g=J.g,sp=J.sp,W=d.W,D=d.D,E=d.E,Lt=d.Lt,pz=Lt+2,ins=z=>z<.8?.8-z:z>Lt-.8?z-(Lt-.8):0;
     const outl=e=>G.rrect(-e,-e,W+e,D+e,e-(J.a-J.ro),Math.max(5,Math.round(e)));
-    const corners=[0,1,2,3].map(i=>({block:atCorner(d,i,postOutline(J,J.cs+1.6)),pocket:atCorner(d,i,postOutline(J,J.cs))}));
+    const corners=[0,1,2,3].map(i=>({block:atCorner(d,i,postOutline(J,J.cs+1.6)),pocket:atCorner(d,i,postShape(J,J.cs))}));
     const extra=[varying(0,Lt,z=>outl(E-ins(z)),.2)],spots=[0,1,2,3].map(i=>atCorner(d,i,[[[-sp.c,-sp.c]]])[0][0]);
     for(const [x,y] of spots)extra.push(...cskHole(x,y,sp,pz+.01));
     /* crest slots: two square slots through the front of the plate, with a small block under each */
@@ -617,5 +623,5 @@
       button:buttons?turnButton(0,4.5):null,front:off+dt,edge:xd1,midZ:(zd0+zd1)/2};
   }
 
-  root.HabitatEnclosure={rectLid2,rectBase2,baseGeom,plaqueMags,atCorner,FIT_STEP,SCREW_STEP,joint,postOutline,jointPost,cskScrew,cskHole,cskHeight,fitBlock,fitKit,rr4,crestX,CREST,screwSpec,screwSpots,stud,hasp,screwHoleUp,lidScrew,turnButton,latchDepth,frontVents,hatchCover,TW,base,lid,rectBase,rectLid,rectPost,polyGeom,polyEnclosure,spineToWorld,roundEnclosure,perimeter,tilePanel,TILE,swingDoor,lightWindows,mirrorY};
+  root.HabitatEnclosure={postShape,rectLid2,rectBase2,baseGeom,plaqueMags,atCorner,FIT_STEP,SCREW_STEP,joint,postOutline,jointPost,cskScrew,cskHole,cskHeight,fitBlock,fitKit,rr4,crestX,CREST,screwSpec,screwSpots,stud,hasp,screwHoleUp,lidScrew,turnButton,latchDepth,frontVents,hatchCover,TW,base,lid,rectBase,rectLid,rectPost,polyGeom,polyEnclosure,spineToWorld,roundEnclosure,perimeter,tilePanel,TILE,swingDoor,lightWindows,mirrorY};
 })(typeof window!=='undefined'?window:globalThis);
