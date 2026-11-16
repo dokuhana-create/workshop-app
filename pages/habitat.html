@@ -3,20 +3,20 @@
 <script src="../shim.js"></script>
 <script src="../lib/clipper.js"></script>
 <script src="../lib/earcut.min.js"></script>
-<script src="../lib/geo.js?v=47"></script>
-<script src="habitat-parts.js?v=47"></script>
-<script src="habitat-enclosure.js?v=47"></script>
-<script src="habitat-more.js?v=47"></script>
-<script src="habitat-motifs.js?v=47"></script>
-<script src="habitat-keep.js?v=47"></script>
-<script src="../lib/sdf.js?v=47"></script>
-<script src="habitat-pots.js?v=47"></script>
-<script src="habitat-sculpt.js?v=47"></script>
-<script src="habitat-trim.js?v=47"></script>
-<script src="habitat-addons.js?v=47"></script>
-<script src="habitat-forms.js?v=47"></script>
-<script src="habitat-shapes.js?v=47"></script>
-<script src="habitat-sets.js?v=47"></script>
+<script src="../lib/geo.js?v=48"></script>
+<script src="habitat-parts.js?v=48"></script>
+<script src="habitat-enclosure.js?v=48"></script>
+<script src="habitat-more.js?v=48"></script>
+<script src="habitat-motifs.js?v=48"></script>
+<script src="habitat-keep.js?v=48"></script>
+<script src="../lib/sdf.js?v=48"></script>
+<script src="habitat-pots.js?v=48"></script>
+<script src="habitat-sculpt.js?v=48"></script>
+<script src="habitat-trim.js?v=48"></script>
+<script src="habitat-addons.js?v=48"></script>
+<script src="habitat-forms.js?v=48"></script>
+<script src="habitat-shapes.js?v=48"></script>
+<script src="habitat-sets.js?v=48"></script>
 <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Bricolage+Grotesque:opsz,wght@12..96,600;12..96,750&family=IBM+Plex+Mono:wght@500&family=IBM+Plex+Sans:wght@400;500;600&display=swap">
 <style>
 /* Same layout as the Resin Workshop: inputs on the left, the 3D preview and downloads beside them. */
@@ -1442,12 +1442,29 @@ function buildSetup(){
 /* pieces already made are kept, so changing one setting only remakes what changed; the preview uses lighter
    versions of the sculpted pieces and wall tiles */
 const BMEMO=new Map();
+/* width and depth of a floor piece as it stands */
+function floorDims(d){const pk=placeKind(d.p.key,d.p.ov,d.m),main=d.r.parts.filter(q=>q.m&&q.role!=='Second file'),mn=[1e9,1e9,1e9],mx=[-1e9,-1e9,-1e9];
+  for(const q of main){const t=q.m.tris;for(let i=0;i<t.length;i+=3)for(let a=0;a<3;a++){if(t[i+a]<mn[a])mn[a]=t[i+a];if(t[i+a]>mx[a])mx[a]=t[i+a]}}
+  return [mx[0]-mn[0],pk==='stand'?mx[2]-mn[2]:mx[1]-mn[1]]}
+/* the floor area a finished piece needs, if it stands on the floor (with a little room round it) */
+function floorFoot(d){if(!d||!d.r||d.err)return 0;const pk=placeKind(d.p.key,d.p.ov,d.m);if(pk!=='floor'&&pk!=='stand')return 0;
+  const main=d.r.parts.filter(q=>q.m&&q.role!=='Second file');if(!main.length)return 0;const mn=[1e9,1e9,1e9],mx=[-1e9,-1e9,-1e9];
+  for(const q of main){const t=q.m.tris;for(let i=0;i<t.length;i+=3)for(let a=0;a<3;a++){if(t[i+a]<mn[a])mn[a]=t[i+a];if(t[i+a]>mx[a])mx[a]=t[i+a]}}
+  return (mx[0]-mn[0]+8)*((pk==='stand'?mx[2]-mn[2]:mx[1]-mn[1])+8)}
 function buildDesign(pv){
-  const sc={s:.75,m:1,l:1.3}[B.size]||1,out=[],enc=JSON.stringify(readEnc());let n=0;
-  for(const p of buildPieces()){if(B.off[p.id])continue;n++;const m=pieceMount(p.key,p.ov);
-    const o=Object.assign({font:B.font},p.ov,nameOv(p.key,p.ov,B.name),{preview:pv?1:0});
+  const sc={s:.75,m:1,l:1.3}[B.size]||1,out=[],e=readEnc(),enc=JSON.stringify(e);let n=0;
+  const make=(p,n,extra)=>{const m=pieceMount(p.key,p.ov),o=Object.assign({font:B.font},p.ov,nameOv(p.key,p.ov,B.name),{preview:pv?1:0},extra||{});
     const key=JSON.stringify([p.key,o,m,(B.seed||1)*31+n,sc,['trim','hanger','carry','bridge'].includes(p.key)?enc:'']);
-    try{let r=BMEMO.get(key);if(!r){r=itemDesign(p.key,o,m,(B.seed||1)*31+n,sc);if(BMEMO.size>80)BMEMO.clear();BMEMO.set(key,r)}out.push({p,r,m,n})}catch(err){console.error(err);out.push({p,err:true,n})}}
+    try{let r=BMEMO.get(key);if(!r){r=itemDesign(p.key,o,m,(B.seed||1)*31+n,sc);if(BMEMO.size>80)BMEMO.clear();BMEMO.set(key,r)}return {p,r,m,n}}catch(err){console.error(err);return {p,err:true,n}}};
+  /* everything but the tiered planter first: the planter is made last, only as big as the floor the other floor
+     pieces leave (and never more than about half the floor) */
+  const later=[];
+  for(const p of buildPieces()){if(B.off[p.id])continue;n++;if(p.key==='tiers'){later.push([out.length,p,n]);out.push(null);continue}out[out.length]=make(p,n)}
+  if(later.length){let floorMax;
+    let maxDp;
+    if(e.shape==='rect'){const ob=(e.T+.6)/2+2.4,Df=e.D-2*ob-1,A=(e.W-2*ob-1)*Df,need=out.reduce((a,d)=>a+floorFoot(d),0);floorMax=Math.max(.2,Math.min(HabitatPots.FLOOR_MAX,(A-1.6*need)/A));
+      const deep=Math.max(0,...out.map(d=>floorFoot(d)?floorDims(d)[1]:0));if(deep)maxDp=Math.round(Df-deep-22)}
+    for(const [i,p,k] of later)out[i]=make(p,k,floorMax?{floorMax:Math.round(floorMax*100)/100,maxDp}:null)}
   return out;
 }
 /* where a piece goes: on the floor, on the back wall, standing up, or on the lid */
@@ -1484,6 +1501,14 @@ function buildScene(des){
   else if(e.shape==='nursery')return [];
   else{const hw=e.W/2*.6,hd=(e.shape==='oval'?e.D:e.W)/2*.6;X0=-hw;X1=hw;Y0=-hd;Y1=hd;yBack=(e.shape==='oval'?e.D:e.W)/2*(e.shape==='poly'?.97:.9)}
   const items=[],rows=[.62,.34,.84];let wx=X0,wr=0,fx=X0,fy=Y0+4,fdep=0;
+  /* a map of the floor in 2 mm cells: the planter and each floor piece mark where they stand, so the next piece goes
+     to the first free spot, from the front left */
+  const cell=2,gx=Math.max(1,Math.ceil((X1-X0)/cell)),gy=Math.max(1,Math.ceil((Y1-Y0)/cell)),occ=new Uint8Array(gx*gy);
+  const mark=(x0,y0,x1,y1)=>{for(let j=Math.max(0,Math.floor((y0-Y0)/cell));j<Math.min(gy,Math.ceil((y1-Y0)/cell));j++)for(let i=Math.max(0,Math.floor((x0-X0)/cell));i<Math.min(gx,Math.ceil((x1-X0)/cell));i++)occ[j*gx+i]=1};
+  const markTris=t=>{for(let k=0;k<t.length;k+=9){let a=1e9,b=-1e9,c=1e9,d=-1e9;for(let v=0;v<9;v+=3){a=Math.min(a,t[k+v]);b=Math.max(b,t[k+v]);c=Math.min(c,t[k+v+1]);d=Math.max(d,t[k+v+1])}if(b-a<120&&d-c<120)mark(a,c,b,d)}};
+  /* is the area free, counting a 2 mm gap round it (which may reach past the walls) */
+  const free=(x0,y0,w,h)=>{x0-=2;y0-=2;w+=4;h+=4;for(let j=Math.max(0,Math.floor((y0-Y0)/cell));j<Math.min(gy,Math.ceil((y0+h-Y0)/cell));j++)for(let i=Math.max(0,Math.floor((x0-X0)/cell));i<Math.min(gx,Math.ceil((x0+w-X0)/cell));i++)if(occ[j*gx+i])return false;return true};
+  let crowded=false;
   for(const d of des){if(!d.r||d.p.key!=='trim')continue;const te=trimEnc(),[mn,mx]=te.box;let lift=0;
     for(const q of d.r.parts)if(q.at==='bottom'&&q.m){const t=q.m.tris;let z1=0;for(let i=2;i<t.length;i+=3)z1=Math.max(z1,t[i]);lift=Math.max(lift,z1-5)}
     for(const q of d.r.parts){if(!q.m||q.at==='loose')continue;const col=q.role==='Colour 2'?c2:c1;
@@ -1497,11 +1522,13 @@ function buildScene(des){
   for(const d of des){if(!d.r||d.p.key!=='tiers')continue;const ps=d.r.parts.filter(q=>q.m);if(!ps.length)continue;
     if(e.shape==='rect'){const ob=(e.T+.6)/2+2.4,m=ps.length;let off=0;
       const ws=ps.map(q=>{if(d.r.Mw)return d.r.Mw;const t=q.m.tris;let a=1e9,b=-1e9;for(let i=0;i<t.length;i+=3){a=Math.min(a,t[i]);b=Math.max(b,t[i])}return b-a});
-      ps.slice().reverse().forEach((q,j)=>{const w=ws[m-1-j],x0=ob+.5+off;items.push({tris:place0(q.m.tris,(x,y,z)=>[x0+w-x,e.D-ob-.5-y,z+2.4]),color:c1});off+=w+1})}
+      ps.slice().reverse().forEach((q,j)=>{const w=ws[m-1-j],x0=ob+.5+off,t=place0(q.m.tris,(x,y,z)=>[x0+w-x,e.D-ob-.5-y,z+2.4]);items.push({tris:t,color:c1});markTris(t);off+=w+1})}
     else{const q=ps[0],t=q.m.tris;let a=[1e9,1e9],b=[-1e9,-1e9];for(let i=0;i<t.length;i+=3)for(let k=0;k<2;k++){a[k]=Math.min(a[k],t[i+k]);b[k]=Math.max(b[k],t[i+k])}
       items.push({tris:place0(t,(x,y,z)=>[(a[0]+b[0])/2-x,yBack-8-(y-a[1]),z+2.4]),color:c1})}
-    Y1=Math.min(Y1,e.D-30);}
-  for(const d of des){if(!d.r||d.p.key==='trim'||d.p.key==='tiers')continue;let pk=placeKind(d.p.key,d.p.ov,d.m);if(pk==='loose')continue;
+    }
+  /* the largest floor pieces go down first, so the small ones fill the gaps */
+  const order=des.filter(d=>d.r&&d.p.key!=='trim'&&d.p.key!=='tiers').map(d=>[d,floorFoot(d)]).sort((a,b)=>b[1]-a[1]).map(x=>x[0]);
+  for(const d of order){let pk=placeKind(d.p.key,d.p.ov,d.m);if(pk==='loose')continue;
     if(pk==='span'){if(d.r.hang&&!hx){items.push(...hangScene(d.r,e,S,H,c1));continue}pk='back'}
     let main=d.r.parts.filter(q=>q.m&&q.role!=='Second file');if(!main.length)continue;
     if(d.r.display)main=main.map(q=>({role:q.role,m:{tris:place0(q.m.tris,d.r.display)}}));
@@ -1512,15 +1539,18 @@ function buildScene(des){
       let yb=yBack;if(e.shape!=='rect'&&e.shape!=='corner'&&!hx){const rx=e.W/2-e.T-1,ry=(e.shape==='oval'?e.D:e.W)/2-e.T-1,u=Math.min(.99,Math.max(Math.abs(ox),Math.abs(ox+sx))/rx);yb=ry*Math.sqrt(1-u*u)*(e.shape==='poly'?.95:1)-1}
       fn=pk==='back'?(x,y,z)=>[x-mn[0]+ox,yb-(z-mn[2]),y-mn[1]+zb]:(x,y,z)=>[x-mn[0]+ox,yb-(y-mn[1]),z-mn[2]+zb];wx+=sx+8}
     else if(pk==='lid'){const cx=(X0+X1)/2+(X1-X0)*.2,cy=(Y0+Y1)/2,zt=S+H+2.4;fn=(x,y,z)=>[x-(mn[0]+mx[0])/2+cx,y-(mn[1]+mx[1])/2+cy,z-mn[2]+zt]}
-    else{const w=sx,dp=pk==='stand'?sz:sy;if(fx+w>X1&&fx>X0){fx=X0;fy+=fdep+8;fdep=0}const ox=fx,oy=fy;
-      fn=pk==='stand'?(x,y,z)=>[x-mn[0]+ox,oy+(z-mn[2]),y-mn[1]+S]:(x,y,z)=>[x-mn[0]+ox,y-mn[1]+oy,z-mn[2]+S];fx+=w+8;fdep=Math.max(fdep,dp)}
+    else{const w=sx,dp=pk==='stand'?sz:sy;let ox=null,oy=null;
+      search:for(let y=Y0+4;y+dp<=Y1+.01;y+=cell)for(let x=X0;x+w<=X1+.01;x+=cell)if(free(x,y,w,dp)){ox=x;oy=y;break search}
+      if(ox==null){crowded=true;if(fx+w>X1&&fx>X0){fx=X0;fy+=fdep+8;fdep=0}ox=fx;oy=fy;fx+=w+8;fdep=Math.max(fdep,dp)}
+      mark(ox-2,oy-2,ox+w+2,oy+dp+2);
+      fn=pk==='stand'?(x,y,z)=>[x-mn[0]+ox,oy+(z-mn[2]),y-mn[1]+S]:(x,y,z)=>[x-mn[0]+ox,y-mn[1]+oy,z-mn[2]+S]}
     for(const q of main)items.push({tris:place0(q.m.tris,fn),color:q.role==='Colour 2'?c2:c1})}
-  return items;
+  items.crowded=crowded;return items;
 }
 let bT=null;function buildCalc(){clearTimeout(bT);$('bMsg').textContent='Building the preview…';bT=setTimeout(buildCalc1,60)}
 function buildCalc1(){
   const p=readEnc();let m;try{m=encModel(p,true)}catch(e){$('bNote').hidden=false;$('bNote').textContent='The enclosure settings don\'t make a valid enclosure. Check the Enclosure tab.';$('bMsg').textContent='';return}
-  const des=buildDesign(true),items=[...m.items,...buildScene(des)];render($('bCv'),items);
+  const des=buildDesign(true),sc_=buildScene(des),items=[...m.items,...sc_];render($('bCv'),items);
   const t=$('bParts');t.innerHTML='<tr><th>Piece</th><th class="n">Files</th></tr>';let mags=(p.hatch==='magnet'?4:0)+(p.shape==='rect'&&p.front.startsWith('swing')&&p.doorCatch==='magnet'?2:0),files=0;const notes=[];
   {const r=document.createElement('tr');r.innerHTML=`<td><b>Enclosure</b></td><td class="n">${m.parts.length}</td>`;t.append(r)}
   for(const d of des){const r=document.createElement('tr');const nm=pieceName(d.p.key,d.p.ov);
@@ -1530,6 +1560,7 @@ function buildCalc1(){
   if(m.cut.length)notes.push('Acrylic or sheet to cut: '+m.cut.map(([a,b])=>`${a}, ${b} mm`).join('; ')+'.');
   if(des.some(d=>d.m==='peg')&&p.pegs!=='grid')notes.push('Some pieces use floor pegs: turn them on under Enclosure.');
   if(des.some(d=>d.m==='clip')&&(p.shape!=='rect'||p.rails!=='yes'))notes.push('Pin-rail pieces need pin rails on the mesh panels: turn them on under Enclosure, or choose magnets.');
+  if(sc_.crowded)notes.push('The floor pieces don\'t all fit next to each other on the free floor: untick one or two, choose wall mounts for some, or make the enclosure bigger.');
   notes.push(`${des.length} interior pieces in ${files} files, plus ${m.parts.length} enclosure files. The download has them in two folders, with a read-me for the whole build.`);
   const n=$('bNote');n.hidden=false;n.innerHTML='';for(const x of notes){const dv=document.createElement('div');dv.textContent=x;n.append(dv)}
   $('bMsg').textContent='';
