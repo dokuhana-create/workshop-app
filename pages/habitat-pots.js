@@ -130,6 +130,8 @@
   }
 
 
+  /* a tiered planter covers at most this share of the floor, so at least half of it stays free for the mantis */
+  const FLOOR_MAX=.48;
   /* ---------- flowing terraces, like rice fields on a hillside ----------
      The terraces follow wavy contour lines around a starting place: the back wall, a back corner, one side, or a
      hill somewhere in the middle. Each terrace is a soil pocket held by a low rounded bank; widths and heights vary,
@@ -143,18 +145,23 @@
     const hill=[Wp*(.3+.4*R(1,1)),Df*(.28+.12*R(2,1))];
     const LAY={back:{phi:(x,y)=>y,R:Df*pct},side:{phi:x=>x,R:Wp*pct},cornerL:{phi:(x,y)=>Math.hypot(x,y*1.15),R:Math.hypot(Wp,Df)*pct*.85},
       cornerR:{phi:(x,y)=>Math.hypot(Wp-x,y*1.15),R:Math.hypot(Wp,Df)*pct*.85},point:{phi:(x,y)=>Math.hypot(x-hill[0],(y-hill[1])*1.1),R:Math.min(Wp,Df)*pct*.75}};
-    const L=LAY[lay]||LAY.back,phi=L.phi,Rr=Math.max(n*16,L.R);
+    const L=LAY[lay]||LAY.back,phi=L.phi;let Rr=Math.max(n*16,L.R);
     /* band widths and step heights vary; the highest terrace is the one at the start */
-    const wts=[...Array(n)].map((_,k)=>.7+.6*R(k,3)),sw=wts.reduce((a,b)=>a+b,0),B=[];let acc=0;for(let k=0;k<n;k++){acc+=wts[k]/sw*Rr;B.push(acc)}
+    const wts=[...Array(n)].map((_,k)=>.7+.6*R(k,3)),sw=wts.reduce((a,b)=>a+b,0),B=[];
+    const setB=()=>{B.length=0;let acc=0;for(let k=0;k<n;k++){acc+=wts[k]/sw*Rr;B.push(acc)}};setB();
     /* rice-field steps are low: on average about half the even planter's, each one different */
     const steps=[...Array(n)].map((_,k)=>(o.step||30)*.45*(.55+.9*R(k,5))),T=[];let t=Sb-2.4+(o.up||20)*.5;for(let k=n-1;k>=0;k--){T[k]=t;t+=steps[k]}
     const Tmax=Math.min(T[0],Sb+(e.H||300)*.55);if(T[0]>Tmax){const sc=(Tmax-T[n-1])/(T[0]-T[n-1]||1);for(let k=0;k<n;k++)T[k]=T[n-1]+(T[k]-T[n-1])*sc}
     /* each contour line wanders on its own, so the terraces widen and narrow */
     const A=k=>Math.min(14,(k?B[k]-B[k-1]:B[0])*.38);
-    const cell=1,GX=Math.ceil(Wp/cell)+3,GY=Math.ceil(Df/cell)+3,grid=[...Array(n)].map((_,k)=>{const g=new Float32Array(GX*GY);
+    const cell=1,GX=Math.ceil(Wp/cell)+3,GY=Math.ceil(Df/cell)+3,mk=()=>[...Array(n)].map((_,k)=>{const g=new Float32Array(GX*GY);
       for(let j=0;j<GY;j++)for(let i=0;i<GX;i++){const x=(i-1)*cell,y=(j-1)*cell;g[j*GX+i]=B[k]+A(k)*sd.fbm(x/55,y/55,k*3.1,seed*5+k,3)*1.6}return g});
+    let grid=mk();
     const bnd=(k,x,y)=>{if(k<0)return -1e9;const u=clamp(x/cell+1,0,GX-1.001),v=clamp(y/cell+1,0,GY-1.001),i=floor(u),j=floor(v),a=u-i,b=v-j,G=grid[k],q=j*GX+i;
       return (G[q]*(1-a)+G[q+1]*a)*(1-b)+(G[q+GX]*(1-a)+G[q+GX+1]*a)*b};
+    /* at least half the floor stays free: measure what the outermost bank encloses and pull the terraces in until it is under the limit */
+    const cover=()=>{let c=0,t=0;for(let y=2;y<Df;y+=4)for(let x=2;x<Wp;x+=4){t++;if(phi(x,y)<bnd(n-1,x,y))c++}return c/t};
+    let cov=cover();for(let it=0;it<12&&cov>FLOOR_MAX&&Rr>n*16;it++){Rr=Math.max(n*16,Rr*Math.sqrt(FLOOR_MAX/cov)*.97);setB();grid=mk();cov=cover()}
     const sk=SURF[o.front]||SURF.smooth,amp=sk.amp||0,sf=surfFn(o.front||'smooth',{C:0,H:T[0],seed});
     const parts=[];let pegN=0;
     for(let j=0;j<m;j++){
@@ -176,7 +183,7 @@
       parts.push({file:m>1?`terraced-planter-${j+1}-of-${m}.stl`:'terraced-planter.stl',role:j?'Second file':'Main colour',m:mm});
     }
     const where={back:'along the back wall',side:'from the left wall',cornerL:'from the back left corner',cornerR:'from the back right corner',point:'around a hill'}[lay];
-    const notes=[`${n} flowing terraces ${where}, ${T.map(round).join(', ')} mm tall from the highest down, each a soil pocket behind a low rounded bank. Shuffle for a different layout.`,
+    const notes=[`${n} flowing terraces ${where}, ${T.map(round).join(', ')} mm tall from the highest down, each a soil pocket behind a low rounded bank. They leave about ${round(100-100*cov)} % of the floor free. Shuffle for a different layout.`,
       'Fill every pocket with a few clay balls and then soil; plant the high terraces with trailing plants so they spill over the banks. The floor beyond the last bank stays free for gravel, sand or moss.',
       'Prints upright without supports, as thin walls only. Drain holes in each pocket let water through to the base.'];
     if(m>1)notes.push(`It comes in ${m} modules that stand side by side.`);
@@ -192,8 +199,11 @@
     if(o.layout&&o.layout!=='even')return flowTiers(o,info);
     const sd=S(),HE=root.HabitatEnclosure,e=info.e||{},rectE=e.shape==='rect',W=rectE?e.W:Math.min(e.W,e.D||e.W)*.7,D=rectE?e.D:Math.min(e.W,e.D||e.W)*.7;
     const g=(e.T||3)+.6,ob=g/2+2.4,Sb=e.S||40,n=Math.max(2,Math.min(3,+o.tiers||2)),wall=Math.max(1.6,o.wall||2.2),fl=2.4;
-    const Wp=W-2*ob-1,Dfloor=D-2*ob-1,Dp=Math.max(30*n,Math.min(Dfloor-25,Dfloor*(o.pct||60)/100)),nt=rectE&&info.Eh?info.Eh-ob+.75:0;
-    const bed=info.bed||350,m=o.mods&&o.mods!=='auto'?+o.mods:Math.max(1,Math.ceil(Wp/(bed-10))),Mw=(Wp-(m-1))/m;
+    const Wp=W-2*ob-1,Dfloor=D-2*ob-1,Dp=Math.max(30*n,Math.min(Dfloor-25,Dfloor*Math.min(o.pct||45,FLOOR_MAX*100)/100)),nt=rectE&&info.Eh?info.Eh-ob+.75:0;
+    /* at least half the floor stays free: if even the shallowest rows across the whole back would cover too much,
+       the planter becomes a block in the back left corner */
+    const Wu=Wp*Dp>FLOOR_MAX*Wp*Dfloor?Math.max(60,FLOOR_MAX*Wp*Dfloor/Dp):Wp,corner=Wu<Wp-1;
+    const bed=info.bed||350,m=o.mods&&o.mods!=='auto'?+o.mods:Math.max(1,Math.ceil(Wu/(bed-10))),Mw=(Wu-(m-1))/m;
     const hk=k=>Sb-2.4+(o.up||20)+(n-1-k)*(o.step||30),yk=k=>(k+1)*Dp/n,sk=SURF[o.front]||SURF.flutes,amp=sk.amp||0;
     const sf=surfFn(o.front||'flutes',{C:0,H:hk(0),seed:o.seed||1});
     /* top edge: depth of a dip at x, only along the front of each tier */
@@ -208,7 +218,7 @@
       const cav=k=>(x,y,z)=>{const front=y-(yk(k)-amp-wall),back=(k?yk(k-1):0)+wall-y;let d=smax(smax(wall-x,x-(Mw-wall),1.2),smax(back,front,1.2),1.2);return smax(d,fl-z,1.2)};
       let f=sd.union(...[...Array(n)].map((_,k)=>tier(k)));
       f=sd.scut(1.4,f,...[...Array(n)].map((_,k)=>cav(k)));
-      if(nt>0){const cs=[];if(first)cs.push(sd.box(nt/2-.5,nt/2-.5,60,nt/2+.5,nt/2+.5,200));if(last)cs.push(sd.box(Mw-nt/2+.5,nt/2-.5,60,nt/2+.5,nt/2+.5,200));if(cs.length)f=sd.cut(f,...cs)}
+      if(nt>0){const cs=[];if(first&&!corner)cs.push(sd.box(nt/2-.5,nt/2-.5,60,nt/2+.5,nt/2+.5,200));if(last)cs.push(sd.box(Mw-nt/2+.5,nt/2-.5,60,nt/2+.5,nt/2+.5,200));if(cs.length)f=sd.cut(f,...cs)}
       const spots=pegsUnder(e,Wp,ob,X0,Mw,Dp+amp),near=(x,y)=>spots.some(([u,v])=>Math.hypot(x-u,y-v)<9.5);
       const hs=[];for(let k=0;k<n;k++){const y0=(k?yk(k-1):0)+wall+4,y1=yk(k)-amp-wall-4;for(let x=wall+6;x<Mw-wall-4;x+=12)for(let y=y0;y<=y1;y+=12)if(!near(x,y))hs.push(sd.cylZ(x,y,1.05,-1,fl+.5))}
       if(hs.length)f=sd.cut(f,...hs);
@@ -217,7 +227,7 @@
       parts.push({file:m>1?`tiered-planter-${j+1}-of-${m}.stl`:'tiered-planter.stl',role:j?'Second file':'Main colour',m:mm});
     }
     const hs=[...Array(n)].map((_,k)=>round(hk(k)));
-    notes.push(`${n} tiers across the back, ${round(Wp)} × ${round(Dp)} mm and ${hs.join(', ')} mm tall from back to front, with a ${sk.name.toLowerCase()} front. It stands on the base floor and leaves ${round(Dfloor-Dp)} mm of floor free in front.`);
+    notes.push(`${n} tiers ${corner?'in the back left corner':'across the back'}, ${round(Wu)} × ${round(Dp)} mm and ${hs.join(', ')} mm tall from back to front, with a ${sk.name.toLowerCase()} front. It stands on the base floor and leaves ${round(100-100*Wu*Dp/(Wp*Dfloor))} % of the floor free${corner?': a planter across the whole back would have covered more than half of it':''}.`);
     if(m>1)notes.push(`It comes in ${m} modules that stand side by side; they need nothing to join them.`);
     notes.push(pegN>=2*m?`It sits on ${pegN} floor pegs of the base, so it can't slide or tip. Turn on floor pegs for the enclosure.`:'Turn on floor pegs for the enclosure and make the planter reach further, so it sits on at least two pegs; it has sockets wherever a peg is under it.');
 
@@ -227,5 +237,5 @@
     return {parts,notes,magnets:0,Mw};
   }
 
-  root.HabitatPots={SURF,FORM,pot,wallPot,tiers};
+  root.HabitatPots={SURF,FORM,pot,wallPot,tiers,FLOOR_MAX};
 })(typeof window!=='undefined'?window:globalThis);

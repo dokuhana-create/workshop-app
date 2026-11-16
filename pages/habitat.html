@@ -3,20 +3,20 @@
 <script src="../shim.js"></script>
 <script src="../lib/clipper.js"></script>
 <script src="../lib/earcut.min.js"></script>
-<script src="../lib/geo.js?v=45"></script>
-<script src="habitat-parts.js?v=45"></script>
-<script src="habitat-enclosure.js?v=45"></script>
-<script src="habitat-more.js?v=45"></script>
-<script src="habitat-motifs.js?v=45"></script>
-<script src="habitat-keep.js?v=45"></script>
-<script src="../lib/sdf.js?v=45"></script>
-<script src="habitat-pots.js?v=45"></script>
-<script src="habitat-sculpt.js?v=45"></script>
-<script src="habitat-trim.js?v=45"></script>
-<script src="habitat-addons.js?v=45"></script>
-<script src="habitat-forms.js?v=45"></script>
-<script src="habitat-shapes.js?v=45"></script>
-<script src="habitat-sets.js?v=45"></script>
+<script src="../lib/geo.js?v=46"></script>
+<script src="habitat-parts.js?v=46"></script>
+<script src="habitat-enclosure.js?v=46"></script>
+<script src="habitat-more.js?v=46"></script>
+<script src="habitat-motifs.js?v=46"></script>
+<script src="habitat-keep.js?v=46"></script>
+<script src="../lib/sdf.js?v=46"></script>
+<script src="habitat-pots.js?v=46"></script>
+<script src="habitat-sculpt.js?v=46"></script>
+<script src="habitat-trim.js?v=46"></script>
+<script src="habitat-addons.js?v=46"></script>
+<script src="habitat-forms.js?v=46"></script>
+<script src="habitat-shapes.js?v=46"></script>
+<script src="habitat-sets.js?v=46"></script>
 <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Bricolage+Grotesque:opsz,wght@12..96,600;12..96,750&family=IBM+Plex+Mono:wght@500&family=IBM+Plex+Sans:wght@400;500;600&display=swap">
 <style>
 /* Same layout as the Resin Workshop: inputs on the left, the 3D preview and downloads beside them. */
@@ -1071,10 +1071,10 @@ Object.assign(ITEMS,{
   bark:{group:'climb',more:'bark',name:'Cork bark holder',fields:[['bw','Bark width',80],['bh','Bark height',100],['bk','Bark thickness',15]],
     selects:[['style','Style',[['classic','Two hooks'],['minimal','One hook'],['cradle','Side cradle'],['organic','Organic plate']]],['open','Back plate',[['yes','See-through cells'],['no','Solid']]]],shuffle:true,mounts:['magnet','clip','glue'],
     hint:'Holds a piece of cork bark flat against a wall, as a climbing and hiding surface. A shelf takes its weight, and hooks or side clamps keep it from tipping forward.'},
-  tiers:{group:'plants',keep:'tiers',name:'Tiered planter',fields:[['up','Lowest tier above the substrate',20],['step','Each tier higher by (on average)',30],['pct','Reach (% of the floor)',60],['wall','Wall',2]],shuffle:true,
+  tiers:{group:'plants',keep:'tiers',name:'Tiered planter',fields:[['up','Lowest tier above the substrate',20],['step','Each tier higher by (on average)',30],['pct','Reach (% of the floor, at most 48)',45],['wall','Wall',2]],shuffle:true,
     selects:[['layout','Layout',[['even','Even rows along the back'],['back','Flowing terraces from the back'],['cornerL','Flowing terraces from the back left corner'],['cornerR','Flowing terraces from the back right corner'],['side','Flowing terraces from the left side'],['point','Flowing terraces around a hill']]],
       ['tiers','Tiers',[['2','Two'],['3','Three']]],['front','Front of each tier',Object.entries(HabitatPots.SURF).map(([k,v])=>[k,v.name])],['top','Top edge',[['flat','Straight'],['arches','Arches'],['pointed','Pointed'],['battlements','Battlements'],['waves','Waves']]],['mods','Pieces',[['auto','As many as the bed needs'],['1','One'],['2','Two modules'],['3','Three modules']]]],mounts:[],
-    hint:'Pots in steps, sized to your enclosure: even rows along the back, or flowing terraces like rice fields on a hillside, starting from the back, a corner, a side or a hill. Fill the tiers with soil and plants, and the floor beyond with aquarium gravel, sand or moss. Shuffle for a new layout.'},
+    hint:'Pots in steps, sized to your enclosure: even rows along the back, or flowing terraces like rice fields on a hillside, starting from the back, a corner, a side or a hill. It always leaves more than half the floor free: if rows across the back would take too much, they become a block in the back left corner. Fill the tiers with soil and plants, and the floor beyond with aquarium gravel, sand or moss. Shuffle for a new layout.'},
   planter:{group:'plants',more:'planter',name:'Hanging planter',fields:[['L','Width',70],['D','Depth',35],['H','Height',50],['wall','Wall',2],['taper','Narrower at the bottom (%)',20,{show:s=>s.shape!=='cone'}]],
     selects:[['shape','Shape',[['halfround','Half round'],['halfhex','Half hexagon'],['facet','Faceted'],['scallop','Scalloped'],['pebble','Pebble'],['square','Rounded box'],['cone','Cone']]]],shuffle:true,mounts:['magnet','clip','glue'],drain:true,
     hint:'A pocket planter with a flat back, for the wall or the mesh. Good for air plants, pothos or fittonia cuttings.'},
