@@ -130,8 +130,10 @@
   }
 
 
-  /* a tiered planter covers at most this share of the floor, so at least half of it stays free for the mantis */
-  const FLOOR_MAX=.48;
+  /* a tiered planter made on its own covers at most this share of the floor, so at least half stays free. In a build
+     it gets o.floorMax instead: the share the other floor pieces leave, which can be more (up to FLOOR_BUILD) when
+     there are few of them. */
+  const FLOOR_MAX=.48,FLOOR_BUILD=.85;
   /* ---------- flowing terraces, like rice fields on a hillside ----------
      The terraces follow wavy contour lines around a starting place: the back wall, a back corner, one side, or a
      hill somewhere in the middle. Each terrace is a soil pocket held by a low rounded bank; widths and heights vary,
@@ -161,7 +163,7 @@
       return (G[q]*(1-a)+G[q+1]*a)*(1-b)+(G[q+GX]*(1-a)+G[q+GX+1]*a)*b};
     /* at least half the floor stays free: measure what the outermost bank encloses and pull the terraces in until it is under the limit */
     const cover=()=>{let c=0,t=0;for(let y=2;y<Df;y+=4)for(let x=2;x<Wp;x+=4){t++;if(phi(x,y)<bnd(n-1,x,y))c++}return c/t};
-    const FM=Math.min(FLOOR_MAX,o.floorMax||1);let cov=cover();for(let it=0;it<12&&cov>FM&&Rr>n*16;it++){Rr=Math.max(n*16,Rr*Math.sqrt(FM/cov)*.97);setB();grid=mk();cov=cover()}
+    const FM=o.floorMax?Math.min(FLOOR_BUILD,o.floorMax):FLOOR_MAX;let cov=cover();for(let it=0;it<12&&cov>FM&&Rr>n*16;it++){Rr=Math.max(n*16,Rr*Math.sqrt(FM/cov)*.97);setB();grid=mk();cov=cover()}
     const sk=SURF[o.front]||SURF.smooth,amp=sk.amp||0,sf=surfFn(o.front||'smooth',{C:0,H:T[0],seed});
     const parts=[];let pegN=0;
     for(let j=0;j<m;j++){
@@ -202,10 +204,10 @@
     /* o.maxDp: the deepest it may be, so the strip of floor in front still takes the largest floor piece; tiers are
        at least 24 mm deep, and a third tier is dropped if they would not fit */
     let n=Math.max(2,Math.min(3,+o.tiers||2));const TMIN=o.maxDp?24:30;if(o.maxDp&&n>2&&o.maxDp<TMIN*n)n=2;
-    const Wp=W-2*ob-1,Dfloor=D-2*ob-1,FM=Math.min(FLOOR_MAX,o.floorMax||1),Dp=Math.max(TMIN*n,Math.min(Dfloor-25,o.maxDp||1e9,Dfloor*Math.min(o.pct||45,FM*100)/100)),nt=rectE&&info.Eh?info.Eh-ob+.75:0;
+    const Wp=W-2*ob-1,Dfloor=D-2*ob-1,FM=o.floorMax?Math.min(FLOOR_BUILD,o.floorMax):FLOOR_MAX,Dp=Math.max(TMIN*n,Math.min(Dfloor-25,o.maxDp||1e9,Dfloor*Math.min(o.pct||45,FM*100)/100)),nt=rectE&&info.Eh?info.Eh-ob+.75:0;
     /* at least half the floor stays free: if even the shallowest rows across the whole back would cover too much,
        the planter becomes a block in the back left corner */
-    let Wu=Wp*Dp>FM*Wp*Dfloor?Math.max(60,FM*Wp*Dfloor/Dp):Wp;if(Wu>=.9*Wp&&Dp<=FLOOR_MAX*Dfloor)Wu=Wp;const corner=Wu<Wp-1;
+    let Wu=Wp*Dp>FM*Wp*Dfloor?Math.max(60,FM*Wp*Dfloor/Dp):Wp;if(!o.exact&&Wu>=.9*Wp&&Dp<=FLOOR_MAX*Dfloor)Wu=Wp;const corner=Wu<Wp-1;
     const bed=info.bed||350,m=corner?1:o.mods&&o.mods!=='auto'?+o.mods:Math.max(1,Math.ceil(Wu/(bed-10))),Mw=(Wu-(m-1))/m;
     /* in the corner the tiers also step down towards the open side: the tallest sits in the corner, each lower one wraps
        round it, so only the two sides against the enclosure walls are full height. The corner is at x = Mw. */
@@ -240,7 +242,7 @@
       parts.push({file:m>1?`tiered-planter-${j+1}-of-${m}.stl`:'tiered-planter.stl',role:j?'Second file':'Main colour',m:mm});
     }
     const hs=[...Array(n)].map((_,k)=>round(hk(k)));
-    notes.push(`${n} tiers ${corner?'in the back left corner':'across the back'}, ${round(Wu)} × ${round(Dp)} mm and ${hs.join(', ')} mm tall from back to front, with a ${sk.name.toLowerCase()} front. It stands on the base floor and leaves ${round(100-100*Wu*Dp/(Wp*Dfloor))} % of the floor free${corner?': a planter across the whole back would have covered more than half of it. The tiers step down towards the front and towards the open side, so only the two sides against the enclosure walls are full height':''}.`);
+    notes.push(`${n} tiers ${corner?'in the back left corner':'across the back'}, ${round(Wu)} × ${round(Dp)} mm and ${hs.join(', ')} mm tall from back to front, with a ${sk.name.toLowerCase()} front. It stands on the base floor and leaves ${round(100-100*Wu*Dp/(Wp*Dfloor))} % of the floor free${corner?': a planter across the whole back would have covered more floor than is free for it. The tiers step down towards the front and towards the open side, so only the two sides against the enclosure walls are full height':''}.`);
     if(m>1)notes.push(`It comes in ${m} modules that stand side by side; they need nothing to join them.`);
     notes.push(pegN>=2*m?`It sits on ${pegN} floor pegs of the base, so it can't slide or tip. Turn on floor pegs for the enclosure.`:'Turn on floor pegs for the enclosure and make the planter reach further, so it sits on at least two pegs; it has sockets wherever a peg is under it.');
 
@@ -250,5 +252,5 @@
     return {parts,notes,magnets:0,Mw};
   }
 
-  root.HabitatPots={SURF,FORM,pot,wallPot,tiers,FLOOR_MAX};
+  root.HabitatPots={SURF,FORM,pot,wallPot,tiers,FLOOR_MAX,FLOOR_BUILD};
 })(typeof window!=='undefined'?window:globalThis);

@@ -3,20 +3,20 @@
 <script src="../shim.js"></script>
 <script src="../lib/clipper.js"></script>
 <script src="../lib/earcut.min.js"></script>
-<script src="../lib/geo.js?v=48"></script>
-<script src="habitat-parts.js?v=48"></script>
-<script src="habitat-enclosure.js?v=48"></script>
-<script src="habitat-more.js?v=48"></script>
-<script src="habitat-motifs.js?v=48"></script>
-<script src="habitat-keep.js?v=48"></script>
-<script src="../lib/sdf.js?v=48"></script>
-<script src="habitat-pots.js?v=48"></script>
-<script src="habitat-sculpt.js?v=48"></script>
-<script src="habitat-trim.js?v=48"></script>
-<script src="habitat-addons.js?v=48"></script>
-<script src="habitat-forms.js?v=48"></script>
-<script src="habitat-shapes.js?v=48"></script>
-<script src="habitat-sets.js?v=48"></script>
+<script src="../lib/geo.js?v=49"></script>
+<script src="habitat-parts.js?v=49"></script>
+<script src="habitat-enclosure.js?v=49"></script>
+<script src="habitat-more.js?v=49"></script>
+<script src="habitat-motifs.js?v=49"></script>
+<script src="habitat-keep.js?v=49"></script>
+<script src="../lib/sdf.js?v=49"></script>
+<script src="habitat-pots.js?v=49"></script>
+<script src="habitat-sculpt.js?v=49"></script>
+<script src="habitat-trim.js?v=49"></script>
+<script src="habitat-addons.js?v=49"></script>
+<script src="habitat-forms.js?v=49"></script>
+<script src="habitat-shapes.js?v=49"></script>
+<script src="habitat-sets.js?v=49"></script>
 <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Bricolage+Grotesque:opsz,wght@12..96,600;12..96,750&family=IBM+Plex+Mono:wght@500&family=IBM+Plex+Sans:wght@400;500;600&display=swap">
 <style>
 /* Same layout as the Resin Workshop: inputs on the left, the 3D preview and downloads beside them. */
@@ -1074,7 +1074,7 @@ Object.assign(ITEMS,{
   tiers:{group:'plants',keep:'tiers',name:'Tiered planter',fields:[['up','Lowest tier above the substrate',20],['step','Each tier higher by (on average)',30],['pct','Reach (% of the floor, at most 48)',45],['wall','Wall',2]],shuffle:true,
     selects:[['layout','Layout',[['even','Even rows along the back'],['back','Flowing terraces from the back'],['cornerL','Flowing terraces from the back left corner'],['cornerR','Flowing terraces from the back right corner'],['side','Flowing terraces from the left side'],['point','Flowing terraces around a hill']]],
       ['tiers','Tiers',[['2','Two'],['3','Three']]],['front','Front of each tier',Object.entries(HabitatPots.SURF).map(([k,v])=>[k,v.name])],['top','Top edge',[['flat','Straight'],['arches','Arches'],['pointed','Pointed'],['battlements','Battlements'],['waves','Waves']]],['mods','Pieces',[['auto','As many as the bed needs'],['1','One'],['2','Two modules'],['3','Three modules']]]],mounts:[],
-    hint:'Pots in steps, sized to your enclosure: even rows along the back, or flowing terraces like rice fields on a hillside, starting from the back, a corner, a side or a hill. It always leaves more than half the floor free: if rows across the back would take too much, they become a block in the back left corner. Fill the tiers with soil and plants, and the floor beyond with aquarium gravel, sand or moss. Shuffle for a new layout.'},
+    hint:'Pots in steps, sized to your enclosure: even rows along the back, or flowing terraces like rice fields on a hillside, starting from the back, a corner, a side or a hill. Made on its own it leaves more than half the floor free. In a build it takes the floor the other floor pieces leave (up to 85 %), so it grows when you untick some, and shrinks when you add more. If rows across the back would take too much, they become a block in the back left corner. Fill the tiers with soil and plants, and the floor beyond with aquarium gravel, sand or moss. Shuffle for a new layout.'},
   planter:{group:'plants',more:'planter',name:'Hanging planter',fields:[['L','Width',70],['D','Depth',35],['H','Height',50],['wall','Wall',2],['taper','Narrower at the bottom (%)',20,{show:s=>s.shape!=='cone'}]],
     selects:[['shape','Shape',[['halfround','Half round'],['halfhex','Half hexagon'],['facet','Faceted'],['scallop','Scalloped'],['pebble','Pebble'],['square','Rounded box'],['cone','Cone']]]],shuffle:true,mounts:['magnet','clip','glue'],drain:true,
     hint:'A pocket planter with a flat back, for the wall or the mesh. Good for air plants, pothos or fittonia cuttings.'},
@@ -1442,6 +1442,25 @@ function buildSetup(){
 /* pieces already made are kept, so changing one setting only remakes what changed; the preview uses lighter
    versions of the sculpted pieces and wall tiles */
 const BMEMO=new Map();
+/* the biggest straight-row planter for which the given floor pieces still fit on the free floor: tries depths from
+   deep to shallow, each across the whole back and then as narrower blocks in the back left corner, and packs the
+   pieces round it, largest first, with a 2 mm gap (as the Build preview places them) */
+function planterFit(Wp,Df,rects,FB){
+  const c=2,gx=Math.ceil(Wp/c),gy=Math.ceil(Df/c),R=rects.slice().sort((a,b)=>b[0]*b[1]-a[0]*a[1]);
+  const packs=(Wu,Dp)=>{const occ=new Uint8Array(gx*gy),P=new Int32Array((gx+1)*(gy+1));
+    const mark=(x0,y0,x1,y1)=>{for(let j=Math.max(0,Math.floor(y0/c));j<Math.min(gy,Math.ceil(y1/c));j++)for(let i=Math.max(0,Math.floor(x0/c));i<Math.min(gx,Math.ceil(x1/c));i++)occ[j*gx+i]=1;
+      for(let j=0;j<gy;j++){let row=0;for(let i=0;i<gx;i++){row+=occ[j*gx+i];P[(j+1)*(gx+1)+i+1]=P[j*(gx+1)+i+1]+row}}};
+    /* how many taken cells in the area, from the running totals */
+    const taken=(x0,y0,x1,y1)=>{const i0=Math.max(0,Math.floor(x0/c)),j0=Math.max(0,Math.floor(y0/c)),i1=Math.min(gx,Math.ceil(x1/c)),j1=Math.min(gy,Math.ceil(y1/c));if(i1<=i0||j1<=j0)return 0;
+      return P[j1*(gx+1)+i1]-P[j0*(gx+1)+i1]-P[j1*(gx+1)+i0]+P[j0*(gx+1)+i0]};
+    /* the planter's front and open side carry the theme's relief (up to about 6 mm) */
+    mark(0,Df-Dp-8,Wu+8,Df);
+    for(const [w,h] of R){let ok=false;search:for(let y=2;y+h<=Df-1;y+=c)for(let x=2;x+w<=Wp-1;x+=c)if(!taken(x-2,y-2,x+w+2,y+h+2)){mark(x-2,y-2,x+w+2,y+h+2);ok=true;break search}if(!ok)return false}return true};
+  const cand=[];for(let Dp=Math.floor(Math.min(Df-25,FB*Df));Dp>=48;Dp-=4)for(const f of [1,.9,.8,.7,.6,.5,.4]){const Wu=Math.max(60,Wp*f);if(Wu*Dp<=FB*Wp*Df)cand.push({Wu,Dp})}
+  cand.sort((a,b)=>b.Wu*b.Dp-a.Wu*a.Dp||b.Wu-a.Wu);
+  for(const q of cand)if(packs(q.Wu,q.Dp))return q;
+  return {Wu:60,Dp:48};
+}
 /* width and depth of a floor piece as it stands */
 function floorDims(d){const pk=placeKind(d.p.key,d.p.ov,d.m),main=d.r.parts.filter(q=>q.m&&q.role!=='Second file'),mn=[1e9,1e9,1e9],mx=[-1e9,-1e9,-1e9];
   for(const q of main){const t=q.m.tris;for(let i=0;i<t.length;i+=3)for(let a=0;a<3;a++){if(t[i+a]<mn[a])mn[a]=t[i+a];if(t[i+a]>mx[a])mx[a]=t[i+a]}}
@@ -1461,10 +1480,12 @@ function buildDesign(pv){
   const later=[];
   for(const p of buildPieces()){if(B.off[p.id])continue;n++;if(p.key==='tiers'){later.push([out.length,p,n]);out.push(null);continue}out[out.length]=make(p,n)}
   if(later.length){let floorMax;
-    let maxDp;
-    if(e.shape==='rect'){const ob=(e.T+.6)/2+2.4,Df=e.D-2*ob-1,A=(e.W-2*ob-1)*Df,need=out.reduce((a,d)=>a+floorFoot(d),0);floorMax=Math.max(.2,Math.min(HabitatPots.FLOOR_MAX,(A-1.6*need)/A));
-      const deep=Math.max(0,...out.map(d=>floorFoot(d)?floorDims(d)[1]:0));if(deep)maxDp=Math.round(Df-deep-22)}
-    for(const [i,p,k] of later)out[i]=make(p,k,floorMax?{floorMax:Math.round(floorMax*100)/100,maxDp}:null)}
+    /* the planter grows into whatever floor the other pieces leave: untick floor pieces and it gets bigger */
+    for(const [i,p,k] of later){let ex=null;
+      if(e.shape==='rect'){const ob=(e.T+.6)/2+2.4,Wp=e.W-2*ob-1,Df=e.D-2*ob-1,A=Wp*Df,rects=out.filter(d=>floorFoot(d)).map(d=>floorDims(d)),FB=HabitatPots.FLOOR_BUILD;
+        if((p.ov.layout||'even')==='even'){const fit=planterFit(Wp,Df,rects,FB);ex={floorMax:Math.round(fit.Wu*fit.Dp/A*1000+5)/1000,pct:fit.Dp/Df*100+.5,maxDp:fit.Dp,exact:1}}
+        else{const need=rects.reduce((a,[w,h])=>a+(w+8)*(h+8),0),fm=Math.max(.2,Math.min(FB,(A-1.6*need)/A));ex={floorMax:Math.round(fm*100)/100,pct:Math.round(fm*100)}}}
+      out[i]=make(p,k,ex)}}
   return out;
 }
 /* where a piece goes: on the floor, on the back wall, standing up, or on the lid */
@@ -1496,7 +1517,7 @@ function buildScene(des){
   const e=readEnc(),hx=e.shape==='hexcell',S=hx?3:e.S,H=hx?e.W*.75:e.H,c=colours(),col=v=>cssColor(getComputedStyle(document.documentElement).getPropertyValue(v).trim()),c1=col('--acc'),c2=col('--acc2');
   let X0,X1,Y0,Y1,yBack;
   if(hx){X0=-e.W*.3;X1=e.W*.3;Y0=10;Y1=e.D-12;yBack=e.D-3.2}
-  else if(e.shape==='rect'){X0=e.T+3;X1=e.W-e.T-3;Y0=e.T+3;Y1=e.D-e.T-3;yBack=e.D-e.T/2-.6}
+  else if(e.shape==='rect'){const ob=(e.T+.6)/2+2.4+.5;X0=ob;X1=e.W-ob;Y0=ob;Y1=e.D-ob;yBack=e.D-e.T/2-.6}
   else if(e.shape==='corner'){X0=e.W*.08;X1=e.W*.62;Y0=e.W*.35;Y1=e.W*.9;yBack=e.W-4}
   else if(e.shape==='nursery')return [];
   else{const hw=e.W/2*.6,hd=(e.shape==='oval'?e.D:e.W)/2*.6;X0=-hw;X1=hw;Y0=-hd;Y1=hd;yBack=(e.shape==='oval'?e.D:e.W)/2*(e.shape==='poly'?.97:.9)}
@@ -1540,7 +1561,7 @@ function buildScene(des){
       fn=pk==='back'?(x,y,z)=>[x-mn[0]+ox,yb-(z-mn[2]),y-mn[1]+zb]:(x,y,z)=>[x-mn[0]+ox,yb-(y-mn[1]),z-mn[2]+zb];wx+=sx+8}
     else if(pk==='lid'){const cx=(X0+X1)/2+(X1-X0)*.2,cy=(Y0+Y1)/2,zt=S+H+2.4;fn=(x,y,z)=>[x-(mn[0]+mx[0])/2+cx,y-(mn[1]+mx[1])/2+cy,z-mn[2]+zt]}
     else{const w=sx,dp=pk==='stand'?sz:sy;let ox=null,oy=null;
-      search:for(let y=Y0+4;y+dp<=Y1+.01;y+=cell)for(let x=X0;x+w<=X1+.01;x+=cell)if(free(x,y,w,dp)){ox=x;oy=y;break search}
+      search:for(let y=Y0+2;y+dp<=Y1+.01;y+=cell)for(let x=X0;x+w<=X1+.01;x+=cell)if(free(x,y,w,dp)){ox=x;oy=y;break search}
       if(ox==null){crowded=true;if(fx+w>X1&&fx>X0){fx=X0;fy+=fdep+8;fdep=0}ox=fx;oy=fy;fx+=w+8;fdep=Math.max(fdep,dp)}
       mark(ox-2,oy-2,ox+w+2,oy+dp+2);
       fn=pk==='stand'?(x,y,z)=>[x-mn[0]+ox,oy+(z-mn[2]),y-mn[1]+S]:(x,y,z)=>[x-mn[0]+ox,y-mn[1]+oy,z-mn[2]+S]}
