@@ -405,6 +405,8 @@
     const corners=[0,1,2,3].map(i=>({block:atCorner(d,i,postOutline(J,J.cs+1.6)),pocket:atCorner(d,i,postShape(J,J.cs))}));
     const extra=[varying(0,Lt,z=>outl(E-ins(z)),.2)],spots=[0,1,2,3].map(i=>atCorner(d,i,[[[-sp.c,-sp.c]]])[0][0]);
     for(const [x,y] of spots)extra.push(...cskHole(x,y,sp,pz+.01));
+    /* the panel groove runs on through the corner blocks into the post pockets, so the panels' top corners have room */
+    const C=[[[0,0],[W,0],[W,D],[0,D]]];extra.push(prism(Lt-.01,Lt+d.s+1,subtract(offset(C,g/2,'miter'),offset(C,-g/2,'miter')),'sub'));
     /* crest slots: two square slots through the front of the plate, with a small block under each */
     if(p.doorStyle&&p.doorStyle!=='plain')for(const x of crestX(d)){const c=CREST.peg/2+.15;
       extra.push(prism(1,Lt+6,rect(x-5,-E+.6,x+5,-E+CREST.y1+1.2)),prism(-1,CREST.len+.4,rect(x-c,-E+CREST.y0-.15,x+c,-E+CREST.y1+.15),'sub'))}

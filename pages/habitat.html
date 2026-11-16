@@ -3,20 +3,20 @@
 <script src="../shim.js"></script>
 <script src="../lib/clipper.js"></script>
 <script src="../lib/earcut.min.js"></script>
-<script src="../lib/geo.js?v=50"></script>
-<script src="habitat-parts.js?v=50"></script>
-<script src="habitat-enclosure.js?v=50"></script>
-<script src="habitat-more.js?v=50"></script>
-<script src="habitat-motifs.js?v=50"></script>
-<script src="habitat-keep.js?v=50"></script>
-<script src="../lib/sdf.js?v=50"></script>
-<script src="habitat-pots.js?v=50"></script>
-<script src="habitat-sculpt.js?v=50"></script>
-<script src="habitat-trim.js?v=50"></script>
-<script src="habitat-addons.js?v=50"></script>
-<script src="habitat-forms.js?v=50"></script>
-<script src="habitat-shapes.js?v=50"></script>
-<script src="habitat-sets.js?v=50"></script>
+<script src="../lib/geo.js?v=51"></script>
+<script src="habitat-parts.js?v=51"></script>
+<script src="habitat-enclosure.js?v=51"></script>
+<script src="habitat-more.js?v=51"></script>
+<script src="habitat-motifs.js?v=51"></script>
+<script src="habitat-keep.js?v=51"></script>
+<script src="../lib/sdf.js?v=51"></script>
+<script src="habitat-pots.js?v=51"></script>
+<script src="habitat-sculpt.js?v=51"></script>
+<script src="habitat-trim.js?v=51"></script>
+<script src="habitat-addons.js?v=51"></script>
+<script src="habitat-forms.js?v=51"></script>
+<script src="habitat-shapes.js?v=51"></script>
+<script src="habitat-sets.js?v=51"></script>
 <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Bricolage+Grotesque:opsz,wght@12..96,600;12..96,750&family=IBM+Plex+Mono:wght@500&family=IBM+Plex+Sans:wght@400;500;600&display=swap">
 <style>
 /* Same layout as the Resin Workshop: inputs on the left, the 3D preview and downloads beside them. */
@@ -733,7 +733,8 @@ function rectModel(p,pv){
       if(sw.buttons)parts.push({name:'Door window button',n:sw.buttons,file:`door-button-print-${sw.buttons}.stl`,tris:place(sw.button.tris)});
       if(sw.turn){const proud=d.g/2-.3+sw.front-d.a,px=d.W-3,reach=px-(e+sw.edge)+6,dep=HE.latchDepth(d),hub=Math.max(.6,proud+.4),btn=HE.turnButton(hub,dep-.5,[5,Math.max(10,reach)]);
         parts.push({name:'Door turn latch',file:'door-turn-latch.stl',tris:place(btn.tris)});
-        items.push({tris:place0(btn.tris,(u,v,w)=>[px-u,-d.a-(2+hub)+w,d.S+d.latchZ+v]),color:c.frame});
+        /* its 0.6 mm shoulder rests on the post's face, the peg goes on into the hole */
+        items.push({tris:place0(btn.tris,(u,v,w)=>[px-u,-d.a-(2.6+hub)+w,d.S+d.latchZ+v]),color:c.frame});
         if(reach<10)notes.push('The turn latch only just reaches the door edge. Check it overlaps the door before printing.');}
       if(d.lockZ!=null){const proud=d.g/2-.3+sw.front-d.a,xd=e+sw.edge-5,xp=d.W-3,m_=xd+6,yF=-d.g/2+.3-sw.front,dep=HE.latchDepth(d);
         const hd=HE.hasp(6,2.6,14,9),hp=HE.hasp(xp-m_,dep-.5,14+proud,9+proud);
