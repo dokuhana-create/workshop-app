@@ -300,9 +300,11 @@
     for(let i=0;i<(dots||0);i++)f.push(prism(-1,.4,circle((i-(dots-1)/2)*1.8,2.4,.55,16),'sub'));
     return build(f)}
   const cskHeight=sp=>CSK.rim+CSK.R-sp.d/2;
-  /* the hole for it, from the bed (z=0) up to z1: the countersink, then a clearance hole */
-  function cskHole(x,y,sp,z1){const r=sp.d/2+.35,R=CSK.R+.2,H=CSK.rim+.2+(R-r);
-    return [varying(-1,H,z=>circle(x,y,z<CSK.rim+.2?R:R-(z-CSK.rim-.2),48),.2,'sub'),prism(-1,z1,circle(x,y,r,32),'sub')]}
+  /* the hole for it, up to z1: the countersink with the head's underside at z0 (reached from the bed through a round
+     channel when z0 > 0), then a clearance hole */
+  function cskHole(x,y,sp,z1,z0){z0=z0||0;const r=sp.d/2+.35,R=CSK.R+.2,H=CSK.rim+.2+(R-r);
+    const zc=z0+CSK.rim+.2;
+    return [prism(-1,zc,circle(x,y,R,48),'sub'),varying(zc-.01,z0+H,z=>circle(x,y,R-(z-zc),48),.25,'sub'),prism(-1,z1,circle(x,y,r,32),'sub')]}
   /* a fit-test corner block: a socket for the post with two short arms carrying the panel groove.
      k = -1, 0, 1 for fit - step, fit, fit + step; k+2 dots on the end of one arm tell them apart. */
   function fitBlock(J,k){const fit=J.fit+k*FIT_STEP,g=J.gN+fit,cs=.25+fit/2,H=16,dep=10,arm=24,w=g+3.6,sp=J.sp;
@@ -312,6 +314,81 @@
     f.push(...cskHole(-sp.c,-sp.c,sp,H-dep+.01));
     for(let i=0;i<k+2;i++)f.push(G.xDisc((i-(k+1)/2)*2.4,4,.8,arm-1,arm+1,'sub'));
     return {m:build(f),fit,screwL:H-dep-cskHeight(sp)+J.thread-1.5}}
+  /* ---------- the v43 base ----------
+     A thin curved shell instead of a solid box. Seen from outside, from the bed up: a foot band with a softly rounded
+     top edge and a shallow arched recess between the corner feet, a cove sweeping in to the slim upper band, a fine
+     incised line and a small chamfer at the top. Every layer is the same size as the one below or smaller, except the
+     45° edges of the line and the recess, so it prints without supports.
+     Inside: an outer skin and an inner wall with a hollow between them, open underneath, tied by ribs. The panel groove
+     sits on a short flat bridge over the hollow. Each corner is a tube round the post socket; the post rests on a boss
+     with a countersunk screw coming up through it from underneath. */
+  function baseGeom(d,J){
+    /* every break in the profile falls on the 0.25 mm grid the base is sampled on */
+    const q4=v=>Math.round(v*4)/4,Ht=d.S+d.s,k=Math.min(1,Ht/46),eT=J.a+J.cs+1.8,eF=eT+3.5,hF=q4(7*k),hc=q4(7*k),z1=hF+1,line=Ht>30?q4(Ht-6):null;
+    const prof=(z,bare)=>{let e;
+      if(z<.6)e=eF-(.6-z);else if(z<hF)e=eF;else if(z<z1)e=eF-1+Math.sqrt(Math.max(0,1-(z-hF)**2));
+      else if(z<z1+hc){const t=(z-z1)/hc;e=eT+(eF-1-eT)*(1-Math.sqrt(Math.max(0,1-(1-t)**2)))}else e=eT;
+      if(!bare){if(line!=null&&Math.abs(z-line)<.75)e-=.75-Math.abs(z-line);if(z>Ht-.75)e-=z-(Ht-.75)}
+      return e};
+    return {Ht,eT,eF,hF,hc,z1,line,prof,skin:1.8,fl:Math.min(d.f,2),zb:Math.min(Math.max(6,d.S-16),Ht-10),hA:hF>=5?hF-2:0};
+  }
+  /* the corner frames: corner i at its point of the centre line, local +x and +y along its two panels */
+  const CORNERS=d=>[[0,0],[d.W,0],[d.W,d.D],[0,d.D]];
+  function atCorner(d,i,rings){const [x,y]=CORNERS(d)[i],a=i*Math.PI/2,co=Math.round(Math.cos(a)),si=Math.round(Math.sin(a));return rings.map(r=>r.map(([u,v])=>[x+co*u-si*v,y+si*u+co*v]))}
+  /* the two magnet pockets for a name plaque: on the flat upper band, 30 % in from each side */
+  function plaqueMags(d,bg){return {xs:[d.W*.2,d.W*.8],z:(bg.z1+bg.hc+(bg.line??bg.Ht))/2}}
+  function rectBase2(d,p,J){
+    const g=J.g,bg=baseGeom(d,J),{Ht,eF,hF,z1,prof,skin,zb,hA,fl}=bg,W=d.W,D=d.D,sp=J.sp,U=a=>a.reduce((x,y)=>unite(x,y),[]);
+    const outlineE=e=>G.rrect(-e,-e,W+e,D+e,e-(J.a-J.ro),Math.max(5,Math.round(e)));
+    const tubes=U([0,1,2,3].map(i=>atCorner(d,i,postOutline(J,J.cs+1.6))));
+    const boss=U([0,1,2,3].map(i=>atCorner(d,i,circle(-sp.c,-sp.c,5.9,24))));
+    const sock=U([0,1,2,3].map(i=>atCorner(d,i,postOutline(J,J.cs))));
+    const inner=rect(g/2+1.6,g/2+1.6,W-g/2-1.6,D-g/2-1.6),wallOut=rect(g/2-.4,g/2-.4,W-g/2+.4,D-g/2+.4),grooveOut=offset([[[0,0],[W,0],[W,D],[0,D]]],g/2+1.6,'miter');
+    const groove=subtract(offset([[[0,0],[W,0],[W,D],[0,D]]],g/2,'miter'),offset([[[0,0],[W,0],[W,D],[0,D]]],-g/2,'miter'));
+    /* ribs from the skin to the inner wall, about every 55 mm */
+    const ribs=[],rw=.6;
+    for(const [len,mk] of [[W,(t,sd)=>sd?rect(t-rw,D-1,t+rw,D+eF+1):rect(t-rw,-eF-1,t+rw,1)],[D,(t,sd)=>sd?rect(W-1,t-rw,W+eF+1,t+rw):rect(-eF-1,t-rw,1,t+rw)]]){
+      const span=len-24,n=Math.max(1,Math.round(span/55));for(let i=1;i<n;i++){const t=12+span*i/n;for(const sd of [0,1])ribs.push(mk(t,sd)[0])}}
+    /* solid bosses behind the plaque magnets */
+    const pm=p.frameMags==='yes'?plaqueMags(d,bg):null,md=p.dMagD||10,mh=p.dMagH||3,pmR=md/2+2.2;
+    const magBoss=pm?pm.xs.map(x=>rect(x-pmR,-bg.eT-1,x+pmR,-bg.eT+mh+1.4)[0]):[];
+    /* the arched recess between the feet on each side: 1 mm deep, its top edge a flattened arch */
+    const recess=z=>{if(z>=hA)return [];const o=[];
+      for(const [len,side] of [[W,0],[D,1],[W,2],[D,3]]){const Lf=Math.max(18,len*.14),x0=Lf,x1=len-Lf;if(x1-x0<30)continue;
+        const n=24,pts=[],mid=(x0+x1)/2,hw=(x1-x0)/2;
+        for(let i=0;i<=n;i++){const x=x0+(x1-x0)*i/n,u=Math.abs(x-mid)/hw,za=hA*Math.cbrt(Math.max(0,1-u*u*u)),dep=Math.max(0,Math.min(1,za-z));pts.push([x,-eF+dep])}
+        if(pts.every(q=>q[1]<=-eF+.001))continue;
+        const ring=[[x1,-eF-2],...pts.reverse(),[x0,-eF-2]].reverse();
+        /* the side's own frame: along +x from its corner, outside at -y */
+        const [cx,cy]=CORNERS(d)[side],a=side*Math.PI/2,co=Math.round(Math.cos(a)),si=Math.round(Math.sin(a));
+        o.push(ring.map(([u,v])=>[cx+co*u-si*v,cy+si*u+co*v]))}
+      return o};
+    const solid=z=>{const e=prof(z),eb=prof(z,true),cut=[];
+      /* hollow between skin and inner wall, open underneath; above the groove's floor it continues outside the groove */
+      if(z<Ht-1.6){const inB=z<d.S-1.6?wallOut:grooveOut,eIn=Math.max(bg.eT-skin,Math.floor((eb-skin-(z<z1?1:0))*4)/4);
+        if(eIn>J.a)cut.push(subtract(outlineE(eIn),U([inB,tubes,boss,ribs,magBoss].filter(x=>x.length))))}
+      if(z>fl)cut.push(subtract(inner,tubes));
+      if(z>d.S)cut.push(groove);
+      cut.push(z>=zb?sock:subtract(sock,boss));
+      const r=recess(z);if(r.length)cut.push(r);
+      return subtract(outlineE(e),U(cut))};
+    const f=[varying(0,Ht,solid,.25)];
+    /* the screws: countersunk from underneath, through the boss into the post */
+    for(let i=0;i<4;i++){const [[x,y]]=atCorner(d,i,[[[-sp.c,-sp.c]]]);f.push(...cskHole(x,y,sp,zb+.01,zb-6))}
+    /* floor pegs for accessories */
+    const pegs=[];
+    if(p.pegs==='grid'){const lim=offset(inner,-12),b=bbox(lim),nx=Math.floor((b.x1-b.x0)/RAIL.pitch),ny=Math.floor((b.y1-b.y0)/RAIL.pitch),ox=(b.x0+b.x1-nx*RAIL.pitch)/2,oy=(b.y0+b.y1-ny*RAIL.pitch)/2;
+      for(let i=0;i<=nx;i++)for(let j=0;j<=ny;j++){const x=ox+i*RAIL.pitch,y=oy+j*RAIL.pitch;pegs.push([x,y]);f.push(prism(fl-.01,fl+PEG.h,circle(x,y,PEG.r,24)))}}
+    /* air slots low in the front, through skin and inner wall, between the feet */
+    let vents=null;
+    if(p.frontVent==='slots'&&d.S>=20){const z0=Math.max(z1+bg.hc,d.S-14),zz1=d.S-3,w=p.hole,pitch=Math.max(w+1.6,p.hole+p.bar),xs=[],xa=Math.max(18,W*.14)+4,xb=W-xa;
+      const n=Math.floor((xb-xa-w)/pitch),o0=(xa+xb-(n*pitch+w))/2;
+      for(let i=0;i<=n;i++){const x=o0+i*pitch;if(pm&&pm.xs.some(mx=>x+w>mx-pmR-1&&x<mx+pmR+1))continue;xs.push(rect(x,-eF-1,x+w,g/2+3)[0])}
+      if(z0<zz1&&xs.length){f.push(prism(z0,zz1,xs,'sub'));vents={z0,z1:zz1,n:xs.length}}}
+    /* plaque magnet pockets, sampled every 0.5 mm in height: they sit hidden in the wall, and finer steps only add weight to the file */
+    if(pm)for(const x of pm.xs){const ring=G.mag(x,pm.z,md),R=md/2+.25;f.push(varying(pm.z-R,pm.z+R,z=>G.slice(ring,z).map(([a,b])=>rect(a,-bg.eT-1,b,-bg.eT+mh+.2)[0]),.5,'sub'))}
+    const m=build(f);m.pegs=pegs;m.vents=vents;m.geom=bg;m.plaqueMags=pm;return m;
+  }
   /* the whole fit kit: three blocks, a short post with a thread in each end, and one screw */
   function fitKit(T,fit,screwFit){const J=joint(T,fit,screwFit),blocks=[-1,0,1].map(k=>fitBlock(J,k));
     /* three screws: 1 dot is fatter (tighter), 3 dots thinner (looser) */
@@ -524,5 +601,5 @@
       button:buttons?turnButton(0,4.5):null,front:off+dt,edge:xd1,midZ:(zd0+zd1)/2};
   }
 
-  root.HabitatEnclosure={FIT_STEP,SCREW_STEP,joint,postOutline,jointPost,cskScrew,cskHole,cskHeight,fitBlock,fitKit,rr4,crestX,CREST,screwSpec,screwSpots,stud,hasp,screwHoleUp,lidScrew,turnButton,latchDepth,frontVents,hatchCover,TW,base,lid,rectBase,rectLid,rectPost,polyGeom,polyEnclosure,spineToWorld,roundEnclosure,perimeter,tilePanel,TILE,swingDoor,lightWindows,mirrorY};
+  root.HabitatEnclosure={rectBase2,baseGeom,plaqueMags,atCorner,FIT_STEP,SCREW_STEP,joint,postOutline,jointPost,cskScrew,cskHole,cskHeight,fitBlock,fitKit,rr4,crestX,CREST,screwSpec,screwSpots,stud,hasp,screwHoleUp,lidScrew,turnButton,latchDepth,frontVents,hatchCover,TW,base,lid,rectBase,rectLid,rectPost,polyGeom,polyEnclosure,spineToWorld,roundEnclosure,perimeter,tilePanel,TILE,swingDoor,lightWindows,mirrorY};
 })(typeof window!=='undefined'?window:globalThis);

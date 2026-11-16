@@ -682,15 +682,15 @@ function lidReadme(L,p){let t='';if(L.win&&L.win.mode==='insert')t+=`\nLight win
 
 function rectModel(p,pv){
   const d=rectDims(p),c=colours(),notes=[],cut=[],parts=[],items=[],Ztop=d.S+d.H+d.Lt;
-  const base=HE.rectBase(d,p),lid=HE.rectLid(d,p,pv),post=HE.rectPost(d,p);
+  const J=HE.joint(p.T,p.fit,p.screwFit),base=HE.rectBase2(d,p,J),zb=base.geom.zb,lid=HE.rectLid(d,p,pv),post=HE.jointPost(J,d.S+d.Hp-zb),bScrew=HE.cskScrew(J.sp,6-HE.cskHeight(J.sp)+J.thread-1.5,J.scl);
   notes.push(...lid.notes);
-  parts.push({name:'Base',file:`base-${p.W}x${p.D}.stl`,tris:place(base.tris)},{name:'Corner post',n:4,file:'corner-post-print-4.stl',tris:place(post.tris,(x,y,z)=>[z,(x-y)*Math.SQRT1_2,(x+y)*Math.SQRT1_2])},{name:lid.win?'Lid with mesh and lamp windows':'Lid with mesh',file:`lid-${p.W}x${p.D}.stl`,tris:place(lid.tris)});
+  parts.push({name:'Base',file:`base-${p.W}x${p.D}.stl`,tris:place(base.tris)},{name:'Corner post',n:4,file:'corner-post-print-4.stl',tris:place(post.tris,(x,y,z)=>[z,(x-y)*Math.SQRT1_2,(x+y)*Math.SQRT1_2])},{name:'Base screw',n:4,file:'base-screw-print-4.stl',tris:place(bScrew.tris)},{name:lid.win?'Lid with mesh and lamp windows':'Lid with mesh',file:`lid-${p.W}x${p.D}.stl`,tris:place(lid.tris)});
   if(lid.cover)parts.push({name:'Feeding hatch cover',file:'feeding-hatch.stl',tris:place(lid.cover.tris)});
   items.push({tris:base.tris,color:c.frame},{tris:place0(lid.tris,(x,y,z)=>[x,-y,Ztop-z]),color:c.mesh,alpha:.55});
   const cw=coverWorld(lid,Ztop,p);if(cw)items.push({tris:cw,color:c.frame});
   if(lid.screw){parts.push({name:'Lid screw',n:4,file:'lid-screw-print-4.stl',tris:place(lid.screw.tris)});
     const sp=HE.screwSpec(d.slim),cc=sp.c;[[0,0],[d.W,0],[d.W,d.D],[0,d.D]].forEach(([x,y],i)=>{const a=i*Math.PI/2,co=Math.round(Math.cos(a)),si=Math.round(Math.sin(a)),sx=x-co*cc+si*cc,sy=y-si*cc-co*cc;items.push({tris:place0(lid.screw.tris,(u,v,w)=>[sx+u,sy-v,Ztop+3-w]),color:c.frame})})}
-  [[0,0],[d.W,0],[d.W,d.D],[0,d.D]].forEach(([x,y],i)=>{const a=i*Math.PI/2,co=Math.round(Math.cos(a)),si=Math.round(Math.sin(a));items.push({tris:place0(post.tris,(u,v,w)=>[x+co*u-si*v,y+si*u+co*v,w+d.S]),color:c.frame})});
+  [[0,0],[d.W,0],[d.W,d.D],[0,d.D]].forEach(([x,y],i)=>{const a=i*Math.PI/2,co=Math.round(Math.cos(a)),si=Math.round(Math.sin(a));items.push({tris:place0(post.tris,(u,v,w)=>[x+co*u-si*v,y+si*u+co*v,w+zb]),color:c.frame})});
   const fbW=d.W-d.g-1,lrW=d.D-d.g-1,pH=d.H-.5;
   const panels=[{k:'front',label:'Front door',w:fbW,h:d.swing?pH:d.H+d.Lt+20,type:d.swing?'swing':p.front},{k:'back',label:'Back',w:fbW,h:pH,type:p.back},{k:'left',label:'Left',w:lrW,h:pH,type:p.left},{k:'right',label:'Right',w:lrW,h:pH,type:p.right}];
   let railRows=0;
